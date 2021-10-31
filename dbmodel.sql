@@ -16,9 +16,7 @@ ALTER TABLE `player`
     ADD `sacColor` TINYINT UNSIGNED DEFAULT NULL,
     -- number of sacrificial actions remaining (1-3)
     -- (NULL unless it's their turn and they've sacrificed a ship)
-    ADD `sacActions` TINYINT UNSIGNED DEFAULT NULL,
-    -- FALSE until the player has been eliminated
-    ADD `eliminated` BOOLEAN DEFAULT FALSE;
+    ADD `sacActions` TINYINT UNSIGNED DEFAULT NULL;
 
 -- Each of the 36 pieces will be listed individually
 CREATE TABLE IF NOT EXISTS `Pieces` (

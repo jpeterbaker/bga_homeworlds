@@ -20,6 +20,7 @@ action:
 args:
     Name of a function that will produce parameters to pass to
     the JS function onEnteringState when this state is enteted.
+    Returned array can include values that get substituted into the descriptions
 
 name:
     Name of the state.
@@ -63,9 +64,9 @@ $machinestates = array(
         'description' => '',
         'type' => 'manager',
         'action' => 'stGameSetup',
-        // 'transitions' => array( '' => 10 )
+        // 'transitions' => array('' => 10)
         // TODO switch back after testing
-        'transitions' => array( '' => 11 )
+        'transitions' => array('' => 11)
     ),
 
     //////////////////////
@@ -79,15 +80,37 @@ $machinestates = array(
         'possibleactions' => array( 'act_creation' ),
         'transitions' => array( 'trans_after_creation' => 20 )
     ),
+    // Get free action, sacrifice, catastrophe, or pass
     11 => array(
         // TODO an args function should provide catastrophe options
         'name' => 'get_free',
-        'description' => clienttranslate('${actplayer} must empower a friendly ship.'),
-        'descriptionmyturn' => clienttranslate('${you} must choose a friendly ship.'),
+        'description' => clienttranslate('${actplayer} must empower or sacrifice a ship.'),
+        'descriptionmyturn' => clienttranslate('${you} must choose a ship.'),
         'type' => 'activeplayer',
-        'possibleactions' => array( 'act_power_action' ),
+        'possibleactions' => array(
+            'act_power_action',
+            'act_sacrifice',
+            'act_pass'
+        ),
         'transitions' => array(
             'trans_after_free' => 21,
+            'trans_get_sac_action' => 12,
+            'trans_pass' => 30
+        )
+    ),
+    // Get sac action, catastrophe, or pass
+    12 => array(
+        // TODO an args function should provide catastrophe options
+        'name' => 'get_sac_action',
+        'description' => clienttranslate('${actplayer} must ${action_name} a ship (${actions_remaining} actions remaining).'),
+        'descriptionmyturn' => clienttranslate('${you} must choose a ship to ${action_name} (${actions_remaining} actions remaining).'),
+        'type' => 'activeplayer',
+        'possibleactions' => array(
+            'act_power_action',
+            'act_pass'
+        ),
+        'transitions' => array(
+            'trans_after_sac_action' => 22,
             'trans_pass' => 30
         )
     ),
@@ -108,7 +131,16 @@ $machinestates = array(
         'type' => 'game',
         'action' => 'st_after_free',
         'transitions' => array(
-            // TODO Allow catastrophe
+            // TODO Allow transition to get_cat state
+            'trans_end_turn' => 30
+        )
+    ),
+    22 => array(
+        'name' => 'after_sac_action',
+        'type' => 'game',
+        'action' => 'st_after_sac_action',
+        'transitions' => array(
+            'trans_get_sac_action' => 12,
             'trans_end_turn' => 30
         )
     ),

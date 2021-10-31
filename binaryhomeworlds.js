@@ -217,12 +217,24 @@ function (dojo, declare) {
         // onUpdateActionButtons:
         // in this method you can manage "action buttons" that are displayed in the
         // action status bar (ie: the HTML links in the status bar).
+
         // This function appears to be redundant. It gets called just before
         // onEnteringState with the same parameters.
+        // BGA's intention seems to be that this is the
+        // "It's time to update action buttons" function
+        // with the idea that you'll have so many buttons that
+        // this deserves its own function
         onUpdateActionButtons: function( stateName, args ) {
             console.log( 'onUpdateActionButtons: '+stateName );
             if( this.isCurrentPlayerActive() ) {
-                switch( stateName ) {
+                switch( stateName ){
+                    case 'client_get_power':
+                        this.addActionButton(
+                            'sacrifice_button',
+                            _('Sacrifice ship'),
+                            'sacrifice_button_selected'
+                        );
+                        break;
                 }
             }
         },
@@ -232,6 +244,7 @@ function (dojo, declare) {
 
         put_in_bank: function(piecenode){
             dojo.removeClass(piecenode,'friendly hostile star ship');
+            piecenode.removeAttribute('empower');
             dojo.addClass(piecenode,'banked');
             var cnameSplit = piecenode.getAttribute('ptype').split('_');
             var color = cnameSplit[0];
@@ -579,6 +592,11 @@ function (dojo, declare) {
             default:
                 console.error('Bad power number: '+power);
             }
+        },
+
+        sacrifice_button_selected: function(args=null){
+            var shipnode = dojo.query('[empower]')[0];
+            shipnode.setAttribute('empower','sacrifice');
         },
 
         ///////////////////////////////////////////////////

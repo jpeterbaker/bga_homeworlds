@@ -86,11 +86,9 @@ class binaryHomeworlds extends Table {
 
         /************ Start the game initialization *****/
 
-        /*
         $sql = 'UPDATE player
             SET player_score=100';
         self::DbQuery($sql);
-        */
 
         /////////////////////////////////////////////////
         // Build up one big SQL command for all pieces //
@@ -148,7 +146,6 @@ class binaryHomeworlds extends Table {
             player_id,
             player_score,
             player_no,
-            eliminated,
             sacColor,
             sacActions
         FROM player";
@@ -251,7 +248,7 @@ class binaryHomeworlds extends Table {
             $system_name = $this->system_names[$idx];
             // Add a number if this system has been used before
             if($system_id >= $this->name_count)
-                $system_name .= ' '.(1+intdiv($system_id,$this->name_count));
+                $system_name .= ' '.(1+intdiv($system_id-2,$this->name_count));
             $sql = "UPDATE Systems
                 SET system_name='".$system_name."'
                 WHERE system_id=".$system_id;
@@ -273,6 +270,21 @@ class binaryHomeworlds extends Table {
                 self::_('No such piece in the bank.')
             );
         }
+    }
+
+    function get_all_overpopulations(){
+        // The first SELECT column must be unique.
+        // For a single unique column representing color and count,
+        // put system_id as the tens digit and count as the ones digit.
+        // (There are only 9 pieces of each color)
+        // TODO adapt for more players
+        $sql = 'SELECT color+10*system_id,COUNT(piece_id),system_id,color
+            FROM Pieces
+            WHERE system_id IS NOT NULL
+            GROUP BY system_id,color
+            HAVING COUNT(piece_id)>=4';
+        $result = self::getCollectionFromDb($sql);
+        return $result;
     }
 
     // Put the piece with the given id into the bank
@@ -499,18 +511,32 @@ class binaryHomeworlds extends Table {
             )
         );
         // Check for fade
-        if($this->is_empty($old_system_id)){
-            $old_system_name = $this->get_system_row($old_system_id)['system_name'];
-            self::notifyAllPlayers('notif_fade',
-                clienttranslate('The ${old_system_name} system fades.'),
-                array(
-                    'system_id' => $old_system_id,
-                    'old_system_name' => $old_system_name
-                )
-            );
-        }
+        if($this->is_empty($old_system_id))
+            $this->fade($old_system_id);
 
         $this->gamestate->nextState('trans_after_free');
+    }
+
+    function fade($system_id){
+        // Notify client
+        $system_name = $this->get_system_row($system_id)['system_name'];
+        self::notifyAllPlayers('notif_fade',
+            clienttranslate('The ${old_system_name} system fades.'),
+            array(
+                'system_id' => $system_id,
+                'old_system_name' => $system_name
+            )
+        );
+        // Put any remaining pieces in bank
+        $sql = 'UPDATE Pieces
+            SET system_id=NULL
+            WHERE system_id='.$system_id;
+        self::DbQuery($sql);
+
+        // Remove system
+        $sql = 'DELETE FROM Systems
+            WHERE system_id='.$system_id;
+        self::DbQuery($sql);
     }
 
     function discover($ship_id,$star_color_num,$star_pips){
@@ -552,7 +578,8 @@ class binaryHomeworlds extends Table {
         $old_ship = $this->get_piece_row($ship_id);
         $color = $old_ship['color'];
         // Get the smallest banked piece of that color
-        $sql = 'SELECT piece_id,color,system_id,owner_id FROM Pieces
+        $sql = 'SELECT piece_id,color,system_id,owner_id
+            FROM Pieces
             WHERE color='.$color.'
                 AND system_id IS NULL
             ORDER BY pips
@@ -658,12 +685,18 @@ class binaryHomeworlds extends Table {
 
     function st_after_free(){
         // TODO check for catastrophes and let player choose one
+        //$this->get_all_overpopulations();
+        $this->gamestate->nextState('trans_end_turn');
+    }
+
+    function st_after_sac_action(){
+        // TODO check for catastrophes and let player choose one
+        //$this->get_all_overpopulations();
         $this->gamestate->nextState('trans_end_turn');
     }
 
     function st_end_turn(){
         //  Check for win
-        /*
         $sql = 'SELECT system_id,homeplayer_id FROM Systems
             WHERE homeplayer_id IS NOT NULL';
         $homeworlds = self::getCollectionFromDb($sql);
@@ -695,7 +728,6 @@ class binaryHomeworlds extends Table {
             $this->gamestate->nextState('trans_endGame');
             return;
         }
-        */
 
         $this->activeNextPlayer();
         $this->gamestate->nextState('trans_get_free');
