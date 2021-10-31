@@ -86,9 +86,11 @@ class binaryHomeworlds extends Table {
 
         /************ Start the game initialization *****/
 
+        /*
         $sql = 'UPDATE player
             SET player_score=100';
         self::DbQuery($sql);
+        */
 
         /////////////////////////////////////////////////
         // Build up one big SQL command for all pieces //

@@ -67,7 +67,7 @@ $machinestates = array(
         // TODO switch back after testing
         'transitions' => array( '' => 11 )
     ),
-/*
+
     //////////////////////
     // Get player input //
     //////////////////////
@@ -121,7 +121,7 @@ $machinestates = array(
             'trans_endGame' => 99
         )
     ),
-*/
+
     // Final state
     // Please do not modify and do not overload action/args methods
     99 => array(

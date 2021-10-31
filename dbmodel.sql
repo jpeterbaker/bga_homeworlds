@@ -10,37 +10,37 @@
 -- dbmodel.sql
 
 -- On Jonathan's computer, player schema described in ~/bga/player_schema.png
--- ALTER TABLE `player`
---     -- color of their sacrificed ship (1-4)
---     -- (NULL unless it's their turn and they've sacrificed a ship)
---     ADD `sacColor` TINYINT UNSIGNED DEFAULT NULL,
---     -- number of sacrificial actions remaining (1-3)
---     -- (NULL unless it's their turn and they've sacrificed a ship)
---     ADD `sacActions` TINYINT UNSIGNED DEFAULT NULL,
---     -- FALSE until the player has been eliminated
---     ADD `eliminated` BOOLEAN DEFAULT FALSE;
--- 
--- -- Each of the 36 pieces will be listed individually
--- CREATE TABLE IF NOT EXISTS `Pieces` (
---     -- getCollectionFromDb uses keys as array indices,
---     -- so it will be convenient to have a single key field
---     `piece_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
---     -- Piece color (1-4)
---     `color` tinyint UNSIGNED NOT NULL,
---     -- Piece size (1-3)
---     `pips` tinyint UNSIGNED NOT NULL,
---     -- System that this piece occupies (null for bank)
---     -- Corresponds to Systems.system_id
---     `system_id` smallint UNSIGNED DEFAULT NULL,
---     -- Play-order number of owning player (null for star or bank)
---     -- Corresponds to player.player_id
---     `owner_id` int UNSIGNED DEFAULT NULL
--- ) ENGINE=InnoDB;
--- 
--- CREATE TABLE IF NOT EXISTS `Systems` (
---     `system_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
---     `system_name` VARCHAR(20) NOT NULL,
---     -- Corresponds to player.player_id or NULL for a colony
---     `homeplayer_id` int UNSIGNED DEFAULT NULL
--- ) ENGINE=InnoDB;
+ALTER TABLE `player`
+    -- color of their sacrificed ship (1-4)
+    -- (NULL unless it's their turn and they've sacrificed a ship)
+    ADD `sacColor` TINYINT UNSIGNED DEFAULT NULL,
+    -- number of sacrificial actions remaining (1-3)
+    -- (NULL unless it's their turn and they've sacrificed a ship)
+    ADD `sacActions` TINYINT UNSIGNED DEFAULT NULL,
+    -- FALSE until the player has been eliminated
+    ADD `eliminated` BOOLEAN DEFAULT FALSE;
+
+-- Each of the 36 pieces will be listed individually
+CREATE TABLE IF NOT EXISTS `Pieces` (
+    -- getCollectionFromDb uses keys as array indices,
+    -- so it will be convenient to have a single key field
+    `piece_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    -- Piece color (1-4)
+    `color` tinyint UNSIGNED NOT NULL,
+    -- Piece size (1-3)
+    `pips` tinyint UNSIGNED NOT NULL,
+    -- System that this piece occupies (null for bank)
+    -- Corresponds to Systems.system_id
+    `system_id` smallint UNSIGNED DEFAULT NULL,
+    -- Play-order number of owning player (null for star or bank)
+    -- Corresponds to player.player_id
+    `owner_id` int UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `Systems` (
+    `system_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `system_name` VARCHAR(20) NOT NULL,
+    -- Corresponds to player.player_id or NULL for a colony
+    `homeplayer_id` int UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB;
 
