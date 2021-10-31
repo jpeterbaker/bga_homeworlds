@@ -1,0 +1,197 @@
+/**
+ *------
+ * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+ * binaryHomeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ *
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.boardgamearena.com/#!doc/Studio for more information.
+ * -----
+ *
+ * binaryhomeworlds.css
+ *
+ * binaryHomeworlds stylesheet
+ *
+ */
+
+#board{
+    /* Board margin-right makes space for bank */
+    margin-right:310px;
+    height:1000px;
+    /*background:rgba(255,255,255,0.3);*/
+}
+#bank{
+    /*
+    Bank must not have default position type (static)
+    or its width/height can't be used for relative sizes of stacks
+    */
+    position:relative;
+    width:300px;
+    height:1000px;
+    float:right;
+    background:rgba(0,0,0,0.3);
+}
+/* A stack is a place for identical pieces in the bank */
+.stack{
+    display:inline-block;
+    position:absolute;
+    width:33.3%;
+    height:25%;
+}
+/* Make pieces in the stack higher the more children there are */
+.stack>*{
+    position:absolute;
+}
+.stack>*:nth-child(1){
+    bottom:0px;
+}
+.stack>*:nth-child(2){
+    bottom:30px;
+}
+.stack>*:nth-child(3){
+    bottom:60px;
+}
+
+/********
+ Systems
+********/
+.system{
+    border:2px solid black;
+    display:inline-block;
+    margin:5px;
+}
+.system[homeplayer_id=none]{
+}
+/* A homeworld system with a non-none homeplayer_id attribute*/
+.system:not([homeplayer_id=none]){
+    border:2px dashed black;
+}
+.home_container{
+    text-align:center;
+    display:block;
+}
+
+/* All pieces use the same sprite background */
+.ship,.star,.banked {
+    background-image:url('img/sprites.png');
+    background-repeat:no-repeat;
+    display:inline-block;
+}
+.ship,.star{
+    /*position:relative;*/
+    transition:.5s;
+}
+
+/*
+The background image has every piece sprite.
+This section sets the vertical background offset by piece color and orientation.
+*/
+.red.ship,.red.banked{
+    background-position-y:-0px
+}
+.red.star{
+    background-position-y:-190px
+}
+.yellow.ship,.yellow.banked{
+    background-position-y:-300px
+}
+.yellow.star{
+    background-position-y:-490px
+}
+.green.ship,.green.banked{
+    background-position-y:-600px
+}
+.green.star{
+    background-position-y:-790px
+}
+.blue.ship,.blue.banked{
+    background-position-y:-900px
+}
+.blue.star{
+    background-position-y:-1090px
+}
+
+/* Horizontal offset by and width depend on piece size. */
+.large{
+    background-position-x:-0px;
+    width:112px;
+}
+.medium{
+    background-position-x:-112px;
+    width:104px;
+}
+.small{
+    background-position-x:-216px;
+    width:84px;
+}
+
+/* For now, height only depends on whether the piece is standing. */
+.ship{
+    /* height:190px; original height */
+    height:190px;
+}
+.star{
+    /* height:110px; original height */
+    height:110px;
+}
+
+/*
+Ships and systems can be friendly or hostile.
+(Hostile ships will need to be generalized if 3+ player is implemented.)
+Hostile elements are controlled by the enemy and should appear on the left.
+*/
+.ship.hostile{
+    transform:rotate(180deg);
+}
+.ship.hostile.selectable{
+    /* Reverse the shadow for hostile ships since they're rotated */
+    filter:drop-shadow(-15px 15px 10px black);
+}
+.ship.friendly{
+}
+.hostile{
+    float:left;
+}
+.friendly{
+    float:right;
+}
+
+/* Banked pieces have the height of ships and point up. */
+.banked{
+    height:190px;
+}
+.selectable{
+    cursor:pointer;
+}
+.selectable.stack{
+    border:2px solid white;
+}
+.selectable.system{
+    background-color:rgba(255,255,255,0.3);
+}
+.selectable.ship:not([empower]):not(.hostile),.selectable.star{
+    filter:drop-shadow(15px -15px 10px black);
+}
+.selectable.ship.friendly:hover,.selectable.star:hover{
+    transform:translate(0px,-10px);
+}
+.selectable.ship.hostile:hover{
+    transform:translate(0px,-10px) rotate(180deg);
+}
+
+/* Use a custom "empower" attribute to highlight with power color */
+[empower=pending]{
+    filter:drop-shadow(15px -15px 10px indigo);
+}
+[empower='1']{
+    filter:drop-shadow(15px -15px 10px red);
+}
+[empower='2']{
+    filter:drop-shadow(15px -15px 10px yellow);
+}
+[empower='3']{
+    filter:drop-shadow(15px -15px 10px green);
+}
+[empower='4']{
+    filter:drop-shadow(15px -15px 10px blue);
+}
+
