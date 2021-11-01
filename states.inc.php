@@ -94,14 +94,14 @@ $machinestates = array(
         ),
         'transitions' => array(
             'trans_after_free' => 21,
-            'trans_get_sac_action' => 12,
+            'trans_get_sacrifice_action' => 12,
             'trans_pass' => 30
         )
     ),
     // Get sac action, catastrophe, or pass
     12 => array(
         // TODO an args function should provide catastrophe options
-        'name' => 'get_sac_action',
+        'name' => 'get_sacrifice_action',
         'description' => clienttranslate('${actplayer} must ${action_name} a ship (${actions_remaining} actions remaining).'),
         'descriptionmyturn' => clienttranslate('${you} must choose a ship to ${action_name} (${actions_remaining} actions remaining).'),
         'type' => 'activeplayer',
@@ -109,8 +109,9 @@ $machinestates = array(
             'act_power_action',
             'act_pass'
         ),
+        'args' => 'args_get_sacrifice_action',
         'transitions' => array(
-            'trans_after_sac_action' => 22,
+            'trans_after_sacrifice_action' => 22,
             'trans_pass' => 30
         )
     ),
@@ -136,11 +137,11 @@ $machinestates = array(
         )
     ),
     22 => array(
-        'name' => 'after_sac_action',
+        'name' => 'after_sacrifice_action',
         'type' => 'game',
-        'action' => 'st_after_sac_action',
+        'action' => 'st_after_sacrifice_action',
         'transitions' => array(
-            'trans_get_sac_action' => 12,
+            'trans_get_sacrifice_action' => 12,
             'trans_end_turn' => 30
         )
     ),

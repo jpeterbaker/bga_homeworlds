@@ -597,6 +597,12 @@ function (dojo, declare) {
         sacrifice_button_selected: function(args=null){
             var shipnode = dojo.query('[empower]')[0];
             shipnode.setAttribute('empower','sacrifice');
+            this.ajaxcallwrapper(
+                'act_sacrifice',
+                {
+                    ship_id: shipnode.id.split('_')[1]
+                }
+            );
         },
 
         ///////////////////////////////////////////////////
@@ -624,6 +630,8 @@ function (dojo, declare) {
             dojo.subscribe('notif_discover',this,'discover_from_notif');
             dojo.subscribe('notif_move',    this,'move_from_notif');
             dojo.subscribe('notif_fade',    this,'fade_from_notif');
+
+            dojo.subscribe('notif_sacrifice',    this,'sacrifice_from_notif');
         },
 
         ignore_notif: function(notif){
@@ -740,6 +748,13 @@ function (dojo, declare) {
                 systemnode
             );
             this.put_in_bank(oldshipnode);
+        },
+
+        sacrifice_from_notif: function(notif){
+            console.log('Sacrificing');
+            var args = notif.args;
+            var shipnode  = document.getElementById('piece_'+args.ship_id);
+            this.put_in_bank(shipnode);
         }
    });
 });

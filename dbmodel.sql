@@ -13,10 +13,10 @@
 ALTER TABLE `player`
     -- color of their sacrificed ship (1-4)
     -- (NULL unless it's their turn and they've sacrificed a ship)
-    ADD `sacColor` TINYINT UNSIGNED DEFAULT NULL,
+    ADD `sac_color` TINYINT UNSIGNED DEFAULT NULL,
     -- number of sacrificial actions remaining (1-3)
     -- (NULL unless it's their turn and they've sacrificed a ship)
-    ADD `sacActions` TINYINT UNSIGNED DEFAULT NULL;
+    ADD `sac_actions` TINYINT UNSIGNED DEFAULT NULL;
 
 -- Each of the 36 pieces will be listed individually
 CREATE TABLE IF NOT EXISTS `Pieces` (

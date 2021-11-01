@@ -76,6 +76,13 @@ class action_binaryhomeworlds extends APP_GameAction {
         }
         self::ajaxResponse( );
     }
+
+    public function act_sacrifice(){
+        self::setAjaxMode();
+        $ship_id = self::getArg('ship_id','AT_posint',true);
+        $this->game->sacrifice($ship_id);
+        self::ajaxResponse( );
+    }
 }
 
 

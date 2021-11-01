@@ -145,9 +145,7 @@ class binaryHomeworlds extends Table {
         $sql = "SELECT
             player_id,
             player_score,
-            player_no,
-            sacColor,
-            sacActions
+            player_no
         FROM player";
         $result['players'] = self::getCollectionFromDb($sql);
 
@@ -388,6 +386,14 @@ class binaryHomeworlds extends Table {
         return self::getCollectionFromDb(
             'SELECT * FROM Pieces WHERE owner_id IS NULL AND system_id='.$system_id
         );
+    }
+
+    function get_player_row(){
+        $player_id = $this->getCurrentPlayerId();
+        $sql = 'SELECT * FROM player WHERE player_id='.$player_id;
+        $result = self::getCollectionFromDb($sql);
+        // We  have to do it this way since player_no is primary key
+        return $result[$this->array_key_first($result)];
     }
 
     function is_empty($system_id){
@@ -631,6 +637,46 @@ class binaryHomeworlds extends Table {
         $this->gamestate->nextState('trans_after_free');
     }
 
+    function sacrifice($ship_id){
+        self::checkAction('act_sacrifice');
+
+        $player_id = $this->getActivePlayerId();
+        $player_name = $this->getActivePlayerName();
+
+        // Make sure the ship's owner is corret
+        $ship = $this->get_piece_row($ship_id);
+        if($ship['owner_id'] != $player_id){
+            throw new BgaVisibleSystemException(
+                self::_('You may only sacrifice your own ships.')
+            );
+        }
+
+        // Make sure they haven't already sacrificed
+        $sql = 'SELECT player_id,sac_color from player
+            WHERE player_id='.$player_id;
+        $result = self::getCollectionFromDb($sql);
+        if($result[$player_id]['sac_color'] != NULL){
+            throw new BgaVisibleSystemException(
+                self::_('You have already sacrificed a ship.')
+            );
+        }
+
+        $this->put_in_bank($ship_id);
+        $sql = 'UPDATE player
+            SET sac_color='.$ship['color'].',
+                sac_actions='.$ship['pips'].'
+            WHERE player_id='.$player_id;
+        self::DbQuery($sql);
+
+        self::notifyAllPlayers('notif_sacrifice',
+            clienttranslate('${player_name} sacrifices a ship.'),
+            array(
+                'player_name' => $player_name,
+                'ship_id' => $ship_id
+            )
+        );
+        $this->gamestate->nextState('trans_get_sacrifice_action');
+    }
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
@@ -656,6 +702,21 @@ class binaryHomeworlds extends Table {
         );
     }
     */
+
+    function args_get_sacrifice_action(){
+        $player_row = $this->get_player_row();
+        $action_color = $player_row['sac_color'];
+        $actions_remaining = $player_row['sac_actions'];
+        $action_name = $this->action_names[$action_color];
+        //return array(
+        //    'action_name' => 'temp action name',
+        //    'actions_remaining' => 'temp action count'
+        //);
+        return array(
+            'action_name' => $action_name,
+            'actions_remaining' => $actions_remaining
+        );
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
@@ -689,7 +750,7 @@ class binaryHomeworlds extends Table {
         $this->gamestate->nextState('trans_end_turn');
     }
 
-    function st_after_sac_action(){
+    function st_after_sacrifice_action(){
         // TODO check for catastrophes and let player choose one
         //$this->get_all_overpopulations();
         $this->gamestate->nextState('trans_end_turn');
