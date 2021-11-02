@@ -183,7 +183,7 @@ Hostile elements are controlled by the enemy and should appear on the left.
     filter:drop-shadow(15px -15px 10px indigo);
 }
 [empower=sacrifice]{
-    opacity:0.1;
+    width:0px;
 }
 [empower='1']{
     filter:drop-shadow(15px -15px 10px red);
