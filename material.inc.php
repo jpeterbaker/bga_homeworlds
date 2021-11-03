@@ -61,10 +61,5 @@ $this->system_names = array(
 );
 $this->name_count = count($this->system_names);
 
-$this->action_names = array(
-    1=>'capture',
-    2=>'move',
-    3=>'build',
-    4=>'trade'
-);
+$this->action_names = ['capture','move','build','trade'];
 

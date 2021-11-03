@@ -45,7 +45,7 @@ function (dojo, declare) {
             ///////////////////
             // Create pieces //
             ///////////////////
-            var color,pipsnum;
+            var colornum,pipsnum;
             var params;
             var piece_id,stack_id;
             // Create bank pieces
@@ -102,13 +102,7 @@ function (dojo, declare) {
             //stacks.connect('onclick',this,'stack_selected_creation' );
             // but then this.disconnect wouldn't work
         },
-
         onEntering_after_free: function(args){
-            this.unempower_all(); // TODO figure out the best place to put this
-            if(!this.isCurrentPlayerActive())
-                return
-        },
-        onEntering_after_sacrifice_action: function(args){
             this.unempower_all(); // TODO figure out the best place to put this
             if(!this.isCurrentPlayerActive())
                 return
@@ -119,33 +113,8 @@ function (dojo, declare) {
                 return
             var ships = dojo.query('.ship.friendly');
             ships.addClass('selectable');
-            this.connectClass(
-                'selectable',
-                'onclick',
-                function(evt){
-                    evt.preventDefault();
-                    dojo.stopEvent(evt);
-                    this.ship_empowered(evt.currentTarget);
-                }
-            );
+            this.connectClass('selectable','onclick','free_ship_selected');
         },
-
-        onEntering_get_sacrifice_action: function(args){
-            if(!this.isCurrentPlayerActive())
-                return
-            var ships = dojo.query('.ship.friendly');
-            ships.addClass('selectable');
-            this.connectClass(
-                'selectable',
-                'onclick',
-                function(evt){
-                    evt.preventDefault();
-                    dojo.stopEvent(evt);
-                    this.ship_empowered(evt.currentTarget,args.color);
-                }
-            );
-        },
-
         onEntering_client_get_power: function(args){
             if(!this.isCurrentPlayerActive())
                 return
@@ -155,19 +124,8 @@ function (dojo, declare) {
             // Candidates for empowering technology
             var candidates = dojo.query('.star,.friendly.ship',systemnode);
             candidates.addClass('selectable');
-            this.connectClass(
-                'selectable',
-                'onclick',
-                function(evt){
-                    evt.preventDefault();
-                    dojo.stopEvent(evt);
-                    var shipnode = evt.currentTarget;
-                    var powernode = evt.currentTarget;
-                    var color = powernode.getAttribute('ptype').split('_')[0];
-                    this.power_selected(color);
-                });
+            this.connectClass('selectable','onclick','power_selected');
         },
-
         onEntering_client_get_target: function(args){
             if(!this.isCurrentPlayerActive())
                 return
@@ -525,31 +483,35 @@ function (dojo, declare) {
             );
         },
 
-        ship_empowered: function(shipnode,color=null){
-            // Free action
-            if(color == null){
-                shipnode.setAttribute('empower','pending');
-                this.setClientState(
-                    'client_get_power',
-                    {
-                        descriptionmyturn :
-                        '${you} must choose a star or friendly ship in the same system.'
-                    }
-                );
-            }
-            else{
-                shipnode.setAttribute('empower',color);
-                this.power_selected(color);
-            }
+        free_ship_selected: function(evt){
+            evt.preventDefault();
+            dojo.stopEvent(evt);
+            var shipnode = evt.currentTarget;
+            shipnode.setAttribute('empower','pending');
+            this.setClientState(
+                'client_get_power',
+                {
+                    descriptionmyturn :
+                    '${you} must choose a star or friendly ship in the same system.'
+                }
+            );
+            // Set "empower" to "pending" AFTER changing state to
+            // apply the empower style last (and have css apply it)
+            shipnode.setAttribute('empower','pending');
         },
 
-        power_selected: function(color){
+        power_selected: function(evt){
+            evt.preventDefault();
+            dojo.stopEvent(evt);
+            // Piece with the chosen technology
+            var powernode = evt.currentTarget;
+            var colornum = powernode.getAttribute('ptype').split('_')[0];
             // The ship being empowered
             var empowerednode = dojo.query('[empower]')[0];
-            empowerednode.setAttribute('empower',color);
-            if(color==3){
+            empowerednode.setAttribute('empower',colornum);
+            if(colornum==3){
                 // Build
-                // The color is green, so no target needs to be chosen, and we're done here
+                // The color is green, so not target needs to be chosen, and we're done here
                 this.ajaxcallwrapper(
                     'act_power_action',
                     {

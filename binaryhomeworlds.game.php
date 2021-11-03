@@ -339,7 +339,6 @@ class binaryHomeworlds extends Table {
     }
 
     // Ensure that current player has the right to empower piece_id with power
-    // If a sacrifice turn is in progress, decrement the available actions counter
     function validate_power_action($power,$ship_id){
         self::checkAction('act_power_action');
         $player_id = $this->getActivePlayerId();
@@ -354,19 +353,12 @@ class binaryHomeworlds extends Table {
                 self::_("You can only empower your own ships."));
         }
 
-        // Check sacrifice power availability
-        $player_row = $this->get_player_row($player_id);
-        if($player_row['sac_color'] == $power && $player_row['sac_actions'] > 0){
-            $sql = 'UPDATE player
-                SET sac_actions='.($player_row['sac_actions']-1).'
-                WHERE player_id='.$player_row['player_id'];
-            self::DbQuery($sql);
-            $this->say('decremented actions remaining');
-            return;
-        }
-
-        // Check free power availability
         $ship = $result[$ship_id];
+        
+        // TODO If a sacrifice is in progress and it makes sense, return
+        // There's a risk of duplicating queries here if you decrement the number of sacrifice actions available in the calling function
+
+        // Check power availability
         $sql = 'SELECT piece_id FROM Pieces
             WHERE system_id='.$ship['system_id'].'
             AND (owner_id='.$player_id.' OR owner_id IS NULL)';
@@ -396,9 +388,8 @@ class binaryHomeworlds extends Table {
         );
     }
 
-    function get_player_row($player_id=NULL){
-        if(is_null($player_id))
-            $player_id = $this->getCurrentPlayerId();
+    function get_player_row(){
+        $player_id = $this->getCurrentPlayerId();
         $sql = 'SELECT * FROM player WHERE player_id='.$player_id;
         $result = self::getCollectionFromDb($sql);
         // We  have to do it this way since player_no is primary key
@@ -453,19 +444,6 @@ class binaryHomeworlds extends Table {
         );
         $this->gamestate->nextState('trans_after_creation');
     }
-
-    // Decide how to transition after a power action
-    function after_action_transition(){
-        $player_row = $this->get_player_row();
-
-        // It was a free action
-        if(is_null($player_row['sac_color']))
-            $this->gamestate->nextState('trans_after_free');
-        // It was a sacrifice action
-        else
-            $this->gamestate->nextState('trans_after_sacrifice_action');
-    }
-
     function capture($piece_id,$capture_id){
         $this->validate_power_action(1,$piece_id);
         $attack_ship = $this->get_piece_row($piece_id);
@@ -501,7 +479,7 @@ class binaryHomeworlds extends Table {
                 'target_id'   => $capture_id
             )
         );
-        $this->after_action_transition();
+        $this->gamestate->nextState('trans_after_free');
     }
 
     function move($ship_id,$system_id){
@@ -542,7 +520,7 @@ class binaryHomeworlds extends Table {
         if($this->is_empty($old_system_id))
             $this->fade($old_system_id);
 
-        $this->after_action_transition();
+        $this->gamestate->nextState('trans_after_free');
     }
 
     function fade($system_id){
@@ -632,7 +610,7 @@ class binaryHomeworlds extends Table {
                 'ship_id'     => $new_ship['piece_id']
             )
         );
-        $this->after_action_transition();
+        $this->gamestate->nextState('trans_after_free');
     }
 
     function trade($ship_id,$color_num){
@@ -656,7 +634,7 @@ class binaryHomeworlds extends Table {
                 'new_ship_id' => $new_ship_id
             )
         );
-        $this->after_action_transition();
+        $this->gamestate->nextState('trans_after_free');
     }
 
     function sacrifice($ship_id){
@@ -730,10 +708,13 @@ class binaryHomeworlds extends Table {
         $action_color = $player_row['sac_color'];
         $actions_remaining = $player_row['sac_actions'];
         $action_name = $this->action_names[$action_color];
+        //return array(
+        //    'action_name' => 'temp action name',
+        //    'actions_remaining' => 'temp action count'
+        //);
         return array(
             'action_name' => $action_name,
-            'actions_remaining' => $actions_remaining,
-            'color' => $action_color
+            'actions_remaining' => $actions_remaining
         );
     }
 
@@ -772,17 +753,11 @@ class binaryHomeworlds extends Table {
     function st_after_sacrifice_action(){
         // TODO check for catastrophes and let player choose one
         //$this->get_all_overpopulations();
-        $player_row = $this->get_player_row();
-        if($player_row['sac_actions'] > 0)
-            $this->gamestate->nextState('trans_get_sacrifice_action');
-        else
-            $this->gamestate->nextState('trans_end_turn');
+        $this->gamestate->nextState('trans_end_turn');
     }
 
     function st_end_turn(){
-        ////////////////////
-        //  Check for win //
-        ////////////////////
+        //  Check for win
         $sql = 'SELECT system_id,homeplayer_id FROM Systems
             WHERE homeplayer_id IS NOT NULL';
         $homeworlds = self::getCollectionFromDb($sql);
@@ -814,13 +789,6 @@ class binaryHomeworlds extends Table {
             $this->gamestate->nextState('trans_endGame');
             return;
         }
-        ///////////////////////
-        // Sacrifice cleanup //
-        ///////////////////////
-        $sql = 'UPDATE player
-            SET sac_color=NULL,
-                sac_actions=NULL';
-        self::DbQuery($sql);
 
         $this->activeNextPlayer();
         $this->gamestate->nextState('trans_get_free');
