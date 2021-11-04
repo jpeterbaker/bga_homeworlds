@@ -93,7 +93,6 @@ $machinestates = array(
             'act_catastrophe',
             'act_pass'
         ),
-        'args' => 'args_want_free',
         'transitions' => array(
             'trans_after_power_action' => 21,
             'trans_want_sacrifice_action' => 12,
