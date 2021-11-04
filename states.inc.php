@@ -73,7 +73,7 @@ $machinestates = array(
     // Get player input //
     //////////////////////
     10 => array(
-        'name' => 'get_creation',
+        'name' => 'want_creation',
         'description' => clienttranslate('${actplayer} must create a homeworld.'),
         'descriptionmyturn' => clienttranslate('${you} must choose a homestar.'),
         'type' => 'activeplayer',
@@ -83,35 +83,56 @@ $machinestates = array(
     // Get free action, sacrifice, catastrophe, or pass
     11 => array(
         // TODO an args function should provide catastrophe options
-        'name' => 'get_free',
+        'name' => 'want_free',
         'description' => clienttranslate('${actplayer} must empower or sacrifice a ship.'),
         'descriptionmyturn' => clienttranslate('${you} must choose a ship.'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',
             'act_sacrifice',
+            'act_catastrophe',
             'act_pass'
         ),
+        'args' => 'args_want_free',
         'transitions' => array(
-            'trans_after_free' => 21,
-            'trans_get_sacrifice_action' => 12,
+            'trans_after_power_action' => 21,
+            'trans_want_sacrifice_action' => 12,
+            'trans_after_catastrophe' => 23,
             'trans_pass' => 30
         )
     ),
     // Get sac action, catastrophe, or pass
     12 => array(
         // TODO an args function should provide catastrophe options
-        'name' => 'get_sacrifice_action',
+        'name' => 'want_sacrifice_action',
         'description' => clienttranslate('${actplayer} must ${action_name} a ship (${actions_remaining} actions remaining).'),
         'descriptionmyturn' => clienttranslate('${you} must choose a ship to ${action_name} (${actions_remaining} actions remaining).'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',
+            'act_catastrophe',
             'act_pass'
         ),
-        'args' => 'args_get_sacrifice_action',
+        'args' => 'args_want_sacrifice_action',
         'transitions' => array(
-            'trans_after_sacrifice_action' => 22,
+            'trans_after_power_action' => 21,
+            'trans_after_catastrophe' => 23,
+            'trans_pass' => 30
+        )
+    ),
+    13 => array(
+        // TODO an args function should provide catastrophe options
+        'name' => 'want_catastrophe',
+        'description' => clienttranslate('${actplayer} may cause a catastrophe.'),
+        'descriptionmyturn' => clienttranslate('${you} may cause a catastrophe.'),
+        'type' => 'activeplayer',
+        'possibleactions' => array(
+            'act_catastrophe',
+            'act_pass'
+        ),
+        'args' => 'args_want_catastrophe',
+        'transitions' => array(
+            'trans_after_catastrophe' => 23,
             'trans_pass' => 30
         )
     ),
@@ -123,26 +144,29 @@ $machinestates = array(
         'type' => 'game',
         'action' => 'st_after_creation',
         'transitions' => array(
-            'trans_get_creation' => 10 ,
-            'trans_get_free' => 11
+            'trans_want_creation' => 10 ,
+            'trans_want_free' => 11
         )
     ),
     21 => array(
-        'name' => 'after_free',
+        'name' => 'after_power_action',
         'type' => 'game',
-        'action' => 'st_after_free',
+        'action' => 'st_after_power_action',
         'transitions' => array(
-            // TODO Allow transition to get_cat state
-            'trans_end_turn' => 30
+            'trans_end_turn' => 30,
+            'trans_want_sacrifice_action' => 12,
+            'trans_want_catastrophe' => 13
         )
     ),
-    22 => array(
-        'name' => 'after_sacrifice_action',
+    23 => array(
+        'name' => 'after_catastrophe',
         'type' => 'game',
-        'action' => 'st_after_sacrifice_action',
+        'action' => 'st_after_catastrophe',
         'transitions' => array(
-            'trans_get_sacrifice_action' => 12,
-            'trans_end_turn' => 30
+            'trans_end_turn' => 30,
+            'trans_want_sacrifice_action' => 12,
+            'trans_want_catastrophe' => 13,
+            'trans_want_free' => 11
         )
     ),
     30 => array(
@@ -150,11 +174,10 @@ $machinestates = array(
         'type' => 'game',
         'action' => 'st_end_turn',
         'transitions' => array(
-            'trans_get_free' => 11 ,
+            'trans_want_free' => 11 ,
             'trans_endGame' => 99
         )
     ),
-
     // Final state
     // Please do not modify and do not overload action/args methods
     99 => array(

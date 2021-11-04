@@ -1,0 +1,98 @@
+25,29c25,30
+<         //  Here, you can assign labels to global variables you are using for this game.
+<         //  You can use any number of global variables with IDs between 10 and 99.
+<         //  If your game has options (variants), you also have to associate here a label to
+<         //  the corresponding ID in gameoptions.inc.php.
+<         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
+---
+>         //     Here, you can assign labels to global variables you are using for this game.
+>         //     You can use any number of global variables with IDs between 10 and 99.
+>         //     If your game has options (variants), you also have to associate here a label to
+>         //     the corresponding ID in gameoptions.inc.php.
+>         // Note: afterwards, you can get/set the global variables with
+>         // getGameStateValue/setGameStateInitialValue/setGameStateValue
+32,36d32
+<         self::initGameStateLabels( array( 
+<             'used_free'         => 11,
+<             'sacrifice_color'   => 12,
+<             'sacrifice_actions' => 13
+<         ));
+83a80,81
+>         self::activeNextPlayer();
+>         return;
+84a83,98
+>         // This is more convenient than a DB table
+>         // Each global variable needs an integer label
+> /*
+>         self::initGameStateLabels( array( 
+>             'used_free'         => 11,
+>             'sacrifice_color'   => 12,
+>             'sacrifice_actions' => 13
+>         ));
+>         // Change used_free to 1 when free move has been used
+>         // (This flag is needed in after_cat state to determine
+>         // whether to transition to want_free or want_cat if there has been
+>         // no sacrifice)
+>         self::setGameStateInitialValue('used_free'  ,0);
+>         // Color zero indicates no sacrifice has occurred
+>         self::setGameStateInitialValue('sacrifice_color'  ,0);
+>         self::setGameStateInitialValue('sacrifice_actions',0);
+119,127d132
+< 
+<         // Change used_free to 1 when free move has been used
+<         // (This flag is needed in after_cat state to determine
+<         // whether to transition to want_free or want_cat if there has been
+<         // no sacrifice)
+<         self::setGameStateInitialValue('used_free'  ,0);
+<         // Color zero indicates no sacrifice has occurred
+<         self::setGameStateInitialValue('sacrifice_color'  ,0);
+<         self::setGameStateInitialValue('sacrifice_actions',0);
+128a134
+> /*
+129a136
+> //*/
+226a234,236
+>     function statestate(){
+>         $this->say('Game is in state "'.$this->gamestate->state()['name'].'"');
+>     }
+346a357
+>     // If a sacrifice turn is in progress, decrement the available actions counter
+417,418c428,430
+<     function get_player_row(){
+<         $player_id = $this->getCurrentPlayerId();
+---
+>     function get_player_row($player_id=NULL){
+>         if(is_null($player_id))
+>             $player_id = $this->getCurrentPlayerId();
+472a485
+> 
+693c706
+<         $this->gamestate->nextState('trans_want_sacrifice_action');
+---
+>         $this->gamestate->nextState('want_sacrifice_action');
+721,722c734,735
+<     function args_want_sacrifice_action(){
+<         $action_color = self::getGameStateValue('sacrifice_color');
+---
+>     function args_get_sacrifice_action(){
+>         $action_color      = self::getGameStateValue('sacrifice_color');
+725,728d737
+<         //return array(
+<         //    'action_name' => 'temp action name',
+<         //    'actions_remaining' => 'temp action count'
+<         //);
+731c740,741
+<             'actions_remaining' => $actions_remaining
+---
+>             'actions_remaining' => $actions_remaining,
+>             'color' => $action_color
+770c780,782
+<         //  Check for win
+---
+>         ////////////////////
+>         //  Check for win //
+>         ////////////////////
+801a814,816
+>         ////////////////////
+>         // Global cleanup //
+>         ////////////////////
