@@ -81,8 +81,13 @@ function (dojo, declare) {
         // You can use this method to perform user interface changes.
         onEnteringState: function( stateName, args ) {
             console.log('Entering state: ' + stateName, args);
+            // Current player saves most recent info from server
+            // to make it easier to cancel partial actions from client states
+            // All server-side player-decision states start with "want"
+            if(this.isCurrentPlayerActive() && stateName.startsWith('want'))
+                this.saveargs(args);
             // Call appropriate method
-            var methodName = "onEntering_" + stateName;
+            var methodName = 'onEntering_' + stateName;
             if (this[methodName] !== undefined)
                 this[methodName](args.args);
         },
@@ -117,7 +122,6 @@ function (dojo, declare) {
         onEntering_want_sacrifice_action: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            console.log('sac empowering',args.color);
             var ships = dojo.query('.ship.friendly');
             ships.addClass('selectable');
             this.connectClass(
@@ -206,6 +210,7 @@ function (dojo, declare) {
             var methodName = "onLeaving_" + stateName;
             if (this[methodName] !== undefined)
                 this[methodName]();
+            console.log('completed ',methodName);
         },
 
         onLeaving_want_creation: function(){
@@ -247,14 +252,25 @@ function (dojo, declare) {
         // with the idea that you'll have so many buttons that
         // this deserves its own function
         onUpdateActionButtons: function( stateName, args ) {
-            console.log( 'onUpdateActionButtons: '+stateName );
+            console.log('update buttons args ',args);
             if( this.isCurrentPlayerActive() ) {
-                switch( stateName ){
+                switch(stateName){
                     case 'client_want_power':
-                        this.addActionButton(
+						this.addActionButton(
                             'sacrifice_button',
                             _('Sacrifice ship'),
                             'sacrifice_button_selected'
+                        );
+						// NO BREAK
+						// The client_want_power state gets both
+                        // a sacrifice and cancel button
+                    case 'client_want_target':
+                        this.addActionButton(
+                            'cancel_button',
+                            _('Cancel'),
+                            function(evt){
+                                this.cancel_action();
+                            }
                         );
                         break;
                 }
@@ -263,6 +279,16 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Utility methods
+        saveargs: function(args){
+            // args needs to be deeply copied because
+            // it appears to be overwritten on state change
+            this['latest_args'] = this.deepcopy(args);
+        },
+
+        deepcopy: function(x){
+            // Not fast, but easy to write
+            return JSON.parse(JSON.stringify(x));
+        },
 
         put_in_bank: function(piecenode){
             dojo.removeClass(piecenode,'friendly hostile star ship overpopulated');
@@ -565,6 +591,22 @@ function (dojo, declare) {
                     ship_id:  piecenode.id.split('_')[1]
                 }
             );
+        },
+
+        cancel_action(){
+            this.deselect_all();
+            this.unempower_all();
+            args = this['latest_args'];
+            console.log('cancel got args ',args);
+            if(args.args === null || args.args.actions_remaining === undefined){
+                console.log('It appears that there has been no sacrifice');
+                this.setClientState('want_free',args);
+                console.log('Finished setting state in cancel action');
+            }
+            else{
+                console.log('It appears that there HAS been a sacrifice');
+                //this.setClientState('want_sacrifice_action',args);
+            }
         },
 
         empower_ship: function(shipnode,color=null){

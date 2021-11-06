@@ -169,6 +169,7 @@ Hostile elements are controlled by the enemy and should appear on the left.
     background-color:rgba(255,255,255,0.3);
 }
 .selectable.ship:not([empower]):not(.hostile),.selectable.star{
+    /* TODO try box-shadow */
     filter:drop-shadow(15px -15px 10px black);
 }
 .selectable.ship.friendly:hover,.selectable.star:hover{
