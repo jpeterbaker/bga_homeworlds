@@ -291,11 +291,24 @@ class binaryHomeworlds extends Table {
     }
 
     // Put the piece with the given id into the bank
-    function put_in_bank($piece_id){
-        $sql = 'UPDATE Pieces
+    function put_in_bank($piece_ids){
+        if(is_int($piece_ids)){
+            $sql = 'UPDATE Pieces
+                SET system_id=NULL,
+                    owner_id=NULL
+                WHERE piece_id='.$piece_ids;
+            self::DbQuery($sql);
+            return;
+        }
+        // Construct a query to return all the pieces
+        $sql = 'UPDATE Piecs
             SET system_id=NULL,
                 owner_id=NULL
-            WHERE piece_id='.$piece_id;
+            WHERE ';
+        foreach($piece_ids as $piece_id)
+            $sql .= 'piece_id='.$piece_id.' OR ';
+        // Remove final ' OR '
+        $sql=substr($sql,0,-4);
         self::DbQuery($sql);
     }
 
@@ -691,6 +704,44 @@ class binaryHomeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_want_sacrifice_action');
+    }
+
+    function catastrophe($system_id,$color){
+        self::checkAction('act_catastrophe');
+
+        $player_name = $this->getActivePlayerName();
+
+        if($this->is_empty($old_system_id))
+            $this->fade($old_system_id);
+
+        $sql = 'SELECT piece_id FROM Systems
+            WHERE system_id='.$system_id.'
+                AND color='.$color;
+        $piece_ids = array_keys(self::getCollectionFromDb($sql));
+
+        // It takes four to make a catastrophe
+        if(count($piece_ids)<4){
+            throw new BgaVisibleSystemException(
+                self::_('Catastrophes require four same-colored pieces in a system.')
+            );
+        }
+
+        $this->put_in_bank($piece_ids);
+
+        $system_name = $this->get_system_row($systeim_id)['name'];
+        $color_name  = $this->color_names[$color-1];
+
+        self::notifyAllPlayers('notif_catastrophe',
+            clienttranslate('${player_name} triggers a ${color_name} catastrophe in ${system_name}.'),
+            array(
+                'player_name' => $player_name,
+                'system_name' => $system_name,
+                'color_name'  => $color_name,
+                'system_id'   => $system_id,
+                'color'       => $color
+            )
+        );
+        $this->gamestate->nextState('trans_after_catastrophe');
     }
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments

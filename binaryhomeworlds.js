@@ -201,6 +201,24 @@ function (dojo, declare) {
             }
         },
 
+        catastrophe_targets: function(){
+            var systems = dojo.query('.system');
+            var colors = ['red','yellow','green','blue'];
+            var targets = dojo.NodeList();
+
+            var system,i,j,color,result;
+            for(i=0;i<4;j++){
+                color = colors[i];
+                for(j=0;j<systems.length;i++){
+                    system = systems[j];
+                    result = dojo.query('.'+color,system);
+                    if(result.length>=4)
+                        targets.concat(result);
+                }
+            }
+            return targets;
+        },
+
         // onLeavingState:
         // This method is called each time we are leaving a game state.
         // You can use this method to perform user interface changes.
@@ -253,28 +271,48 @@ function (dojo, declare) {
         // this deserves its own function
         onUpdateActionButtons: function( stateName, args ) {
             console.log('update buttons args ',args);
-            if( this.isCurrentPlayerActive() ) {
-                switch(stateName){
-                    case 'client_want_power':
-						this.addActionButton(
-                            'sacrifice_button',
-                            _('Sacrifice ship'),
-                            'sacrifice_button_selected'
-                        );
-						// NO BREAK
-						// The client_want_power state gets both
-                        // a sacrifice and cancel button
-                    case 'client_want_target':
-                        this.addActionButton(
-                            'cancel_button',
-                            _('Cancel'),
-                            function(evt){
-                                this.cancel_action();
-                            }
-                        );
-                        break;
-                }
+            // Only active players get buttons
+            if(!this.isCurrentPlayerActive())
+                return;
+            // Only choice states get buttons
+            if(!stateName.startsWith('want') && !stateName.startsWith('client'))
+                return;
+            // Server choice states get pass and catastrophe buttons
+            if(stateName.startsWith('want')){
+                this.addActionButton(
+                    'catastrophe_button',
+                    _('Trigger catastrophe'),
+                    'catastrophe_button_selected'
+                );
+                this.addActionButton(
+                    'pass_button',
+                    _('Pass'),
+                    'pass_button_selected'
+                );
+                return;
             }
+            
+            switch(stateName){
+                case 'client_want_power':
+                    this.addActionButton(
+                        'sacrifice_button',
+                        _('Sacrifice ship'),
+                        'sacrifice_button_selected'
+                    );
+                    // NO BREAK
+                    // The client_want_power state gets both
+                    // a sacrifice and cancel button
+                case 'client_want_target':
+                    this.addActionButton(
+                        'cancel_button',
+                        _('Cancel'),
+                        function(evt){
+                            this.cancel_action();
+                        }
+                    );
+                    break;
+            }
+            
         },
 
         ///////////////////////////////////////////////////
@@ -727,6 +765,10 @@ function (dojo, declare) {
                 }
             );
         },
+        catastrophe_button_selected: function(args=null){
+        },
+        pass_button_selected: function(args=null){
+        },
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
@@ -754,7 +796,8 @@ function (dojo, declare) {
             dojo.subscribe('notif_move',    this,'move_from_notif');
             dojo.subscribe('notif_fade',    this,'fade_from_notif');
 
-            dojo.subscribe('notif_sacrifice',    this,'sacrifice_from_notif');
+            dojo.subscribe('notif_sacrifice',   this,'sacrifice_from_notif');
+            dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
         },
 
         ignore_notif: function(notif){
@@ -877,6 +920,16 @@ function (dojo, declare) {
             var args = notif.args;
             var shipnode  = document.getElementById('piece_'+args.ship_id);
             this.put_in_bank(shipnode);
+        },
+        catastrophe_from_notif: function(notif){
+            console.log('Catastrophe-ing');
+            var args = notif.args;
+            var system = document.getElementById('system_'+args.system_id);
+            var color_name = this.get_color_name(args.color);
+
+            var pieces = dojo.query('.'+color_name,system);
+            for(var i=0;i<pieces.length;i++)
+                this.put_in_bank(pieces[i]);
         }
    });
 });
