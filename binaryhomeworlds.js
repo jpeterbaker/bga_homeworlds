@@ -120,10 +120,14 @@ function (dojo, declare) {
         },
 
         onEntering_want_sacrifice_action: function(args){
+            console.log('entering want sacrifice action handling function');
             if(!this.isCurrentPlayerActive())
                 return
+            console.log('getting ships');
             var ships = dojo.query('.ship.friendly');
+            console.log('adding selectability');
             ships.addClass('selectable');
+            console.log('connecting function');
             this.connectClass(
                 'selectable',
                 'onclick',
@@ -133,6 +137,7 @@ function (dojo, declare) {
                     this.empower_ship(evt.currentTarget,args.color);
                 }
             );
+            console.log('finishing want sacrifice action handling function');
         },
 
         onEntering_client_want_power: function(args){
@@ -320,7 +325,11 @@ function (dojo, declare) {
         saveargs: function(args){
             // args needs to be deeply copied because
             // it appears to be overwritten on state change
-            this['latest_args'] = this.deepcopy(args);
+            //this['latest_args'] = this.deepcopy(args);
+            this['latest_args'] = {
+                descriptionmyturn:args.descriptionmyturn,
+                args:args.args
+            };
         },
 
         deepcopy: function(x){
@@ -635,7 +644,6 @@ function (dojo, declare) {
             this.deselect_all();
             this.unempower_all();
             args = this['latest_args'];
-            console.log('cancel got args ',args);
             if(args.args === null || args.args.actions_remaining === undefined){
                 console.log('It appears that there has been no sacrifice');
                 this.setClientState('want_free',args);
@@ -643,8 +651,9 @@ function (dojo, declare) {
             }
             else{
                 console.log('It appears that there HAS been a sacrifice');
-                //this.setClientState('want_sacrifice_action',args);
+                this.setClientState('want_sacrifice_action',args);
             }
+            console.log('ending cancel');
         },
 
         empower_ship: function(shipnode,color=null){

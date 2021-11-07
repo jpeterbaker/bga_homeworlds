@@ -292,7 +292,7 @@ class binaryHomeworlds extends Table {
 
     // Put the piece with the given id into the bank
     function put_in_bank($piece_ids){
-        if(is_int($piece_ids)){
+        if(!is_array($piece_ids)){
             $sql = 'UPDATE Pieces
                 SET system_id=NULL,
                     owner_id=NULL
@@ -300,6 +300,8 @@ class binaryHomeworlds extends Table {
             self::DbQuery($sql);
             return;
         }
+        if(count($piece_ids) == 0)
+            return;
         // Construct a query to return all the pieces
         $sql = 'UPDATE Piecs
             SET system_id=NULL,
@@ -693,6 +695,7 @@ class binaryHomeworlds extends Table {
         // since act_sacrifice is only available in want_free state
 
         $this->put_in_bank($ship_id);
+
         self::setGameStateValue('sacrifice_color',$ship['color']);
         self::setGameStateValue('sacrifice_actions',$ship['pips']);
 
