@@ -42,7 +42,7 @@ class action_binaryhomeworlds extends APP_GameAction {
         $star2_id = self::getArg('star2_id','AT_posint',true);
         $ship_id  = self::getArg('ship_id' ,'AT_posint',true);
         $this->game->creation($star1_id,$star2_id,$ship_id);
-        self::ajaxResponse( );
+        self::ajaxResponse();
     }
 
     public function act_power_action(){
@@ -74,14 +74,22 @@ class action_binaryhomeworlds extends APP_GameAction {
                 $this->game->trade($piece_id,$color_num);
                 break;
         }
-        self::ajaxResponse( );
+        self::ajaxResponse();
     }
 
     public function act_sacrifice(){
         self::setAjaxMode();
         $ship_id = self::getArg('ship_id','AT_posint',true);
         $this->game->sacrifice($ship_id);
-        self::ajaxResponse( );
+        self::ajaxResponse();
+    }
+
+    public function act_catastrophe(){
+        self::setAjaxMode();
+        $system_id = self::getArg('system_id','AT_posint',true);
+        $color = self::getArg('color','AT_posint',true);
+        //$this->game->catastrophe($system_id,$color);
+        self::ajaxResponse();
     }
 }
 

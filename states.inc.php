@@ -105,7 +105,7 @@ $machinestates = array(
         // TODO an args function should provide catastrophe options
         'name' => 'want_sacrifice_action',
         'description' => clienttranslate('${actplayer} must ${action_name} a ship (${actions_remaining} actions remaining).'),
-        'descriptionmyturn' => clienttranslate('${you} must choose a ship to ${action_name} (${actions_remaining} actions remaining).'),
+        'descriptionmyturn' => clienttranslate('${you} must choose a ship to empower (${actions_remaining} ${action_name} actions remaining).'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',

@@ -79,15 +79,15 @@ function (dojo, declare) {
         // onEnteringState:
         // This method is called each time we are entering into a new game state.
         // You can use this method to perform user interface changes.
-        onEnteringState: function( stateName, args ) {
-            console.log('Entering state: ' + stateName, args);
+        onEnteringState: function( state_name, args ) {
+            console.log('Entering state: ' + state_name, args);
             // Current player saves most recent info from server
-            // to make it easier to cancel partial actions from client states
+            // to make it easier to cancel partial actions from client states.
             // All server-side player-decision states start with "want"
-            if(this.isCurrentPlayerActive() && stateName.startsWith('want'))
-                this.saveargs(args);
+            if(this.isCurrentPlayerActive() && state_name.startsWith('want'))
+                this.set_turn_checkpoint(args,state_name);
             // Call appropriate method
-            var methodName = 'onEntering_' + stateName;
+            var methodName = 'onEntering_' + state_name;
             if (this[methodName] !== undefined)
                 this[methodName](args.args);
         },
@@ -172,6 +172,14 @@ function (dojo, declare) {
             this.connectClass('selectable','onclick','target_selected');
         },
 
+        onEntering_client_want_catastrophe_target: function(args){
+            if(!this.isCurrentPlayerActive())
+                return
+            var overpopulated = this.get_overpopulated_pieces();
+            overpopulated.addClass('selectable overpopulated');
+            this.connectClass('selectable','onclick','catastrophe_target_selected');
+        },
+
         power_targets: function(empowerednode,power){
             var system = empowerednode.parentNode;
             // Nodes to highlight
@@ -206,19 +214,21 @@ function (dojo, declare) {
             }
         },
 
-        catastrophe_targets: function(){
+        get_overpopulated_pieces: function(){
             var systems = dojo.query('.system');
-            var colors = ['red','yellow','green','blue'];
+            var colors = ['.red','.yellow','.green','.blue'];
             var targets = dojo.NodeList();
 
             var system,i,j,color,result;
-            for(i=0;i<4;j++){
+            for(i=0;i<4;i++){
                 color = colors[i];
-                for(j=0;j<systems.length;i++){
+                for(j=0;j<systems.length;j++){
                     system = systems[j];
-                    result = dojo.query('.'+color,system);
-                    if(result.length>=4)
-                        targets.concat(result);
+                    result = dojo.query(color,system);
+                    console.log(color,' ',system.id);
+                    if(result.length>=4){
+                        targets = targets.concat(result);
+                    }
                 }
             }
             return targets;
@@ -227,10 +237,10 @@ function (dojo, declare) {
         // onLeavingState:
         // This method is called each time we are leaving a game state.
         // You can use this method to perform user interface changes.
-        onLeavingState: function( stateName ) {
-            console.log( 'Leaving state: '+stateName );
+        onLeavingState: function( state_name ) {
+            console.log( 'Leaving state: '+state_name );
             // Call appropriate method
-            var methodName = "onLeaving_" + stateName;
+            var methodName = "onLeaving_" + state_name;
             if (this[methodName] !== undefined)
                 this[methodName]();
             console.log('completed ',methodName);
@@ -274,16 +284,16 @@ function (dojo, declare) {
         // "It's time to update action buttons" function
         // with the idea that you'll have so many buttons that
         // this deserves its own function
-        onUpdateActionButtons: function( stateName, args ) {
+        onUpdateActionButtons: function( state_name, args ) {
             console.log('update buttons args ',args);
             // Only active players get buttons
             if(!this.isCurrentPlayerActive())
                 return;
             // Only choice states get buttons
-            if(!stateName.startsWith('want') && !stateName.startsWith('client'))
+            if(!state_name.startsWith('want') && !state_name.startsWith('client'))
                 return;
             // Server choice states get pass and catastrophe buttons
-            if(stateName.startsWith('want')){
+            if(state_name.startsWith('want')){
                 this.addActionButton(
                     'catastrophe_button',
                     _('Trigger catastrophe'),
@@ -297,7 +307,7 @@ function (dojo, declare) {
                 return;
             }
             
-            switch(stateName){
+            switch(state_name){
                 case 'client_want_power':
                     this.addActionButton(
                         'sacrifice_button',
@@ -322,13 +332,28 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Utility methods
-        saveargs: function(args){
+
+        get_system: function(piecenode){
+            // Get the system node containing this piece
+            var par = piecenode.parentNode;
+            if(!par.id.startsWith('system')){
+                this.showMessage(
+                    _('Piece is not in a system.'),
+                    'error'
+                );
+                return null;
+            }
+            return par
+        },
+
+        set_turn_checkpoint: function(args,state_name){
             // args needs to be deeply copied because
             // it appears to be overwritten on state change
             //this['latest_args'] = this.deepcopy(args);
             this['latest_args'] = {
-                descriptionmyturn:args.descriptionmyturn,
-                args:args.args
+                state_name: state_name,
+                descriptionmyturn: args.descriptionmyturn,
+                args: args.args
             };
         },
 
@@ -644,16 +669,7 @@ function (dojo, declare) {
             this.deselect_all();
             this.unempower_all();
             args = this['latest_args'];
-            if(args.args === null || args.args.actions_remaining === undefined){
-                console.log('It appears that there has been no sacrifice');
-                this.setClientState('want_free',args);
-                console.log('Finished setting state in cancel action');
-            }
-            else{
-                console.log('It appears that there HAS been a sacrifice');
-                this.setClientState('want_sacrifice_action',args);
-            }
-            console.log('ending cancel');
+            this.setClientState(args.state_name,args);
         },
 
         empower_ship: function(shipnode,color=null){
@@ -698,6 +714,21 @@ function (dojo, declare) {
                 );
                 return;
             }
+        },
+
+        catastrophe_target_selected: function(evt){
+            evt.preventDefault();
+            dojo.stopEvent(evt);
+            var targetnode = evt.currentTarget;
+            var target_color = targetnode.getAttribute('ptype').split('_')[0];
+            var target_system = this.get_system(targetnode);
+            this.ajaxcallwrapper(
+                'act_catastrophe',
+                {
+                    system_id: target_system.id.split('_')[1],
+                    color: target_color
+                }
+            );
         },
 
         target_selected: function(evt){
@@ -764,7 +795,7 @@ function (dojo, declare) {
             }
         },
 
-        sacrifice_button_selected: function(args=null){
+        sacrifice_button_selected: function(){
             var shipnode = dojo.query('[empower]')[0];
             shipnode.setAttribute('empower','sacrifice');
             this.ajaxcallwrapper(
@@ -774,9 +805,15 @@ function (dojo, declare) {
                 }
             );
         },
-        catastrophe_button_selected: function(args=null){
+
+        catastrophe_button_selected: function(){
+            this.setClientState(
+                'client_want_catastrophe_target',
+                {descriptionmyturn:_('${you} may trigger a catastrophe.')}
+            );
         },
-        pass_button_selected: function(args=null){
+
+        pass_button_selected: function(){
         },
 
         ///////////////////////////////////////////////////
