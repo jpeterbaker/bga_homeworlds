@@ -41,6 +41,7 @@ function (dojo, declare) {
         */
         setup: function( gamedatas ) {
             console.log( "Starting game setup" );
+            return;
             console.log(gamedatas);
             ///////////////////
             // Create pieces //
@@ -120,14 +121,10 @@ function (dojo, declare) {
         },
 
         onEntering_want_sacrifice_action: function(args){
-            console.log('entering want sacrifice action handling function');
             if(!this.isCurrentPlayerActive())
                 return
-            console.log('getting ships');
             var ships = dojo.query('.ship.friendly');
-            console.log('adding selectability');
             ships.addClass('selectable');
-            console.log('connecting function');
             this.connectClass(
                 'selectable',
                 'onclick',
@@ -137,7 +134,6 @@ function (dojo, declare) {
                     this.empower_ship(evt.currentTarget,args.color);
                 }
             );
-            console.log('finishing want sacrifice action handling function');
         },
 
         onEntering_client_want_power: function(args){
@@ -225,7 +221,6 @@ function (dojo, declare) {
                 for(j=0;j<systems.length;j++){
                     system = systems[j];
                     result = dojo.query(color,system);
-                    console.log(color,' ',system.id);
                     if(result.length>=4){
                         targets = targets.concat(result);
                     }
@@ -243,7 +238,6 @@ function (dojo, declare) {
             var methodName = "onLeaving_" + state_name;
             if (this[methodName] !== undefined)
                 this[methodName]();
-            console.log('completed ',methodName);
         },
 
         onLeaving_want_creation: function(){
@@ -251,7 +245,6 @@ function (dojo, declare) {
         onLeaving_client_create_ship: function(){
             if(!this.isCurrentPlayerActive())
                 return
-            console.log('player active')
             var selectable = dojo.query('.selectable');
             selectable.removeClass('selectable');
             this.disconnectAll();
@@ -285,7 +278,7 @@ function (dojo, declare) {
         // with the idea that you'll have so many buttons that
         // this deserves its own function
         onUpdateActionButtons: function( state_name, args ) {
-            console.log('update buttons args ',args);
+            console.log('Update buttons args ',args);
             // Only active players get buttons
             if(!this.isCurrentPlayerActive())
                 return;
@@ -301,7 +294,7 @@ function (dojo, declare) {
                 );
                 this.addActionButton(
                     'pass_button',
-                    _('Pass'),
+                    _('End turn'),
                     'pass_button_selected'
                 );
                 return;
@@ -814,6 +807,7 @@ function (dojo, declare) {
         },
 
         pass_button_selected: function(){
+            this.ajaxcallwrapper('act_pass',{});
         },
 
         ///////////////////////////////////////////////////
@@ -844,6 +838,8 @@ function (dojo, declare) {
 
             dojo.subscribe('notif_sacrifice',   this,'sacrifice_from_notif');
             dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
+
+            dojo.subscribe('notif_pass', this,'ignore_notif');
         },
 
         ignore_notif: function(notif){
@@ -974,6 +970,7 @@ function (dojo, declare) {
             var color_name = this.get_color_name(args.color);
 
             var pieces = dojo.query('.'+color_name,system);
+            console.log('catastrophe-ing ',pieces);
             for(var i=0;i<pieces.length;i++)
                 this.put_in_bank(pieces[i]);
         }

@@ -88,7 +88,13 @@ class action_binaryhomeworlds extends APP_GameAction {
         self::setAjaxMode();
         $system_id = self::getArg('system_id','AT_posint',true);
         $color = self::getArg('color','AT_posint',true);
-        //$this->game->catastrophe($system_id,$color);
+        $this->game->catastrophe($system_id,$color);
+        self::ajaxResponse();
+    }
+
+    public function act_pass(){
+        self::setAjaxMode();
+        $this->game->pass();
         self::ajaxResponse();
     }
 }

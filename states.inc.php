@@ -82,10 +82,9 @@ $machinestates = array(
     ),
     // Get free action, sacrifice, catastrophe, or pass
     11 => array(
-        // TODO an args function should provide catastrophe options
         'name' => 'want_free',
-        'description' => clienttranslate('${actplayer} must empower or sacrifice a ship.'),
-        'descriptionmyturn' => clienttranslate('${you} must choose a ship.'),
+        'description' => clienttranslate('${actplayer} may empower or sacrifice a ship.'),
+        'descriptionmyturn' => clienttranslate('${you} may choose a ship.'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',
@@ -97,15 +96,14 @@ $machinestates = array(
             'trans_after_power_action' => 21,
             'trans_want_sacrifice_action' => 12,
             'trans_after_catastrophe' => 23,
-            'trans_pass' => 30
+            'trans_end_turn' => 30
         )
     ),
     // Get sac action, catastrophe, or pass
     12 => array(
-        // TODO an args function should provide catastrophe options
         'name' => 'want_sacrifice_action',
-        'description' => clienttranslate('${actplayer} must ${action_name} a ship (${actions_remaining} actions remaining).'),
-        'descriptionmyturn' => clienttranslate('${you} must choose a ship to empower (${actions_remaining} ${action_name} actions remaining).'),
+        'description' => clienttranslate('${actplayer} may ${action_name} a ship (${actions_remaining} actions remaining).'),
+        'descriptionmyturn' => clienttranslate('${you} may choose a ship to empower (${actions_remaining} ${action_name} actions remaining).'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',
@@ -116,7 +114,7 @@ $machinestates = array(
         'transitions' => array(
             'trans_after_power_action' => 21,
             'trans_after_catastrophe' => 23,
-            'trans_pass' => 30
+            'trans_end_turn' => 30
         )
     ),
     13 => array(
@@ -131,7 +129,7 @@ $machinestates = array(
         ),
         'transitions' => array(
             'trans_after_catastrophe' => 23,
-            'trans_pass' => 30
+            'trans_end_turn' => 30
         )
     ),
     ///////////////////

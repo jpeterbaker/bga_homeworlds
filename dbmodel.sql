@@ -10,13 +10,6 @@
 -- dbmodel.sql
 
 -- On Jonathan's computer, player schema described in ~/bga/player_schema.png
--- ALTER TABLE `player`
---     -- color of their sacrificed ship (1-4)
---     -- (NULL unless it's their turn and they've sacrificed a ship)
---     ADD `sac_color` TINYINT UNSIGNED DEFAULT NULL,
---     -- number of sacrificial actions remaining (1-3)
---     -- (NULL unless it's their turn and they've sacrificed a ship)
---     ADD `sac_actions` TINYINT UNSIGNED DEFAULT NULL;
 
 -- Each of the 36 pieces will be listed individually
 CREATE TABLE IF NOT EXISTS `Pieces` (
