@@ -59,16 +59,17 @@
     display:inline-block;
     margin:5px;
 }
-.system[homeplayer_id=none]{
-}
 /* A homeworld system with a non-none homeplayer_id attribute*/
 .system:not([homeplayer_id=none]){
     border:2px dashed black;
 }
-.system_container{
+.centerizer{
     text-align:center;
     display:block;
     border:2px solid blue;
+}
+.system_container{
+    display:inline-block;
 }
 
 /* All pieces use the same sprite background */
@@ -161,7 +162,7 @@ These terms will need to be generalized if 3+ player is implemented.
 .selectable{
     cursor:pointer;
 }
-.selectable.ship,.selectable.star:hover{
+.selectable.ship:hover,.selectable.star:hover{
     transform:translate(0px,-10px) rotate(var(--rotateAmount));
 }
 
@@ -243,5 +244,4 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
         transform: rotate(var(--rotateAmount)) translate(3px, 1px) scale(.95, .95);
     }
 }
-
 
