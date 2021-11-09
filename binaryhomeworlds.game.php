@@ -362,6 +362,10 @@ class binaryHomeworlds extends Table {
         return $this->array_key_first($result);
     }
 
+    function get_homeplayer($system_id){
+        return $this->get_system_row($system_id)['homeplayer_id'];
+    }
+
     // Ensure that current player has the right to empower piece_id with power
     function validate_power_action($power,$ship_id){
         self::checkAction('act_power_action');
@@ -440,7 +444,11 @@ class binaryHomeworlds extends Table {
         return $result[$this->array_key_first($result)];
     }
 
-    function is_empty($system_id){
+    function is_empty($system_id,$turn_over=false){
+        // If the turn is not over and it's a home system, it's not empty
+        if(!$turn_over && !is_null($this->get_homeplayer($system_id))){
+            return false;
+        }
         // Check for lack of ships
         $sql = 'SELECT piece_id FROM Pieces
             WHERE system_id='.$system_id.'
@@ -573,7 +581,7 @@ class binaryHomeworlds extends Table {
         // Notify client
         $system_name = $this->get_system_row($system_id)['system_name'];
         self::notifyAllPlayers('notif_fade',
-            clienttranslate('The ${old_system_name} system fades.'),
+            clienttranslate('${old_system_name} is forgotten.'),
             array(
                 'system_id' => $system_id,
                 'old_system_name' => $system_name
@@ -851,13 +859,16 @@ class binaryHomeworlds extends Table {
     }
 
     function st_end_turn(){
-        //  Check for win
         $sql = 'SELECT system_id,homeplayer_id FROM Systems
             WHERE homeplayer_id IS NOT NULL';
         $homeworlds = self::getCollectionFromDb($sql);
 
+        // Homeworlds fade
+        // Check for win
         $losers = [];
         foreach($homeworlds as $system_id => $system){
+            if($this->is_empty($system_id,true))
+                $this->fade($system_id);
             $homeplayer_id = $system['homeplayer_id'];
             $sql = 'SELECT piece_id FROM Pieces
                 WHERE system_id='.$system_id.'

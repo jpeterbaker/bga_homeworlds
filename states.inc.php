@@ -83,7 +83,7 @@ $machinestates = array(
     11 => array(
         'name' => 'want_free',
         'description' => clienttranslate('${actplayer} may empower or sacrifice a ship.'),
-        'descriptionmyturn' => clienttranslate('${you} may choose a ship.'),
+        'descriptionmyturn' => clienttranslate('${you} may choose a ship to empower or sacrifice.'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',

@@ -33,7 +33,6 @@ $this->system_names = array(
     'Alti',
     'Bleb',
     'Cemori',
-    /*
     'Dioj',
     'Ewarop',
     'Fost',
@@ -57,7 +56,6 @@ $this->system_names = array(
     'Xebd',
     'Yokrip',
     'Zeeha'
-    */
 );
 $this->name_count = count($this->system_names);
 

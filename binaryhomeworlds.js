@@ -31,7 +31,7 @@ function (dojo, declare) {
             // colony_assignments[size] will be the position (1,2, or 3)
             // where colonies with stars of the given size belong
             // (in a colony_container)
-            this.colony_assignments = null;
+            this.colony_assignments = {1:1,2:2,3:3};
         },
 
         /*
@@ -75,6 +75,9 @@ function (dojo, declare) {
                 player = gamedatas.players[player_id];
                 this['player_'+player.player_no] = player_id;
             }
+
+            this.setup_colony_assignments();
+
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
             console.log( "Ending game setup" );
@@ -362,6 +365,16 @@ function (dojo, declare) {
             return par
         },
 
+        // Set up the global variable this.colony_assignments
+        setup_colony_assignments: function(){
+            var homes = dojo.query('.system:not([homeplayer_id=none])');
+            if(homes.length<2)
+                // Creation is not finished
+                return;
+            console.log('making colony position assignments');
+            //this.colony_assignments = {1:null,2:null,3:null};
+        },
+
         set_turn_checkpoint: function(args,state_name){
             // args needs to be deeply copied because
             // it appears to be overwritten on state change
@@ -379,6 +392,9 @@ function (dojo, declare) {
         },
 
         put_in_bank: function(piecenode){
+            var systemnode=piecenode;
+            while(!systemnode.id.startsWith('system'))
+                systemnode = systemnode.parentNode;
             dojo.removeClass(piecenode,'friendly hostile star ship overpopulated');
             piecenode.removeAttribute('empower');
             dojo.addClass(piecenode,'banked');
@@ -387,14 +403,27 @@ function (dojo, declare) {
             var pips  = cnameSplit[1];
             var stacknode = document.getElementById('stack_'+color+'_'+pips);
             dojo.place(piecenode,stacknode);
+            // TODO be smarter about when this is done
+            // Re-sort the ships in this system
+            // and the systems within the row
+            this.on_system_change(systemnode);
         },
 
         // Make a system at setup from JSON object (creating new pieces)
         setup_system: function(system){
+            var star_size = null;
+            if(system.homeplayer_id == null){
+                // This is a colony, so find its star size
+                for(star_id in system.stars){
+                    star_size = system.stars[star_id].pips;
+                    break;
+                }
+            }
             var systemnode = this.place_system(
                 system.system_id,
                 system.system_name,
-                system.homeplayer_id
+                system.homeplayer_id,
+                star_size
             );
 
             var ship_id,star_id;
@@ -456,21 +485,25 @@ function (dojo, declare) {
             }
         },
 
-        place_ship: function(piecenode,owner_id,systemnode){
+        place_ship: function(piecenode,systemnode,owner_id=null){
             dojo.place(piecenode,systemnode);
             dojo.removeClass(piecenode,'banked');
             dojo.addClass(piecenode,'ship');
-            if(owner_id==this.get_bot_player())
-                dojo.addClass(piecenode,'friendly');
-            else
-                dojo.addClass(piecenode,'hostile');
+            // Owner may be changing
+            if(owner_id != null){
+                if(owner_id==this.get_bot_player())
+                    dojo.addClass(piecenode,'friendly');
+                else
+                    dojo.addClass(piecenode,'hostile');
+            }
+            this.on_system_change(systemnode);
         },
         place_star: function(piecenode,systemnode){
             dojo.place(piecenode,systemnode);
             dojo.removeClass(piecenode,'banked');
             dojo.addClass(piecenode,'star');
         },
-        place_system: function(system_id,system_name,homeplayer_id=null){
+        place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
             var params,par;
             if(homeplayer_id == null){
                 params = {
@@ -478,9 +511,15 @@ function (dojo, declare) {
                     system_name:system_name,
                     homeplayer_id:'none'
                 };
-                // The parent of a colony is the board
-                par = 'board';
-
+                if(star_size==null){
+                    this.showMessage(
+                        'Placing a colony with unknown star.',
+                        'error'
+                    );
+                    par = 'colony_container_1';
+                }
+                else
+                    par = 'colony_container_'+this.colony_assignments[star_size];
             }
             else{
                 params = {
@@ -502,9 +541,48 @@ function (dojo, declare) {
             return systemnode;
         },
 
+        // Make sure the correct friendly/hostile class is in place
+        on_system_change:function(systemnode){
+            console.log('system changed');
+            if(systemnode.getAttribute('homeplayer_id') != 'none')
+                // Homeworlds don't need these labels
+                return;
+            var top_player = this.get_top_player();
+            var bot_player = this.get_bot_player();
+            var pip_counts = {
+                friendly:0,
+                hostile:0
+            };
+            var ships = dojo.query('.ship',systemnode);
+            var size,ship;
+            for(var i=0;i<ships.length;i++){
+                ship = ships[i];
+                size = parseInt(ship.getAttribute('ptype').split('_')[1]);
+                if(dojo.hasClass(ship,'friendly'))
+                    pip_counts.friendly += size;
+                else
+                    pip_counts.hostile += size;
+            }
+            console.log(pip_counts);
+            if(pip_counts.friendly > pip_counts.hostile){
+                dojo.removeClass(systemnode,'hostile');
+                dojo.addClass(systemnode,'friendly');
+                console.log('hostile system');
+            }
+            else if(pip_counts.friendly < pip_counts.hostile){
+                dojo.removeClass(systemnode,'friendly');
+                dojo.addClass(systemnode,'hostile');
+                console.log('friendly system');
+            }
+            else{
+                // Pip count is equal, put it in the middle
+                dojo.removeClass(systemnode,'friendly hostile');
+                console.log('neither system');
+            }
+        },
+
         connected_systems: function(systemnode){
             // Get an array of connected system nodes and bank stacks
-            // TODO do this right
             var old_stars = dojo.query('.star',systemnode);
             var systems = dojo.query('.system');
             var i,j,k;
@@ -576,6 +654,11 @@ function (dojo, declare) {
             if(this.isSpectator)
                 return this.player_2;
             return this.player_id;
+        },
+        get_top_player: function(){
+            if(this.isSpectator || this.player_id != this.player_1)
+                return this.player_1;
+            return this.player_2;
         },
 
         deselect_all: function(){
@@ -670,8 +753,8 @@ function (dojo, declare) {
             var piecenode = children[children.length-1];
             this.place_ship(
                 piecenode,
-                this.player_id,
-                systemnode
+                systemnode,
+                this.player_id
             );
             var starnodes = dojo.query('.star',systemnode);
             this.ajaxcallwrapper(
@@ -911,8 +994,8 @@ function (dojo, declare) {
             piecenode = document.getElementById('piece_'+args.ship_id);
             this.place_ship(
                 piecenode,
-                args.homeplayer_id,
-                systemnode
+                systemnode,
+                args.homeplayer_id
             );
         },
 
@@ -946,16 +1029,22 @@ function (dojo, declare) {
             var args = notif.args;
             var shipnode   = document.getElementById('piece_'+args.ship_id);
             var systemnode = document.getElementById('system_'+args.system_id);
-            dojo.place(shipnode,systemnode);
+            this.place_ship(
+                shipnode,
+                systemnode
+            );
         },
 
         discover_from_notif: function(notif){
             console.log('Discovering');
             var args = notif.args;
             var starnode   = document.getElementById('piece_'+args.star_id);
+            var star_size = starnode.getAttribute('ptype').split('_')[1];
             var systemnode = this.place_system(
                 args.system_id,
-                args.system_name
+                args.system_name,
+                null,
+                star_size
             );
             this.place_star(starnode,systemnode);
         },
@@ -967,8 +1056,8 @@ function (dojo, declare) {
             var shipnode   = document.getElementById('piece_'+args.ship_id);
             this.place_ship(
                 shipnode,
-                args.player_id,
-                systemnode
+                systemnode,
+                args.player_id
             );
         },
 
@@ -980,8 +1069,8 @@ function (dojo, declare) {
             var newshipnode = document.getElementById('piece_'+args.new_ship_id);
             this.place_ship(
                 newshipnode,
-                args.player_id,
-                systemnode
+                systemnode,
+                args.player_id
             );
             this.put_in_bank(oldshipnode);
         },

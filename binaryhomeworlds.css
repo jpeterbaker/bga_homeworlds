@@ -68,6 +68,7 @@
 .system_container{
     text-align:center;
     display:block;
+    border:2px solid blue;
 }
 
 /* All pieces use the same sprite background */
@@ -133,31 +134,24 @@ This section sets the vertical background offset by piece color and orientation.
 .star{
     /* height:110px; original height */
     height:110px;
+    --rotateAmount:0deg;
 }
 
 /*
 Ships and systems can be friendly or hostile.
-(Hostile ships will need to be generalized if 3+ player is implemented.)
-Hostile elements are controlled by the enemy and should appear on the left.
+These terms will need to be generalized if 3+ player is implemented.
 */
-.ship.hostile{
-    --rotateAmount:180deg;
-}
-.ship.hostile.selectable{
-    /* Reverse the shadow for hostile ships since they're rotated */
-    filter:drop-shadow(-15px 15px 10px black);
-}
-.ship.friendly{
-    --rotateAmount:0deg;
-}
-.star{
-    --rotateAmount:0deg;
-}
 .hostile{
     float:left;
 }
+.hostile.ship{
+    --rotateAmount:180deg;
+}
 .friendly{
     float:right;
+}
+.friendly.ship{
+    --rotateAmount:0deg;
 }
 
 /* Banked pieces have the height of ships and point up. */
@@ -167,20 +161,24 @@ Hostile elements are controlled by the enemy and should appear on the left.
 .selectable{
     cursor:pointer;
 }
+.selectable.ship,.selectable.star:hover{
+    transform:translate(0px,-10px) rotate(var(--rotateAmount));
+}
+
 .selectable.stack,.selectable.system{
     background-color:rgba(255,255,255,0.3);
 }
 .selectable.stack:hover,.selectable.system:hover{
     background-color:rgba(255,255,255,0.6);
 }
-.selectable.ship:not([empower]):not(.hostile),.selectable.star{
+.hostile.ship.selectable{
+    /* Reverse the shadow for hostile ships since they're rotated */
+    filter:drop-shadow(-15px 15px 10px black);
+}
+.selectable.ship.friendly:not([empower]),.selectable.star{
     /* TODO try box-shadow */
     filter:drop-shadow(15px -15px 10px black);
 }
-.selectable:hover{
-    transform:translate(0px,-10px) rotate(var(--rotateAmount));
-}
-
 /* Use a custom "empower" attribute to highlight with power color */
 [empower=pending]{
     filter:drop-shadow(15px -15px 10px indigo);
