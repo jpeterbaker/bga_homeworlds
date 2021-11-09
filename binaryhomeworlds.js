@@ -41,7 +41,6 @@ function (dojo, declare) {
         */
         setup: function( gamedatas ) {
             console.log( "Starting game setup" );
-            return;
             console.log(gamedatas);
             ///////////////////
             // Create pieces //
@@ -970,7 +969,6 @@ function (dojo, declare) {
             var color_name = this.get_color_name(args.color);
 
             var pieces = dojo.query('.'+color_name,system);
-            console.log('catastrophe-ing ',pieces);
             for(var i=0;i<pieces.length;i++)
                 this.put_in_bank(pieces[i]);
         }

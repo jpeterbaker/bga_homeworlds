@@ -81,8 +81,6 @@ class binaryHomeworlds extends Table {
         self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
         self::reloadPlayersBasicInfos();
 
-        self::activeNextPlayer();
-        return;
         /************ Start the game initialization *****/
 
         $sql = 'UPDATE player
@@ -107,7 +105,7 @@ class binaryHomeworlds extends Table {
 
 //*
         // Put a few pieces on the board to see if they're displayed properly
-        [$system_id,$autogen] = $this->make_system('Autogen',$player_id);
+        [$system_id,$autogen] = $this->make_system('Home of Babamots',$player_id);
 
         $this->make_star(1,$system_id);
         $this->make_star(31,$system_id);
@@ -234,8 +232,6 @@ class binaryHomeworlds extends Table {
     }
 
     function make_system($system_name=NULL,$homeplayer_id=NULL){
-        return [1,'hey'];
-        /*
         if(is_null($homeplayer_id)){
             $sql = "INSERT
                 INTO Systems (system_name)
@@ -250,30 +246,18 @@ class binaryHomeworlds extends Table {
 
         $sql = 'SELECT MAX(system_id) FROM Systems';
         $system_id = $this->array_key_first(self::getCollectionFromDb($sql));
-
         if(is_null($system_name)){
-            if(is_null($homeplayer_id)){
-                $idx = ($system_id-2) % $this->name_count;
-                $system_name = $this->system_names[$idx];
-                // Add a number if this system has been used before
-                if($system_id-2 >= $this->name_count)
-                    $system_name .= ' '.(1+intdiv($system_id-2,$this->name_count));
-            }
-            else{
-                // I intend for the creation method to provide the system name
-                // so that this branch isn't needed
-                $sql = 'SELECT player_id,player_name FROM player
-                    WHERE player_id='.$homeplayer_id;
-                $player_name = self::getCollectionFromDb($sql)[$homeplayer_id]['player_name'];
-                $system_name = 'Home of '.$player_name;
-            }
+            $idx = ($system_id-2) % $this->name_count;
+            $system_name = $this->system_names[$idx];
+            // Add a number if this system name has been used before
+            if($system_id-2 >= $this->name_count)
+                $system_name .= ' '.(1+intdiv($system_id-2,$this->name_count));
             $sql = "UPDATE Systems
                 SET system_name='".$system_name."'
                 WHERE system_id=".$system_id;
             self::DbQuery($sql);
         }
         return [$system_id,$system_name];
-        */
     }
 
     // Raise a user-visible exception if piece is not in bank
@@ -297,7 +281,6 @@ class binaryHomeworlds extends Table {
         // put system_id as the tens digit and count as the ones digit.
         // (There are only 9 pieces of each color)
         // TODO adapt for more players
-        // TODO make it so this doesn't have to get called so often
         $sql = 'SELECT color+10*system_id,COUNT(piece_id),system_id,color
             FROM Pieces
             WHERE system_id IS NOT NULL
@@ -307,7 +290,7 @@ class binaryHomeworlds extends Table {
         return $result;
     }
 
-    function exist_overpopulations(){
+	function exist_overpopulations(){
         return count($this->get_all_overpopulations()) > 0;
     }
 
@@ -485,10 +468,7 @@ class binaryHomeworlds extends Table {
         $player_id = $this->getActivePlayerId();
         $player_name = $this->getActivePlayerName();
 
-        [$system_id,$system_name] = $this->make_system(
-            _('Home of ${player_name}',
-            $player_id
-        );
+        [$system_id,$system_name] = $this->make_system($player_name,$player_id);
 
         $this->make_star($star1_id,$system_id);
         $this->make_star($star2_id,$system_id);
@@ -509,7 +489,6 @@ class binaryHomeworlds extends Table {
         );
         $this->gamestate->nextState('trans_after_creation');
     }
-
     function capture($piece_id,$capture_id){
         $this->validate_power_action(1,$piece_id);
         $attack_ship = $this->get_piece_row($piece_id);
@@ -711,7 +690,6 @@ class binaryHomeworlds extends Table {
 
         // Make sure the ship's owner is corret
         $ship = $this->get_piece_row($ship_id);
-        $system_id = $ship['system_id'];
         if($ship['owner_id'] != $player_id){
             throw new BgaVisibleSystemException(
                 self::_('You may only sacrifice your own ships.')
@@ -721,8 +699,6 @@ class binaryHomeworlds extends Table {
         // since act_sacrifice is only available in want_free state
 
         $this->put_in_bank($ship_id);
-        if($this->is_empty($system_id))
-            $this->fade($system_id);
 
         self::setGameStateValue('sacrifice_color',$ship['color']);
         self::setGameStateValue('sacrifice_actions',$ship['pips']);
@@ -739,6 +715,7 @@ class binaryHomeworlds extends Table {
 
     function catastrophe($system_id,$color){
         self::checkAction('act_catastrophe');
+
         $player_name = $this->getActivePlayerName();
 
         if($this->is_empty($system_id))
@@ -774,7 +751,7 @@ class binaryHomeworlds extends Table {
         $this->gamestate->nextState('trans_after_catastrophe');
     }
 
-    function pass(){
+	function pass(){
         $player_name = $this->getActivePlayerName();
         self::notifyAllPlayers('notif_pass',
             clienttranslate('${player_name} ends their turn.'),
@@ -782,7 +759,6 @@ class binaryHomeworlds extends Table {
         );
         $this->gamestate->nextState('trans_end_turn');
     }
-
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
@@ -851,15 +827,16 @@ class binaryHomeworlds extends Table {
     }
 
     function st_after_power_action(){
+		$this->say('after power actioning');
         if(self::getGameStateValue('sacrifice_actions') > 0)
             $this->gamestate->nextState('trans_want_sacrifice_action');
-        elseif($this->exist_overpopulations())
+		elseif($this->exist_overpopulations())
             $this->gamestate->nextState('trans_want_catastrophe');
         else
             $this->gamestate->nextState('trans_end_turn');
     }
 
-    function st_after_catastrophe(){
+	function st_after_catastrophe(){
         if(self::getGameStateValue('sacrifice_actions') > 0)
             $this->gamestate->nextState('trans_want_sacrifice_action');
         elseif(self::getGameStateValue('used_free') == 0)
