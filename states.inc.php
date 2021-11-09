@@ -64,9 +64,8 @@ $machinestates = array(
         'description' => '',
         'type' => 'manager',
         'action' => 'stGameSetup',
-        // 'transitions' => array('' => 10)
-        // TODO switch back after testing
-        'transitions' => array('' => 11)
+        'transitions' => array('' => 10) // PRODUCTION
+        //'transitions' => array('' => 11) // TESTING
     ),
 
     //////////////////////

@@ -103,7 +103,7 @@ class binaryHomeworlds extends Table {
         $sql=substr($sql,0,-2);
         self::DbQuery($sql);
 
-//*
+/*
         // Put a few pieces on the board to see if they're displayed properly
         [$system_id,$autogen] = $this->make_system('Home of Babamots',$player_id);
 
@@ -119,8 +119,8 @@ class binaryHomeworlds extends Table {
 
         // Change used_free to 1 when free move has been used
         // (This flag is needed in after_cat state to determine
-        // whether to transition to want_free or want_cat if there has been
-        // no sacrifice)
+        // whether to transition to want_free or want_catastrophe
+        // if there has been no sacrifice)
         self::setGameStateInitialValue('used_free'  ,0);
         // Color zero indicates no sacrifice has occurred
         self::setGameStateInitialValue('sacrifice_color'  ,0);
@@ -468,7 +468,10 @@ class binaryHomeworlds extends Table {
         $player_id = $this->getActivePlayerId();
         $player_name = $this->getActivePlayerName();
 
-        [$system_id,$system_name] = $this->make_system($player_name,$player_id);
+        [$system_id,$system_name] = $this->make_system(
+            clienttranslate("Home of ${player_name}"),
+            $player_id
+        );
 
         $this->make_star($star1_id,$system_id);
         $this->make_star($star2_id,$system_id);
@@ -561,7 +564,6 @@ class binaryHomeworlds extends Table {
                 'system_name' => $system_name
             )
         );
-        // Check for fade
         if($this->is_empty($old_system_id))
             $this->fade($old_system_id);
 
@@ -710,6 +712,9 @@ class binaryHomeworlds extends Table {
                 'ship_id' => $ship_id
             )
         );
+        $system_id = $ship['system_id'];
+        if($this->is_empty($system_id))
+            $this->fade($system_id);
         $this->gamestate->nextState('trans_want_sacrifice_action');
     }
 

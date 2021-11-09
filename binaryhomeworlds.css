@@ -167,11 +167,11 @@ Hostile elements are controlled by the enemy and should appear on the left.
 .selectable{
     cursor:pointer;
 }
-.selectable.stack{
-    border:2px solid white;
-}
-.selectable.system{
+.selectable.stack,.selectable.system{
     background-color:rgba(255,255,255,0.3);
+}
+.selectable.stack:hover,.selectable.system:hover{
+    background-color:rgba(255,255,255,0.6);
 }
 .selectable.ship:not([empower]):not(.hostile),.selectable.star{
     /* TODO try box-shadow */

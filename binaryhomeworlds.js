@@ -248,8 +248,12 @@ function (dojo, declare) {
             selectable.removeClass('selectable');
             this.disconnectAll();
         },
-        // Current player leaves get_free as soon as a ship is selected
         onLeaving_want_free: function(){
+            if(!this.isCurrentPlayerActive())
+                return
+            this.deselect_all();
+        },
+        onLeaving_want_sacrifice_action: function(){
             if(!this.isCurrentPlayerActive())
                 return
             this.deselect_all();
@@ -264,6 +268,13 @@ function (dojo, declare) {
                 return
             this.deselect_all();
             this.unempower_all();
+        },
+        onLeaving_client_want_catastrophe_target: function(args){
+            if(!this.isCurrentPlayerActive())
+                return
+            this.deselect_all();
+            var selectable = dojo.query('.overpopulated');
+            selectable.removeClass('overpopulated')
         },
 
         // onUpdateActionButtons:
@@ -284,22 +295,22 @@ function (dojo, declare) {
             // Only choice states get buttons
             if(!state_name.startsWith('want') && !state_name.startsWith('client'))
                 return;
-            // Server choice states get pass and catastrophe buttons
-            if(state_name.startsWith('want')){
-                this.addActionButton(
-                    'catastrophe_button',
-                    _('Trigger catastrophe'),
-                    'catastrophe_button_selected'
-                );
-                this.addActionButton(
-                    'pass_button',
-                    _('End turn'),
-                    'pass_button_selected'
-                );
-                return;
-            }
-            
             switch(state_name){
+                // Server choice states get pass and catastrophe buttons
+                case 'want_free':
+                case 'want_sacrifice_action':
+                case 'want_catastrophe':
+                    this.addActionButton(
+                        'catastrophe_button',
+                        _('Trigger catastrophe'),
+                        'catastrophe_button_selected'
+                    );
+                    this.addActionButton(
+                        'pass_button',
+                        _('End turn'),
+                        'pass_button_selected'
+                    );
+                    break;
                 case 'client_want_power':
                     this.addActionButton(
                         'sacrifice_button',
@@ -589,6 +600,7 @@ function (dojo, declare) {
             selectable.removeClass('selectable')
             this.disconnectAll();
         },
+
         unempower_all: function(){
             var empowered = dojo.query('[empower]');
             empowered.removeAttr('empower');
@@ -617,9 +629,10 @@ function (dojo, declare) {
                 // Home hasn't been created yet, so we must create it now
                 var player = this.gamedatas.players[this.player_id];
                 var player_name = player.name;
+                // Start out with an empty name and temporary id
                 systemnode = this.place_system(
                     'tempid',
-                    player_name,
+                    '',
                     this.player_id
                 );
             }
@@ -855,10 +868,13 @@ function (dojo, declare) {
                 // The system is already represented by a node,
                 // so this is the player who made it.
                 // The pieces were moved in real time on client side,
-                // so all that needs to happen is that the system_id should be
-                // made to match the id that the server assigned.
+                // so all that needs to happen is that the
+                // system_id and system_name should be
+                // made to match the server assignment
                 systemnode = systemnode_candidates[0];
                 systemnode.id = 'system_'+args.system_id;
+                var labelnode = dojo.query('.system_label',systemnode);
+                labelnode.innerHTML = args.system_name;
                 return;
             }
 

@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `Pieces` (
 
 CREATE TABLE IF NOT EXISTS `Systems` (
     `system_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `system_name` VARCHAR(20) NOT NULL,
+    `system_name` VARCHAR(40) NOT NULL,
     -- Corresponds to player.player_id or NULL for a colony
     `homeplayer_id` int UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB;
