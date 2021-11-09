@@ -17,8 +17,11 @@
 
 <!-- Putting the board after the bank makes it fill the remaining space-->
 <div id='board'>
-    <div id='home_container_top' class='home_container'></div>
-    <div id='home_container_bot' class='home_container'></div>
+    <div id='home_container_top' class='system_container'></div>
+    <div id='colony_container_1' class='system_container'></div>
+    <div id='colony_container_2' class='system_container'></div>
+    <div id='colony_container_3' class='system_container'></div>
+    <div id='home_container_bot' class='system_container'></div>
 </div>
 
 <script type="text/javascript">

@@ -364,7 +364,6 @@ class binaryHomeworlds extends Table {
 
     // Ensure that current player has the right to empower piece_id with power
     function validate_power_action($power,$ship_id){
-        $this->say('validating');
         self::checkAction('act_power_action');
         $player_id = $this->getActivePlayerId();
 
@@ -832,7 +831,6 @@ class binaryHomeworlds extends Table {
     }
 
     function st_after_power_action(){
-		$this->say('after power actioning');
         if(self::getGameStateValue('sacrifice_actions') > 0)
             $this->gamestate->nextState('trans_want_sacrifice_action');
 		elseif($this->exist_overpopulations())

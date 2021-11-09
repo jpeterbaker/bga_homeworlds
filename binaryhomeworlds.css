@@ -65,7 +65,7 @@
 .system:not([homeplayer_id=none]){
     border:2px dashed black;
 }
-.home_container{
+.system_container{
     text-align:center;
     display:block;
 }

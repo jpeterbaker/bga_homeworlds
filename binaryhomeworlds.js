@@ -25,6 +25,13 @@ function (dojo, declare) {
     return declare( "bgagame.binaryhomeworlds", ebg.core.gamegui, {
         constructor: function(){
             console.log('binaryhomeworlds constructor');
+            this.color_names = {1:'red',2:'yellow',3:'green',4:'blue'};
+            this.size_names = {1:'small',2:'medium',3:'large'};
+            // Once homeworlds are established,
+            // colony_assignments[size] will be the position (1,2, or 3)
+            // where colonies with stars of the given size belong
+            // (in a colony_container)
+            this.colony_assignments = null;
         },
 
         /*
@@ -97,9 +104,9 @@ function (dojo, declare) {
                 return
             var stacks = dojo.query('.stack');
             stacks.addClass('selectable');
-            this.connectClass('selectable','onclick','stack_selected_creation');
+            this.connectClass('selectable','onclick','stack_selected_star_creation');
             // You could instead use
-            //stacks.connect('onclick',this,'stack_selected_creation' );
+            //stacks.connect('onclick',this,'stack_selected_star_creation' );
             // but then this.disconnect wouldn't work
         },
 
@@ -165,6 +172,15 @@ function (dojo, declare) {
             var targets = this.power_targets(empowerednode,power);
             targets.addClass('selectable');
             this.connectClass('selectable','onclick','target_selected');
+        },
+
+        onEntering_client_want_creation_ship: function(args){
+            if(!this.isCurrentPlayerActive())
+                return
+            this.disconnectAll();
+            var stacks = dojo.query('.stack');
+            stacks.addClass('selectable');
+            this.connectClass('selectable','onclick','stack_selected_ship_creation');
         },
 
         onEntering_client_want_catastrophe_target: function(args){
@@ -239,14 +255,10 @@ function (dojo, declare) {
                 this[methodName]();
         },
 
-        onLeaving_want_creation: function(){
-        },
-        onLeaving_client_create_ship: function(){
+        onLeaving_client_want_creation_ship: function(){
             if(!this.isCurrentPlayerActive())
                 return
-            var selectable = dojo.query('.selectable');
-            selectable.removeClass('selectable');
-            this.disconnectAll();
+            this.deselect_all();
         },
         onLeaving_want_free: function(){
             if(!this.isCurrentPlayerActive())
@@ -320,6 +332,7 @@ function (dojo, declare) {
                     // NO BREAK
                     // The client_want_power state gets both
                     // a sacrifice and cancel button
+                case 'client_want_catastrophe_target':
                 case 'client_want_target':
                     this.addActionButton(
                         'cancel_button',
@@ -411,44 +424,14 @@ function (dojo, declare) {
         setup_piece: function(piece,more_classes,container){
             var params = {
                 piece_id     : piece.piece_id,
-                colorname    : this.get_color_name(piece.color),
-                pipsname     : this.get_size_name(piece.pips),
+                colorname    : this.color_names[piece.color],
+                pipsname     : this.size_names[piece.pips],
                 colornum     : piece.color,
                 pipsnum      : piece.pips,
                 more_classes : more_classes
             };
             var piece_html = this.format_block('jstpl_piece',params);
             dojo.place( piece_html, container);
-        },
-
-        get_color_name: function(i){
-            i = parseInt(i);
-            switch(i){
-                case 1:
-                    return 'red';
-                case 2:
-                    return 'yellow';
-                case 3:
-                    return 'green';
-                case 4:
-                    return 'blue';
-                default:
-                    console.error('Bad color: '+i);
-            }
-        },
-
-        get_size_name: function(i){
-            i = parseInt(i);
-            switch(i){
-                case 1:
-                    return 'small';
-                case 2:
-                    return 'medium';
-                case 3:
-                    return 'large';
-                default:
-                    console.error('Bad size: '+i);
-            }
         },
 
         ajaxcallwrapper: function(action, args, handler) {
@@ -608,7 +591,7 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Player's action
-        stack_selected_creation: function(evt){
+        stack_selected_star_creation: function(evt){
             evt.preventDefault();
             dojo.stopEvent(evt);
 
@@ -638,28 +621,59 @@ function (dojo, declare) {
             }
             else
                 systemnode = home_candidates[0];
+
             var starnodes = dojo.query('.star',systemnode);
-            if(starnodes.length<=1){
-                this.place_star(
-                    piecenode,
-                    systemnode
+            if(starnodes.length>1){
+                this.showMessage(
+                    _('Cannot select more stars for homeworld creation.'),
+                    'error'
                 );
                 return;
             }
-            // Make sure a ship didn't already get added
+            this.place_star(
+                piecenode,
+                systemnode
+            );
+            if(starnodes.length>0){
+                // There was 1 star, the second just got added
+                // Ship is needed next
+                this.setClientState(
+                    'client_want_creation_ship',
+                    {
+                        descriptionmyturn :
+                        '${you} must choose an initial ship.'
+                    }
+                );
+            }
+        },
+
+        stack_selected_ship_creation: function(evt){
+            var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
             var shipnodes = dojo.query('.ship',systemnode);
+            // Make sure a ship didn't already get added
             if(shipnodes.length > 0){
                 this.showMessage(
-                    _('Cannot select more pieces for creation.'),
+                    _('Cannot select more more ships for homeworld creation.'),
                     'error'
                 );
                 return
             }
+            var stacknode = evt.currentTarget;
+            var children = stacknode.children;
+            if(children.length == 0){
+                this.showMessage(
+                    _('No pieces of this type remain.'),
+                    'error'
+                );
+                return;
+            }
+            var piecenode = children[children.length-1];
             this.place_ship(
                 piecenode,
                 this.player_id,
                 systemnode
             );
+            var starnodes = dojo.query('.star',systemnode);
             this.ajaxcallwrapper(
                 'act_creation',
                 {
@@ -873,7 +887,7 @@ function (dojo, declare) {
                 // made to match the server assignment
                 systemnode = systemnode_candidates[0];
                 systemnode.id = 'system_'+args.system_id;
-                var labelnode = dojo.query('.system_label',systemnode);
+                var labelnode = dojo.query('.system_label',systemnode)[0];
                 labelnode.innerHTML = args.system_name;
                 return;
             }
@@ -982,7 +996,7 @@ function (dojo, declare) {
             console.log('Catastrophe-ing');
             var args = notif.args;
             var system = document.getElementById('system_'+args.system_id);
-            var color_name = this.get_color_name(args.color);
+            var color_name = this.color_names[args.color];
 
             var pieces = dojo.query('.'+color_name,system);
             for(var i=0;i<pieces.length;i++)
