@@ -125,7 +125,18 @@ class homeworlds extends Table {
         // Color zero indicates no sacrifice has occurred
         self::setGameStateInitialValue('sacrifice_color'  ,0);
         self::setGameStateInitialValue('sacrifice_actions',0);
+
+        // Setup stats
+        self::initStat('player','turns_number',0);
+        self::initStat('player','ships_captured',0);
+        self::initStat('player','systems_discovered',0);
+        self::initStat('player','ships_built',0);
+        self::initStat('player','ships_traded',0);
+        self::initStat('player','ships_sacrificed',0);
+        self::initStat('player','catastrophes_trigged',0);
+
         /************ End of the game initialization *****/
+
         self::activeNextPlayer();
     }
 
@@ -628,6 +639,7 @@ class homeworlds extends Table {
 
         // State change will happen in move
         $this->move($ship_id,$system_id);
+        self::incStat(1,'systems_discovered',$this->getActivePlayerId());
     }
 
     function build($ship_id){
@@ -663,6 +675,7 @@ class homeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
+        self::incStat(1,'ships_built',$this->getActivePlayerId());
     }
 
     function trade($ship_id,$color_num){
@@ -687,6 +700,7 @@ class homeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
+        self::incStat(1,'ships_traded',$player_id);
     }
 
     function sacrifice($ship_id){
@@ -721,6 +735,7 @@ class homeworlds extends Table {
         if($this->is_empty($system_id))
             $this->fade($system_id);
         $this->gamestate->nextState('trans_want_sacrifice_action');
+        self::incStat(1,'ships_sacrificed',$player_id);
     }
 
     function catastrophe($system_id,$color){
@@ -759,6 +774,7 @@ class homeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_after_catastrophe');
+        self::incStat(1,'catastrophes_trigged',$this->getActivePlayerId());
     }
 
 	function pass(){
@@ -901,6 +917,7 @@ class homeworlds extends Table {
 
         $this->activeNextPlayer();
         $this->gamestate->nextState('trans_want_free');
+        self::incStat(1,'turns_number',$player_id);
     }
 
 //////////////////////////////////////////////////////////////////////////////
