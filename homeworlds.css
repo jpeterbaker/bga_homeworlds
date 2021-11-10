@@ -87,6 +87,14 @@ and rows of same-sized systems are created
     transition:.5s;
 }
 
+.star_container{
+    display:inline-block;
+    text-align:center;
+}
+.system_label{
+    float:bottom;
+}
+
 /*
 The background image has every piece sprite.
 This section sets the vertical background offset by piece color and orientation.

@@ -35,7 +35,7 @@
 </div>
 
 <script type="text/javascript">
-    var jstpl_system = "<div class='system' id='system_${system_id}' homeplayer_id='${homeplayer_id}'><span class='system_label'>${system_name}</span></div>"
+    var jstpl_system = "<div class='system' id='system_${system_id}' homeplayer_id='${homeplayer_id}'><div class='star_container'><div class='system_label'>${system_name}</div></div></div>"
     var jstpl_piece = "<div class='${colorname} ${pipsname} ${more_classes}' id='piece_${piece_id}' ptype='${colornum}_${pipsnum}'></div>"
 </script>
 

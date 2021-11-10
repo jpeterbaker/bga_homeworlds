@@ -24,7 +24,6 @@ define([
 function (dojo, declare) {
     return declare( "bgagame.homeworlds", ebg.core.gamegui, {
         constructor: function(){
-            console.log('homeworlds constructor');
             this.color_names = {1:'red',2:'yellow',3:'green',4:'blue'};
             this.size_names = {1:'small',2:'medium',3:'large'};
             // Once homeworlds are established,
@@ -47,8 +46,6 @@ function (dojo, declare) {
         "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
         setup: function( gamedatas ) {
-            console.log( "Starting game setup" );
-            console.log(gamedatas);
             ///////////////////
             // Create pieces //
             ///////////////////
@@ -80,7 +77,6 @@ function (dojo, declare) {
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
-            console.log( "Ending game setup" );
         },
 
         ///////////////////////////////////////////////////
@@ -90,7 +86,6 @@ function (dojo, declare) {
         // This method is called each time we are entering into a new game state.
         // You can use this method to perform user interface changes.
         onEnteringState: function( state_name, args ) {
-            console.log('Entering state: ' + state_name, args);
             // Current player saves most recent info from server
             // to make it easier to cancel partial actions from client states.
             // All server-side player-decision states start with "want"
@@ -251,7 +246,6 @@ function (dojo, declare) {
         // This method is called each time we are leaving a game state.
         // You can use this method to perform user interface changes.
         onLeavingState: function( state_name ) {
-            console.log( 'Leaving state: '+state_name );
             // Call appropriate method
             var methodName = "onLeaving_" + state_name;
             if (this[methodName] !== undefined)
@@ -303,7 +297,6 @@ function (dojo, declare) {
         // with the idea that you'll have so many buttons that
         // this deserves its own function
         onUpdateActionButtons: function( state_name, args ) {
-            console.log('Update buttons args ',args);
             // Only active players get buttons
             if(!this.isCurrentPlayerActive())
                 return;
@@ -371,7 +364,6 @@ function (dojo, declare) {
             if(homes.length<2)
                 // Creation is not finished
                 return;
-            console.log('making colony position assignments');
             //this.colony_assignments = {1:null,2:null,3:null};
         },
 
@@ -444,9 +436,10 @@ function (dojo, declare) {
             }
 
             // Add stars
+            var starcontainer = dojo.query('.star_container',systemnode)[0];
             for(star_id in system.stars){
                 star = system.stars[star_id];
-                this.setup_piece(star,'star',systemnode);
+                this.setup_piece(star,'star',starcontainer);
             }
         },
 
@@ -499,7 +492,8 @@ function (dojo, declare) {
             this.on_system_change(systemnode);
         },
         place_star: function(piecenode,systemnode){
-            dojo.place(piecenode,systemnode);
+            var containernode = dojo.query('.star_container',systemnode)[0];
+            dojo.place(piecenode,containernode);
             dojo.removeClass(piecenode,'banked');
             dojo.addClass(piecenode,'star');
         },
@@ -543,7 +537,6 @@ function (dojo, declare) {
 
         // Make sure the correct friendly/hostile class is in place
         on_system_change:function(systemnode){
-            console.log('system changed');
             if(systemnode.getAttribute('homeplayer_id') != 'none')
                 // Homeworlds don't need these labels
                 return;
@@ -563,21 +556,17 @@ function (dojo, declare) {
                 else
                     pip_counts.hostile += size;
             }
-            console.log(pip_counts);
             if(pip_counts.friendly > pip_counts.hostile){
                 dojo.removeClass(systemnode,'hostile');
                 dojo.addClass(systemnode,'friendly');
-                console.log('hostile system');
             }
             else if(pip_counts.friendly < pip_counts.hostile){
                 dojo.removeClass(systemnode,'friendly');
                 dojo.addClass(systemnode,'hostile');
-                console.log('friendly system');
             }
             else{
                 // Pip count is equal, put it in the middle
                 dojo.removeClass(systemnode,'friendly hostile');
-                console.log('neither system');
             }
         },
 
@@ -693,8 +682,6 @@ function (dojo, declare) {
             var systemnode;
             if(home_candidates.length == 0){
                 // Home hasn't been created yet, so we must create it now
-                var player = this.gamedatas.players[this.player_id];
-                var player_name = player.name;
                 // Start out with an empty name and temporary id
                 systemnode = this.place_system(
                     'tempid',
@@ -776,7 +763,6 @@ function (dojo, declare) {
 
         empower_ship: function(shipnode,color=null){
             // Free action
-            console.log('empowering',shipnode);
             if(color == null){
                 shipnode.setAttribute('empower','pending');
                 this.setClientState(
@@ -955,7 +941,6 @@ function (dojo, declare) {
         },
 
         create_from_notif: function(notif){
-            console.log('Creating homeworld');
             var args = notif.args;
             var systemnode_candidates = dojo.query(
                 '[homeplayer_id=player_'+args.homeplayer_id+']'
@@ -1000,7 +985,6 @@ function (dojo, declare) {
         },
 
         capture_from_notif: function(notif){
-            console.log('Capturing');
             var args = notif.args;
             var shipnode = document.getElementById('piece_'+args.target_id);
             if(this.isCurrentPlayerActive()){
@@ -1014,7 +998,6 @@ function (dojo, declare) {
         },
 
         fade_from_notif: function(notif){
-            console.log('Fading');
             var args = notif.args;
             var systemnode   = document.getElementById('system_'+args.system_id);
             var piecenodes = dojo.query('.ship,.star',systemnode);
@@ -1025,7 +1008,6 @@ function (dojo, declare) {
         },
 
         move_from_notif: function(notif){
-            console.log('Moving');
             var args = notif.args;
             var shipnode   = document.getElementById('piece_'+args.ship_id);
             var systemnode = document.getElementById('system_'+args.system_id);
@@ -1036,7 +1018,6 @@ function (dojo, declare) {
         },
 
         discover_from_notif: function(notif){
-            console.log('Discovering');
             var args = notif.args;
             var starnode   = document.getElementById('piece_'+args.star_id);
             var star_size = starnode.getAttribute('ptype').split('_')[1];
@@ -1050,7 +1031,6 @@ function (dojo, declare) {
         },
 
         build_from_notif: function(notif){
-            console.log('Building');
             var args = notif.args;
             var systemnode = document.getElementById('system_'+args.system_id);
             var shipnode   = document.getElementById('piece_'+args.ship_id);
@@ -1062,7 +1042,6 @@ function (dojo, declare) {
         },
 
         trade_from_notif: function(notif){
-            console.log('Trading');
             var args = notif.args;
             var systemnode  = document.getElementById('system_'+args.system_id);
             var oldshipnode = document.getElementById('piece_'+args.old_ship_id);
@@ -1076,13 +1055,11 @@ function (dojo, declare) {
         },
 
         sacrifice_from_notif: function(notif){
-            console.log('Sacrificing');
             var args = notif.args;
             var shipnode  = document.getElementById('piece_'+args.ship_id);
             this.put_in_bank(shipnode);
         },
         catastrophe_from_notif: function(notif){
-            console.log('Catastrophe-ing');
             var args = notif.args;
             var system = document.getElementById('system_'+args.system_id);
             var color_name = this.color_names[args.color];
