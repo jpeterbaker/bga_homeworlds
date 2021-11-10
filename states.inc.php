@@ -64,8 +64,8 @@ $machinestates = array(
         'description' => '',
         'type' => 'manager',
         'action' => 'stGameSetup',
-        'transitions' => array('' => 10) // PRODUCTION
-        //'transitions' => array('' => 11) // TESTING
+        //'transitions' => array('' => 10) // PRODUCTION
+        'transitions' => array('' => 11) // TESTING
     ),
 
     //////////////////////

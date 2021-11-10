@@ -103,7 +103,7 @@ class homeworlds extends Table {
         $sql=substr($sql,0,-2);
         self::DbQuery($sql);
 
-/*
+//*
         // Put a few pieces on the board to see if they're displayed properly
         [$system_id,$autogen] = $this->make_system('Home of Babamots',$player_id);
 
@@ -572,7 +572,7 @@ class homeworlds extends Table {
         $system_name = $this->get_system_row($system_id)['system_name'];
         $player_name = $this->getActivePlayerName();
         self::notifyAllPlayers('notif_move',
-            clienttranslate('${player_name} moves a ship to the ${system_name} system.'),
+            clienttranslate('${player_name} moves a ship to ${system_name}.'),
             array(
                 'player_name' => $player_name,
                 'system_id'   => $system_id,
@@ -623,7 +623,7 @@ class homeworlds extends Table {
 
         $player_name = $this->getActivePlayerName();
         self::notifyAllPlayers('notif_discover',
-            clienttranslate('${player_name} discovers the ${system_name} system.'),
+            clienttranslate('${player_name} discovers ${system_name}.'),
             array(
                 'player_name' => $player_name,
                 'system_id'   => $system_id,
@@ -743,9 +743,6 @@ class homeworlds extends Table {
 
         $player_name = $this->getActivePlayerName();
 
-        if($this->is_empty($system_id))
-            $this->fade($system_id);
-
         $sql = 'SELECT piece_id FROM Pieces
             WHERE system_id='.$system_id.'
                 AND color='.$color;
@@ -761,7 +758,7 @@ class homeworlds extends Table {
         $this->put_in_bank($piece_ids);
 
         $system_name = $this->get_system_row($system_id)['system_name'];
-        $color_name  = $this->color_names[$color-1];
+        $color_name  = $this->color_names_local[$color-1];
 
         self::notifyAllPlayers('notif_catastrophe',
             clienttranslate('${player_name} triggers a ${color_name} catastrophe in ${system_name}.'),
@@ -773,6 +770,10 @@ class homeworlds extends Table {
                 'color'       => $color
             )
         );
+
+        if($this->is_empty($system_id))
+            $this->fade($system_id);
+
         $this->gamestate->nextState('trans_after_catastrophe');
         self::incStat(1,'catastrophes_trigged',$this->getActivePlayerId());
     }

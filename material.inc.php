@@ -59,6 +59,22 @@ $this->system_names = array(
 );
 $this->name_count = count($this->system_names);
 
-$this->action_names = ['capture','move','build','trade'];
-$this->color_names = ['red','yellow','green','blue'];
+$this->action_names = [
+    self::_('capture'),
+    self::_('move'),
+    self::_('build'),
+    self::_('trade')
+];
+$this->color_names_eng = [
+    'red',
+    'yellow',
+    'green',
+    'blue'
+];
+$this->color_names_local = [
+    self::_('red'),
+    self::_('yellow'),
+    self::_('green'),
+    self::_('blue')
+];
 

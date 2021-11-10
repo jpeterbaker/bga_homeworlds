@@ -13,13 +13,13 @@
  *
  */
 
-#board{
+#HWboard{
     /* Board margin-right makes space for bank */
     margin-right:310px;
     height:1000px;
     /*background:rgba(255,255,255,0.3);*/
 }
-#bank{
+#HWbank{
     /*
     Bank must not have default position type (static)
     or its width/height can't be used for relative sizes of stacks
@@ -31,67 +31,67 @@
     background:rgba(0,0,0,0.3);
 }
 /* A stack is a place for identical pieces in the bank */
-.stack{
+.HWstack{
     display:inline-block;
     position:absolute;
     width:33.3%;
     height:25%;
 }
 /* Make pieces in the stack higher the more children there are */
-.stack>*{
+.HWstack>*{
     position:absolute;
 }
-.stack>*:nth-child(1){
+.HWstack>*:nth-child(1){
     bottom:0px;
 }
-.stack>*:nth-child(2){
+.HWstack>*:nth-child(2){
     bottom:30px;
 }
-.stack>*:nth-child(3){
+.HWstack>*:nth-child(3){
     bottom:60px;
 }
 
 /********
  Systems
 ********/
-.system{
+.HWsystem{
     border:2px solid black;
     display:inline-block;
     margin:5px;
 }
 /* A homeworld system with a non-none homeplayer_id attribute*/
-.system:not([homeplayer_id=none]){
+.HWsystem:not([homeplayer_id=none]){
     border:2px dashed black;
 }
 /*
 A dummy div so that the system container can be centered
 and rows of same-sized systems are created
 */
-.centerizer{
+.HWcenterizer{
     text-align:center;
     display:block;
 }
 /* A centered, collection-fitting container for same-sized systems */
-.system_container{
+.HWsystem_container{
     display:inline-block;
 }
 
 /* All pieces use the same sprite background */
-.ship,.star,.banked {
+.HWship,.HWstar,.HWbanked {
     background-image:url('img/sprites.png');
     background-repeat:no-repeat;
     display:inline-block;
 }
-.ship,.star{
+.HWship,.HWstar{
     /*position:relative;*/
     transition:.5s;
 }
 
-.star_container{
+.HWstar_container{
     display:inline-block;
     text-align:center;
 }
-.system_label{
+.HWsystem_label{
     float:bottom;
 }
 
@@ -99,52 +99,52 @@ and rows of same-sized systems are created
 The background image has every piece sprite.
 This section sets the vertical background offset by piece color and orientation.
 */
-.red.ship,.red.banked{
+.HWred.ship,.HWred.HWbanked{
     background-position-y:-0px
 }
-.red.star{
+.HWred.HWstar{
     background-position-y:-190px
 }
-.yellow.ship,.yellow.banked{
+.HWyellow.HWship,.HWyellow.HWbanked{
     background-position-y:-300px
 }
-.yellow.star{
+.HWyellow.HWstar{
     background-position-y:-490px
 }
-.green.ship,.green.banked{
+.HWgreen.HWship,.HWgreen.HWbanked{
     background-position-y:-600px
 }
-.green.star{
+.HWgreen.HWstar{
     background-position-y:-790px
 }
-.blue.ship,.blue.banked{
+.HWblue.HWship,.HWblue.HWbanked{
     background-position-y:-900px
 }
-.blue.star{
+.HWblue.HWstar{
     background-position-y:-1090px
 }
 
 /* Horizontal offset by and width depend on piece size. */
-.large{
+.HWlarge{
     background-position-x:-0px;
     width:112px;
 }
-.medium{
+.HWmedium{
     background-position-x:-112px;
     width:104px;
 }
-.small{
+.HWsmall{
     background-position-x:-216px;
     width:84px;
 }
 
 /* For now, height only depends on whether the piece is standing. */
-.ship{
+.HWship{
     /* height:190px; original height */
     height:190px;
     transform:rotate(var(--rotateAmount));
 }
-.star{
+.HWstar{
     /* height:110px; original height */
     height:110px;
     --rotateAmount:0deg;
@@ -154,41 +154,41 @@ This section sets the vertical background offset by piece color and orientation.
 Ships and systems can be friendly or hostile.
 These terms will need to be generalized if 3+ player is implemented.
 */
-.hostile{
+.HWhostile{
     float:left;
 }
-.hostile.ship{
+.HWhostile.HWship{
     --rotateAmount:180deg;
 }
-.friendly{
+.HWfriendly{
     float:right;
 }
-.friendly.ship{
+.HWfriendly.HWship{
     --rotateAmount:0deg;
 }
 
 /* Banked pieces have the height of ships and point up. */
-.banked{
+.HWbanked{
     height:190px;
 }
-.selectable{
+.HWselectable{
     cursor:pointer;
 }
-.selectable.ship:hover,.selectable.star:hover{
+.HWselectable.HWship:hover,.HWselectable.HWstar:hover{
     transform:translate(0px,-10px) rotate(var(--rotateAmount));
 }
 
-.selectable.stack,.selectable.system{
+.HWselectable.HWstack,.HWselectable.HWsystem{
     background-color:rgba(255,255,255,0.3);
 }
-.selectable.stack:hover,.selectable.system:hover{
+.HWselectable.HWstack:hover,.HWselectable.HWsystem:hover{
     background-color:rgba(255,255,255,0.6);
 }
-.hostile.ship.selectable{
+.HWhostile.HWship.HWselectable{
     /* Reverse the shadow for hostile ships since they're rotated */
     filter:drop-shadow(-15px 15px 10px black);
 }
-.selectable.ship.friendly:not([empower]),.selectable.star{
+.HWselectable.HWship.HWfriendly:not([empower]),.HWselectable.HWstar{
     /* TODO try box-shadow */
     filter:drop-shadow(15px -15px 10px black);
 }
@@ -216,7 +216,7 @@ These terms will need to be generalized if 3+ player is implemented.
 Borrowed from
 https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
 */
-.overpopulated {
+.HWoverpopulated {
     animation-duration: 1s;
     animation-timing-function: ease-in-out;
     animation-fill-mode: forwards;

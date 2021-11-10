@@ -9,34 +9,34 @@
 - - See http://en.boardgamearena.com/#!doc/Studio for more information.
 -->
 
-<div id='bank'>
+<div id='HWbank'>
     <!-- BEGIN stack -->
-    <div id='stack_{COLOR}_{PIPS}' class='stack' style='left:{LEFT}%;top:{TOP}%'> </div>
+    <div id='HWstack_{COLOR}_{PIPS}' class='HWstack' style='left:{LEFT}%;top:{TOP}%'> </div>
     <!-- END stack -->
 </div>
 
 <!-- Putting the board after the bank makes it fill the remaining space-->
-<div id='board'>
-    <div class='centerizer'>
-        <div id='home_container_top' class='system_container'></div>
+<div id='HWboard'>
+    <div class='HWcenterizer'>
+        <div id='HWhome_container_top' class='HWsystem_container'></div>
     </div>
-    <div class='centerizer'>
-        <div id='colony_container_1' class='system_container'></div>
+    <div class='HWcenterizer'>
+        <div id='HWcolony_container_1' class='HWsystem_container'></div>
     </div>
-    <div class='centerizer'>
-        <div id='colony_container_2' class='system_container'></div>
+    <div class='HWcenterizer'>
+        <div id='HWcolony_container_2' class='HWsystem_container'></div>
     </div>
-    <div class='centerizer'>
-        <div id='colony_container_3' class='system_container'></div>
+    <div class='HWcenterizer'>
+        <div id='HWcolony_container_3' class='HWsystem_container'></div>
     </div>
-    <div class='centerizer'>
-        <div id='home_container_bot' class='system_container'></div>
+    <div class='HWcenterizer'>
+        <div id='HWhome_container_bot' class='HWsystem_container'></div>
     </div>
 </div>
 
 <script type="text/javascript">
-    var jstpl_system = "<div class='system' id='system_${system_id}' homeplayer_id='${homeplayer_id}'><div class='star_container'><div class='system_label'>${system_name}</div></div></div>"
-    var jstpl_piece = "<div class='${colorname} ${pipsname} ${more_classes}' id='piece_${piece_id}' ptype='${colornum}_${pipsnum}'></div>"
+    var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>"
+    var jstpl_piece = "<div class='HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'></div>"
 </script>
 
 {OVERALL_GAME_FOOTER}

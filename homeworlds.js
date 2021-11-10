@@ -24,8 +24,10 @@ define([
 function (dojo, declare) {
     return declare( "bgagame.homeworlds", ebg.core.gamegui, {
         constructor: function(){
-            this.color_names = {1:'red',2:'yellow',3:'green',4:'blue'};
-            this.size_names = {1:'small',2:'medium',3:'large'};
+            this.color_names_eng = {1:'red',2:'yellow',3:'green',4:'blue'};
+            this.color_names_local = {1:_('red'),2:_('yellow'),3:_('green'),4:_('blue')};
+            this.size_names_eng = {1:'small',2:'medium',3:'large'};
+            this.size_names_local = {1:_('small'),2:_('medium'),3:_('large')};
             // Once homeworlds are established,
             // colony_assignments[size] will be the position (1,2, or 3)
             // where colonies with stars of the given size belong
@@ -55,8 +57,8 @@ function (dojo, declare) {
             // Create bank pieces
             for(piece_id in gamedatas.bank){
                 piece = gamedatas.bank[piece_id];
-                stack_id = 'stack_'+piece.color+'_'+piece.pips;
-                this.setup_piece(piece,'banked',stack_id);
+                stack_id = 'HWstack_'+piece.color+'_'+piece.pips;
+                this.setup_piece(piece,'HWbanked',stack_id);
             }
             // Create systems and their pieces
             for(system_id in gamedatas.systems) {
@@ -100,9 +102,9 @@ function (dojo, declare) {
         onEntering_want_creation: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var stacks = dojo.query('.stack');
-            stacks.addClass('selectable');
-            this.connectClass('selectable','onclick','stack_selected_star_creation');
+            var stacks = dojo.query('.HWstack');
+            stacks.addClass('HWselectable');
+            this.connectClass('HWselectable','onclick','stack_selected_star_creation');
             // You could instead use
             //stacks.connect('onclick',this,'stack_selected_star_creation' );
             // but then this.disconnect wouldn't work
@@ -111,10 +113,10 @@ function (dojo, declare) {
         onEntering_want_free: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var ships = dojo.query('.ship.friendly');
-            ships.addClass('selectable');
+            var ships = dojo.query('.HWship.HWfriendly');
+            ships.addClass('HWselectable');
             this.connectClass(
-                'selectable',
+                'HWselectable',
                 'onclick',
                 function(evt){
                     evt.preventDefault();
@@ -127,10 +129,10 @@ function (dojo, declare) {
         onEntering_want_sacrifice_action: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var ships = dojo.query('.ship.friendly');
-            ships.addClass('selectable');
+            var ships = dojo.query('.HWship.HWfriendly');
+            ships.addClass('HWselectable');
             this.connectClass(
-                'selectable',
+                'HWselectable',
                 'onclick',
                 function(evt){
                     evt.preventDefault();
@@ -145,12 +147,12 @@ function (dojo, declare) {
                 return
             var empowerednode = dojo.query('[empower]')[0];
             // The system that the empowered ship is in
-            var systemnode = empowerednode.parentNode;
+            var systemnode = this.get_system(empowerednode);
             // Candidates for empowering technology
-            var candidates = dojo.query('.star,.friendly.ship',systemnode);
-            candidates.addClass('selectable');
+            var candidates = dojo.query('.HWstar,.HWfriendly.HWship',systemnode);
+            candidates.addClass('HWselectable');
             this.connectClass(
-                'selectable',
+                'HWselectable',
                 'onclick',
                 function(evt){
                     evt.preventDefault();
@@ -168,36 +170,37 @@ function (dojo, declare) {
             var empowerednode = dojo.query('[empower]')[0];
             var power = empowerednode.getAttribute('empower');
             var targets = this.power_targets(empowerednode,power);
-            targets.addClass('selectable');
-            this.connectClass('selectable','onclick','target_selected');
+            targets.addClass('HWselectable');
+            this.connectClass('HWselectable','onclick','target_selected');
         },
 
         onEntering_client_want_creation_ship: function(args){
             if(!this.isCurrentPlayerActive())
                 return
             this.disconnectAll();
-            var stacks = dojo.query('.stack');
-            stacks.addClass('selectable');
-            this.connectClass('selectable','onclick','stack_selected_ship_creation');
+            var stacks = dojo.query('.HWstack');
+            stacks.addClass('HWselectable');
+            this.connectClass('HWselectable','onclick','stack_selected_ship_creation');
         },
 
         onEntering_client_want_catastrophe_target: function(args){
             if(!this.isCurrentPlayerActive())
                 return
             var overpopulated = this.get_overpopulated_pieces();
-            overpopulated.addClass('selectable overpopulated');
-            this.connectClass('selectable','onclick','catastrophe_target_selected');
+            overpopulated.addClass('HWselectable HWoverpopulated');
+            this.connectClass('HWselectable','onclick','catastrophe_target_selected');
         },
 
         power_targets: function(empowerednode,power){
-            var system = empowerednode.parentNode;
+            var systemnode = this.get_system(empowerednode);
             // Nodes to highlight
             var candidates;
             switch(power){
                 case '1':
-                    return dojo.query('.hostile.ship',system);
+                    return dojo.query('.HWhostile.HWship',systemnode);
                 case '2':
-                    return this.connected_systems(system).concat(this.connected_stacks(system));
+                    return this.connected_systems(systemnode).concat(
+                        this.connected_stacks(systemnode));
                 case '3':
                     // Build target is selected automatically, so don't highlight anything
                     return dojo.NodeList();
@@ -211,11 +214,11 @@ function (dojo, declare) {
                     for(var i=1;i<=4;i++){
                         if(i==old_color)
                             continue;
-                        stack = document.getElementById('stack_'+i+'_'+pips);
-                        children = dojo.query('.banked',stack);
+                        stack = document.getElementById('HWstack_'+i+'_'+pips);
+                        children = dojo.query('.HWbanked',stack);
                         if(children.length==0)
                             continue;
-                        dojo.addClass(stack,'selectable');
+                        dojo.addClass(stack,'HWselectable');
                     }
                     return dojo.NodeList();
                 default:
@@ -224,13 +227,12 @@ function (dojo, declare) {
         },
 
         get_overpopulated_pieces: function(){
-            var systems = dojo.query('.system');
-            var colors = ['.red','.yellow','.green','.blue'];
+            var systems = dojo.query('.HWsystem');
             var targets = dojo.NodeList();
 
             var system,i,j,color,result;
             for(i=0;i<4;i++){
-                color = colors[i];
+                color = '.HW'+this.color_names_eng[i];
                 for(j=0;j<systems.length;j++){
                     system = systems[j];
                     result = dojo.query(color,system);
@@ -282,8 +284,8 @@ function (dojo, declare) {
             if(!this.isCurrentPlayerActive())
                 return
             this.deselect_all();
-            var selectable = dojo.query('.overpopulated');
-            selectable.removeClass('overpopulated')
+            var selectable = dojo.query('.HWoverpopulated');
+            selectable.removeClass('HWoverpopulated')
         },
 
         // onUpdateActionButtons:
@@ -347,20 +349,25 @@ function (dojo, declare) {
 
         get_system: function(piecenode){
             // Get the system node containing this piece
-            var par = piecenode.parentNode;
-            if(!par.id.startsWith('system')){
-                this.showMessage(
-                    _('Piece is not in a system.'),
-                    'error'
-                );
-                return null;
+            var par = piecenode;
+            while(!par.id.startsWith('HWsystem')){
+                console.log('parenting',par);
+                par = par.parentNode;
+                if(par === undefined || par.id === undefined){
+                    this.showMessage(
+                        _('Piece is not in a system.'),
+                        'error'
+                    );
+                    return null;
+                }
             }
+            console.log('finished parenting\n\n\n');
             return par
         },
 
         // Set up the global variable this.colony_assignments
         setup_colony_assignments: function(){
-            var homes = dojo.query('.system:not([homeplayer_id=none])');
+            var homes = dojo.query('.HWsystem:not([homeplayer_id=none])');
             if(homes.length<2)
                 // Creation is not finished
                 return;
@@ -384,16 +391,14 @@ function (dojo, declare) {
         },
 
         put_in_bank: function(piecenode){
-            var systemnode=piecenode;
-            while(!systemnode.id.startsWith('system'))
-                systemnode = systemnode.parentNode;
-            dojo.removeClass(piecenode,'friendly hostile star ship overpopulated');
+            var systemnode = this.get_system(piecenode);
+            dojo.removeClass(piecenode,'HWfriendly HWhostile HWstar HWship HWoverpopulated');
             piecenode.removeAttribute('empower');
-            dojo.addClass(piecenode,'banked');
+            dojo.addClass(piecenode,'HWbanked');
             var cnameSplit = piecenode.getAttribute('ptype').split('_');
             var color = cnameSplit[0];
             var pips  = cnameSplit[1];
-            var stacknode = document.getElementById('stack_'+color+'_'+pips);
+            var stacknode = document.getElementById('HWstack_'+color+'_'+pips);
             dojo.place(piecenode,stacknode);
             // TODO be smarter about when this is done
             // Re-sort the ships in this system
@@ -430,24 +435,24 @@ function (dojo, declare) {
             for(ship_id in system.ships){
                 ship = system.ships[ship_id];
                 if(friendly_id == ship.owner_id)
-                    this.setup_piece(ship,'friendly ship',systemnode);
+                    this.setup_piece(ship,'HWfriendly HWship',systemnode);
                 else
-                    this.setup_piece(ship,'hostile ship',systemnode);
+                    this.setup_piece(ship,'HWhostile HWship',systemnode);
             }
 
             // Add stars
-            var starcontainer = dojo.query('.star_container',systemnode)[0];
+            var starcontainer = dojo.query('.HWstar_container',systemnode)[0];
             for(star_id in system.stars){
                 star = system.stars[star_id];
-                this.setup_piece(star,'star',starcontainer);
+                this.setup_piece(star,'HWstar',starcontainer);
             }
         },
 
         setup_piece: function(piece,more_classes,container){
             var params = {
                 piece_id     : piece.piece_id,
-                colorname    : this.color_names[piece.color],
-                pipsname     : this.size_names[piece.pips],
+                colorname    : this.color_names_eng[piece.color],
+                pipsname     : this.size_names_eng[piece.pips],
                 colornum     : piece.color,
                 pipsnum      : piece.pips,
                 more_classes : more_classes
@@ -480,22 +485,22 @@ function (dojo, declare) {
 
         place_ship: function(piecenode,systemnode,owner_id=null){
             dojo.place(piecenode,systemnode);
-            dojo.removeClass(piecenode,'banked');
-            dojo.addClass(piecenode,'ship');
+            dojo.removeClass(piecenode,'HWbanked');
+            dojo.addClass(piecenode,'HWship');
             // Owner may be changing
             if(owner_id != null){
                 if(owner_id==this.get_bot_player())
-                    dojo.addClass(piecenode,'friendly');
+                    dojo.addClass(piecenode,'HWfriendly');
                 else
-                    dojo.addClass(piecenode,'hostile');
+                    dojo.addClass(piecenode,'HWhostile');
             }
             this.on_system_change(systemnode);
         },
         place_star: function(piecenode,systemnode){
-            var containernode = dojo.query('.star_container',systemnode)[0];
+            var containernode = dojo.query('.HWstar_container',systemnode)[0];
             dojo.place(piecenode,containernode);
-            dojo.removeClass(piecenode,'banked');
-            dojo.addClass(piecenode,'star');
+            dojo.removeClass(piecenode,'HWbanked');
+            dojo.addClass(piecenode,'HWstar');
         },
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
             var params,par;
@@ -510,10 +515,10 @@ function (dojo, declare) {
                         'Placing a colony with unknown star.',
                         'error'
                     );
-                    par = 'colony_container_1';
+                    par = 'HWcolony_container_1';
                 }
                 else
-                    par = 'colony_container_'+this.colony_assignments[star_size];
+                    par = 'HWcolony_container_'+this.colony_assignments[star_size];
             }
             else{
                 params = {
@@ -523,9 +528,9 @@ function (dojo, declare) {
                 };
                 // The parent of a home system node is a special container
                 if(homeplayer_id == this.get_bot_player())
-                    par = 'home_container_bot';
+                    par = 'HWhome_container_bot';
                 else
-                    par = 'home_container_top';
+                    par = 'HWhome_container_top';
             }
 
             var systemnode = dojo.place(
@@ -546,34 +551,34 @@ function (dojo, declare) {
                 friendly:0,
                 hostile:0
             };
-            var ships = dojo.query('.ship',systemnode);
+            var ships = dojo.query('.HWship',systemnode);
             var size,ship;
             for(var i=0;i<ships.length;i++){
                 ship = ships[i];
                 size = parseInt(ship.getAttribute('ptype').split('_')[1]);
-                if(dojo.hasClass(ship,'friendly'))
+                if(dojo.hasClass(ship,'HWfriendly'))
                     pip_counts.friendly += size;
                 else
                     pip_counts.hostile += size;
             }
             if(pip_counts.friendly > pip_counts.hostile){
-                dojo.removeClass(systemnode,'hostile');
-                dojo.addClass(systemnode,'friendly');
+                dojo.removeClass(systemnode,'HWhostile');
+                dojo.addClass(systemnode,'HWfriendly');
             }
             else if(pip_counts.friendly < pip_counts.hostile){
-                dojo.removeClass(systemnode,'friendly');
-                dojo.addClass(systemnode,'hostile');
+                dojo.removeClass(systemnode,'HWfriendly');
+                dojo.addClass(systemnode,'HWhostile');
             }
             else{
                 // Pip count is equal, put it in the middle
-                dojo.removeClass(systemnode,'friendly hostile');
+                dojo.removeClass(systemnode,'HWfriendly HWhostile');
             }
         },
 
         connected_systems: function(systemnode){
             // Get an array of connected system nodes and bank stacks
-            var old_stars = dojo.query('.star',systemnode);
-            var systems = dojo.query('.system');
+            var old_stars = dojo.query('.HWstar',systemnode);
+            var systems = dojo.query('.HWsystem');
             var i,j,k;
             var new_stars;
             var new_star,new_size;
@@ -581,7 +586,7 @@ function (dojo, declare) {
             var breakout;
             i = 0;
             while(i<systems.length){
-                new_stars = dojo.query('.star',systems[i]);
+                new_stars = dojo.query('.HWstar',systems[i]);
                 for(j=0;j<new_stars.length;j++){
                     breakout = 0;
                     new_star = new_stars[j];
@@ -607,8 +612,8 @@ function (dojo, declare) {
         },
 
         connected_stacks: function(systemnode){
-            var stars = dojo.query('.star',systemnode);
-            var stacks = dojo.query('.stack');
+            var stars = dojo.query('.HWstar',systemnode);
+            var stacks = dojo.query('.HWstack');
             var i,j;
             var new_size,old_size,star;
             var stack;
@@ -617,7 +622,7 @@ function (dojo, declare) {
                 breakout = 0;
                 stack = stacks[i];
                 // Skip empty stacks
-                if(dojo.query('.banked',stack).length==0){
+                if(dojo.query('.HWbanked',stack).length==0){
                     stacks.splice(i,1);
                     continue
                 }
@@ -651,8 +656,8 @@ function (dojo, declare) {
         },
 
         deselect_all: function(){
-            var selectable = dojo.query('.selectable');
-            selectable.removeClass('selectable')
+            var selectable = dojo.query('.HWselectable');
+            selectable.removeClass('HWselectable')
             this.disconnectAll();
         },
 
@@ -692,7 +697,7 @@ function (dojo, declare) {
             else
                 systemnode = home_candidates[0];
 
-            var starnodes = dojo.query('.star',systemnode);
+            var starnodes = dojo.query('.HWstar',systemnode);
             if(starnodes.length>1){
                 this.showMessage(
                     _('Cannot select more stars for homeworld creation.'),
@@ -719,7 +724,7 @@ function (dojo, declare) {
 
         stack_selected_ship_creation: function(evt){
             var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
-            var shipnodes = dojo.query('.ship',systemnode);
+            var shipnodes = dojo.query('.HWship',systemnode);
             // Make sure a ship didn't already get added
             if(shipnodes.length > 0){
                 this.showMessage(
@@ -743,7 +748,7 @@ function (dojo, declare) {
                 systemnode,
                 this.player_id
             );
-            var starnodes = dojo.query('.star',systemnode);
+            var starnodes = dojo.query('.HWstar',systemnode);
             this.ajaxcallwrapper(
                 'act_creation',
                 {
@@ -841,7 +846,7 @@ function (dojo, declare) {
                 break;
             case '2':
                 // Move or discover
-                var is_discovery = targetnode.classList.contains('stack');
+                var is_discovery = targetnode.classList.contains('HWstack');
                 if(is_discovery){
                     this.ajaxcallwrapper(
                         'act_power_action',
@@ -954,8 +959,8 @@ function (dojo, declare) {
                 // system_id and system_name should be
                 // made to match the server assignment
                 systemnode = systemnode_candidates[0];
-                systemnode.id = 'system_'+args.system_id;
-                var labelnode = dojo.query('.system_label',systemnode)[0];
+                systemnode.id = 'HWsystem_'+args.system_id;
+                var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
                 labelnode.innerHTML = args.system_name;
                 return;
             }
@@ -966,17 +971,17 @@ function (dojo, declare) {
                 args.homeplayer_id
             );
             var piecenode;
-            piecenode = document.getElementById('piece_'+args.star1_id);
+            piecenode = document.getElementById('HWpiece_'+args.star1_id);
             this.place_star(
                 piecenode,
                 systemnode
             );
-            piecenode = document.getElementById('piece_'+args.star2_id);
+            piecenode = document.getElementById('HWpiece_'+args.star2_id);
             this.place_star(
                 piecenode,
                 systemnode
             );
-            piecenode = document.getElementById('piece_'+args.ship_id);
+            piecenode = document.getElementById('HWpiece_'+args.ship_id);
             this.place_ship(
                 piecenode,
                 systemnode,
@@ -986,21 +991,21 @@ function (dojo, declare) {
 
         capture_from_notif: function(notif){
             var args = notif.args;
-            var shipnode = document.getElementById('piece_'+args.target_id);
+            var shipnode = document.getElementById('HWpiece_'+args.target_id);
             if(this.isCurrentPlayerActive()){
-                dojo.removeClass(shipnode,'hostile');
-                dojo.addClass(shipnode,'friendly');
+                dojo.removeClass(shipnode,'HWhostile');
+                dojo.addClass(shipnode,'HWfriendly');
             }
             else{
-                dojo.removeClass(shipnode,'friendly');
-                dojo.addClass(shipnode,'hostile');
+                dojo.removeClass(shipnode,'HWfriendly');
+                dojo.addClass(shipnode,'HWhostile');
             }
         },
 
         fade_from_notif: function(notif){
             var args = notif.args;
-            var systemnode   = document.getElementById('system_'+args.system_id);
-            var piecenodes = dojo.query('.ship,.star',systemnode);
+            var systemnode   = document.getElementById('HWsystem_'+args.system_id);
+            var piecenodes = dojo.query('.HWship,.HWstar',systemnode);
             var piecenode;
             for(var i=0;i<piecenodes.length;i++)
                 this.put_in_bank(piecenodes[i]);
@@ -1009,8 +1014,8 @@ function (dojo, declare) {
 
         move_from_notif: function(notif){
             var args = notif.args;
-            var shipnode   = document.getElementById('piece_'+args.ship_id);
-            var systemnode = document.getElementById('system_'+args.system_id);
+            var shipnode   = document.getElementById('HWpiece_'+args.ship_id);
+            var systemnode = document.getElementById('HWsystem_'+args.system_id);
             this.place_ship(
                 shipnode,
                 systemnode
@@ -1019,7 +1024,7 @@ function (dojo, declare) {
 
         discover_from_notif: function(notif){
             var args = notif.args;
-            var starnode   = document.getElementById('piece_'+args.star_id);
+            var starnode   = document.getElementById('HWpiece_'+args.star_id);
             var star_size = starnode.getAttribute('ptype').split('_')[1];
             var systemnode = this.place_system(
                 args.system_id,
@@ -1032,8 +1037,8 @@ function (dojo, declare) {
 
         build_from_notif: function(notif){
             var args = notif.args;
-            var systemnode = document.getElementById('system_'+args.system_id);
-            var shipnode   = document.getElementById('piece_'+args.ship_id);
+            var systemnode = document.getElementById('HWsystem_'+args.system_id);
+            var shipnode   = document.getElementById('HWpiece_'+args.ship_id);
             this.place_ship(
                 shipnode,
                 systemnode,
@@ -1043,9 +1048,9 @@ function (dojo, declare) {
 
         trade_from_notif: function(notif){
             var args = notif.args;
-            var systemnode  = document.getElementById('system_'+args.system_id);
-            var oldshipnode = document.getElementById('piece_'+args.old_ship_id);
-            var newshipnode = document.getElementById('piece_'+args.new_ship_id);
+            var systemnode  = document.getElementById('HWsystem_'+args.system_id);
+            var oldshipnode = document.getElementById('HWpiece_'+args.old_ship_id);
+            var newshipnode = document.getElementById('HWpiece_'+args.new_ship_id);
             this.place_ship(
                 newshipnode,
                 systemnode,
@@ -1056,15 +1061,15 @@ function (dojo, declare) {
 
         sacrifice_from_notif: function(notif){
             var args = notif.args;
-            var shipnode  = document.getElementById('piece_'+args.ship_id);
+            var shipnode  = document.getElementById('HWpiece_'+args.ship_id);
             this.put_in_bank(shipnode);
         },
         catastrophe_from_notif: function(notif){
             var args = notif.args;
-            var system = document.getElementById('system_'+args.system_id);
-            var color_name = this.color_names[args.color];
+            var system = document.getElementById('HWsystem_'+args.system_id);
+            var color_name = this.color_names_eng[args.color];
 
-            var pieces = dojo.query('.'+color_name,system);
+            var pieces = dojo.query('.HW'+color_name,system);
             for(var i=0;i<pieces.length;i++)
                 this.put_in_bank(pieces[i]);
         }
