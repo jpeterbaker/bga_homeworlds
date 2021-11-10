@@ -2,27 +2,27 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * binaryHomeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on https://boardgamearena.com.
  * See http://en.doc.boardgamearena.com/Studio for more information.
  * -----
  *
- * binaryhomeworlds.action.php
+ * homeworlds.action.php
  *
- * binaryHomeworlds main action entry point
+ * Homeworlds main action entry point
  *
  *
  * In this file, you are describing all the methods that can be called from your
  * user interface logic (javascript).
  *
  * If you define a method "myAction" here, then you can call it from your javascript code with:
- * this.ajaxcall( "/binaryhomeworlds/binaryhomeworlds/myAction.html", ...)
+ * this.ajaxcall( "/homeworlds/homeworlds/myAction.html", ...)
  *
  */
 
 
-class action_binaryhomeworlds extends APP_GameAction {
+class action_homeworlds extends APP_GameAction {
     // Constructor: please do not modify
     public function __default() {
         if( self::isArg( 'notifwindow') ) {
@@ -30,7 +30,7 @@ class action_binaryhomeworlds extends APP_GameAction {
             $this->viewArgs['table'] = self::getArg( "table", AT_posint, true );
         }
         else {
-            $this->view = "binaryhomeworlds_binaryhomeworlds";
+            $this->view = "homeworlds_homeworlds";
             self::trace( "Complete reinitialization of board game" );
         }
     }

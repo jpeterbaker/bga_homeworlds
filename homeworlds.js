@@ -1,15 +1,15 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * binaryHomeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * binaryhomeworlds.js
+ * homeworlds.js
  *
- * binaryHomeworlds user interface script
+ * Homeworlds user interface script
  *
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
@@ -22,9 +22,9 @@ define([
     "ebg/counter"
 ],
 function (dojo, declare) {
-    return declare( "bgagame.binaryhomeworlds", ebg.core.gamegui, {
+    return declare( "bgagame.homeworlds", ebg.core.gamegui, {
         constructor: function(){
-            console.log('binaryhomeworlds constructor');
+            console.log('homeworlds constructor');
             this.color_names = {1:'red',2:'yellow',3:'green',4:'blue'};
             this.size_names = {1:'small',2:'medium',3:'large'};
             // Once homeworlds are established,
@@ -930,7 +930,7 @@ function (dojo, declare) {
 
         Note: game notification names correspond to
         "notifyAllPlayers" and "notifyPlayer" calls in
-        your binaryhomeworlds.game.php file.
+        your homeworlds.game.php file.
         */
         setupNotifications: function() {
             dojo.subscribe('notif_debug'   ,this,'ignore_notif');

@@ -2,13 +2,13 @@
  /**
   *------
   * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
-  * binaryHomeworlds implementation : © <Your name here> <Your email address here>
+  * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
   *
   * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
   * See http://en.boardgamearena.com/#!doc/Studio for more information.
   * -----
   *
-  * binaryhomeworlds.game.php
+  * homeworlds.game.php
   *
   * This is the main file for your game logic.
   *
@@ -19,7 +19,7 @@
 require_once( APP_GAMEMODULE_PATH.'module/table/table.game.php' );
 
 
-class binaryHomeworlds extends Table {
+class homeworlds extends Table {
     function __construct( ) {
         // Your global variables labels:
         //  Here, you can assign labels to global variables you are using for this game.
@@ -38,7 +38,7 @@ class binaryHomeworlds extends Table {
 
     protected function getGameName( ) {
         // Used for translations and stuff. Please do not modify.
-        return 'binaryhomeworlds';
+        return 'homeworlds';
     }
 
     /*
@@ -212,8 +212,14 @@ class binaryHomeworlds extends Table {
     (see states.inc.php)
     */
     function getGameProgression() {
-        // TODO: compute and return the game progression
-        return 0;
+        // For Homeworlds, this is hard to estimate.
+        // Let's say that progress is the proportion of pieces that are in play.
+        $sql = 'SELECT piece_id FROM Pieces
+            WHERE system_id IS NOT NULL';
+        $result = self::getCollectionFromDb($sql);
+        // Number of pieces in play
+        $n_in_play = count($result);
+        return intdiv(100*$n_in_play,36);
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -434,14 +440,6 @@ class binaryHomeworlds extends Table {
         return self::getCollectionFromDb(
             'SELECT * FROM Pieces WHERE owner_id IS NULL AND system_id='.$system_id
         );
-    }
-
-    function get_player_row(){
-        $player_id = $this->getCurrentPlayerId();
-        $sql = 'SELECT * FROM player WHERE player_id='.$player_id;
-        $result = self::getCollectionFromDb($sql);
-        // We  have to do it this way since player_no is primary key
-        return $result[$this->array_key_first($result)];
     }
 
     function is_empty($system_id,$turn_over=false){
@@ -898,6 +896,9 @@ class binaryHomeworlds extends Table {
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
 
+        $player_id = $this->getActivePlayerId();
+        $this->giveExtraTime($player_id);
+
         $this->activeNextPlayer();
         $this->gamestate->nextState('trans_want_free');
     }
@@ -920,26 +921,11 @@ class binaryHomeworlds extends Table {
     */
 
     function zombieTurn( $state, $active_player ) {
-        $statename = $state['name'];
-
+        // If a player is missing, just end the zombie turn.
+        // Really, the game should be over though, so this shouldn't come up.
         if ($state['type'] === "activeplayer") {
-            switch ($statename) {
-                default:
-                    $this->gamestate->nextState( "zombiePass" );
-                    break;
-            }
-
-            return;
+            $this->gamestate->nextState( "zombiePass" );
         }
-
-        if ($state['type'] === "multipleactiveplayer") {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
-
-            return;
-        }
-
-        throw new feException( "Zombie mode not supported at this game state: ".$statename );
     }
 ///////////////////////////////////////////////////////////////////////////////////:
 

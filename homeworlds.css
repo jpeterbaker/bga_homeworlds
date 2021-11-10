@@ -1,15 +1,15 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * binaryHomeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * binaryhomeworlds.css
+ * homeworlds.css
  *
- * binaryHomeworlds stylesheet
+ * Homeworlds stylesheet
  *
  */
 
@@ -63,11 +63,15 @@
 .system:not([homeplayer_id=none]){
     border:2px dashed black;
 }
+/*
+A dummy div so that the system container can be centered
+and rows of same-sized systems are created
+*/
 .centerizer{
     text-align:center;
     display:block;
-    border:2px solid blue;
 }
+/* A centered, collection-fitting container for same-sized systems */
 .system_container{
     display:inline-block;
 }

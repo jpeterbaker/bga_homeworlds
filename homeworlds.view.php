@@ -2,13 +2,13 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * binaryHomeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * binaryhomeworlds.view.php
+ * homeworlds.view.php
  *
  * This is your "view" file.
  *
@@ -17,7 +17,7 @@
  * _ when a player refreshes the game page (F5)
  *
  * "build_page" method allows you to dynamically modify the HTML generated for the game interface. In
- * particular, you can set here the values of variables elements defined in binaryhomeworlds_binaryhomeworlds.tpl (elements
+ * particular, you can set here the values of variables elements defined in homeworlds_homeworlds.tpl (elements
  * like {MY_VARIABLE_ELEMENT}), and insert HTML block elements (also defined in your HTML template file)
  *
  * Note: if the HTML of your game interface is always the same, you don't have to place anything here.
@@ -26,9 +26,9 @@
 
 require_once( APP_BASE_PATH.'view/common/game.view.php' );
 
-class view_binaryhomeworlds_binaryhomeworlds extends game_view {
+class view_homeworlds_homeworlds extends game_view {
     function getGameName() {
-        return 'binaryhomeworlds';
+        return 'homeworlds';
     }
     function build_page( $viewArgs ) {
         // Get players & players number
@@ -37,7 +37,7 @@ class view_binaryhomeworlds_binaryhomeworlds extends game_view {
 
         /*********** Place your code below:  ************/
 
-        $this->page->begin_block('binaryhomeworlds_binaryhomeworlds','stack');
+        $this->page->begin_block('homeworlds_homeworlds','stack');
         for($color=1;$color<=4;$color++){
             for($pips=1;$pips<=3;$pips++){
                 $left = ($pips-1)*33.3;

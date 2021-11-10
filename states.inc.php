@@ -2,14 +2,14 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * binaryHomeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  * states.inc.php
  *
- * binaryHomeworlds game states description
+ * Homeworlds game states description
 
 action:
     Name of a PHP function to call on entry to this state.
@@ -77,7 +77,10 @@ $machinestates = array(
         'descriptionmyturn' => clienttranslate('${you} must choose a homestar.'),
         'type' => 'activeplayer',
         'possibleactions' => array( 'act_creation' ),
-        'transitions' => array( 'trans_after_creation' => 20 )
+        'transitions' => array(
+            'trans_after_creation' => 20,
+            'zombiePass' => 20
+        )
     ),
     // Get free action, sacrifice, catastrophe, or pass
     11 => array(
@@ -95,7 +98,8 @@ $machinestates = array(
             'trans_after_power_action' => 21,
             'trans_want_sacrifice_action' => 12,
             'trans_after_catastrophe' => 23,
-            'trans_end_turn' => 30
+            'trans_end_turn' => 30,
+            'zombiePass' => 30
         )
     ),
     // Get sac action, catastrophe, or pass
@@ -113,7 +117,8 @@ $machinestates = array(
         'transitions' => array(
             'trans_after_power_action' => 21,
             'trans_after_catastrophe' => 23,
-            'trans_end_turn' => 30
+            'trans_end_turn' => 30,
+            'zombiePass' => 30
         )
     ),
     13 => array(
@@ -128,7 +133,8 @@ $machinestates = array(
         ),
         'transitions' => array(
             'trans_after_catastrophe' => 23,
-            'trans_end_turn' => 30
+            'trans_end_turn' => 30,
+            'zombiePass' => 30
         )
     ),
     ///////////////////
