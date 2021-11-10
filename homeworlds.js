@@ -27,7 +27,7 @@ function (dojo, declare) {
             this.color_names_eng = {1:'red',2:'yellow',3:'green',4:'blue'};
             this.color_names_local = {1:_('red'),2:_('yellow'),3:_('green'),4:_('blue')};
             this.size_names_eng = {1:'small',2:'medium',3:'large'};
-            this.size_names_local = {1:_('small'),2:_('medium'),3:_('large')};
+            //this.size_names_local = {1:_('small'),2:_('medium'),3:_('large')};
             // Once homeworlds are established,
             // colony_assignments[size] will be the position (1,2, or 3)
             // where colonies with stars of the given size belong

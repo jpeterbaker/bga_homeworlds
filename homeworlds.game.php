@@ -485,7 +485,7 @@ class homeworlds extends Table {
         $player_name = $this->getActivePlayerName();
 
         [$system_id,$system_name] = $this->make_system(
-            clienttranslate("Home of ${player_name}"),
+            clienttranslate('Home of ${player_name}'),
             $player_id
         );
 
@@ -763,6 +763,7 @@ class homeworlds extends Table {
         self::notifyAllPlayers('notif_catastrophe',
             clienttranslate('${player_name} triggers a ${color_name} catastrophe in ${system_name}.'),
             array(
+                'i18n' => array('color_name'),
                 'player_name' => $player_name,
                 'system_name' => $system_name,
                 'color_name'  => $color_name,

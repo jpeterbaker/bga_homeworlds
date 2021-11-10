@@ -60,10 +60,10 @@ $this->system_names = array(
 $this->name_count = count($this->system_names);
 
 $this->action_names = [
-    self::_('capture'),
-    self::_('move'),
-    self::_('build'),
-    self::_('trade')
+    clienttranslate('capture'),
+    clienttranslate('move'),
+    clienttranslate('build'),
+    clienttranslate('trade')
 ];
 $this->color_names_eng = [
     'red',
@@ -72,9 +72,9 @@ $this->color_names_eng = [
     'blue'
 ];
 $this->color_names_local = [
-    self::_('red'),
-    self::_('yellow'),
-    self::_('green'),
-    self::_('blue')
+    clienttranslate('red'),
+    clienttranslate('yellow'),
+    clienttranslate('green'),
+    clienttranslate('blue')
 ];
 
