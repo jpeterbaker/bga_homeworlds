@@ -105,9 +105,28 @@ function (dojo, declare) {
             var stacks = dojo.query('.HWstack');
             stacks.addClass('HWselectable');
             this.connectClass('HWselectable','onclick','stack_selected_star_creation');
+            this.addTooltipHtmlToClass(
+                'HWselectable',
+                _('Click to add this star to your homeworld'),
+                '',1500
+            );
             // You could instead use
             //stacks.connect('onclick',this,'stack_selected_star_creation' );
             // but then this.disconnect wouldn't work
+        },
+
+        onEntering_client_want_creation_ship: function(args){
+            if(!this.isCurrentPlayerActive())
+                return
+            this.disconnectAll();
+            var stacks = dojo.query('.HWstack');
+            stacks.addClass('HWselectable');
+            this.addTooltipHtmlToClass(
+                'HWselectable',
+                _('Click to add this ship to your homeworld'),
+                '',1500
+            );
+            this.connectClass('HWselectable','onclick','stack_selected_ship_creation');
         },
 
         onEntering_want_free: function(args){
@@ -115,6 +134,11 @@ function (dojo, declare) {
                 return
             var ships = dojo.query('.HWship.HWfriendly');
             ships.addClass('HWselectable');
+            this.addTooltipHtmlToClass(
+                'HWselectable',
+                _('Click to empower or sacrifice this ship'),
+                '',1500
+            );
             this.connectClass(
                 'HWselectable',
                 'onclick',
@@ -131,6 +155,38 @@ function (dojo, declare) {
                 return
             var ships = dojo.query('.HWship.HWfriendly');
             ships.addClass('HWselectable');
+            switch(parseInt(args.color)){
+                case 1:
+                    this.addTooltipHtmlToClass(
+                        'HWselectable',
+                        _('Click to give this ship capturing power'),
+                        '',1500
+                    );
+                    break;
+                case 2:
+                    this.addTooltipHtmlToClass(
+                        'HWselectable',
+                        _('Click to give this ship movement power'),
+                        '',1500
+                    );
+                    break;
+                case 3:
+                    this.addTooltipHtmlToClass(
+                        'HWselectable',
+                        _('Click to build another ship of this color'),
+                        '',1500
+                    );
+                    break;
+                case 4:
+                    this.addTooltipHtmlToClass(
+                        'HWselectable',
+                        _('Click to trade this ship for another color'),
+                        '',1500
+                    );
+                    break;
+                default:
+                    console.error('Bad power number: '+args.color);
+            }
             this.connectClass(
                 'HWselectable',
                 'onclick',
@@ -145,12 +201,14 @@ function (dojo, declare) {
         onEntering_client_want_power: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var empowerednode = dojo.query('[empower]')[0];
+            var empowerquery = dojo.query('[empower]')[0];
+            var empowerednode = empowerquery[0];
             // The system that the empowered ship is in
             var systemnode = this.get_system(empowerednode);
             // Candidates for empowering technology
             var candidates = dojo.query('.HWstar,.HWfriendly.HWship',systemnode);
             candidates.addClass('HWselectable');
+            this.add_power_tooltips(candidates.concat(empowerquery));
             this.connectClass(
                 'HWselectable',
                 'onclick',
@@ -161,26 +219,76 @@ function (dojo, declare) {
                     var powernode = evt.currentTarget;
                     var color = powernode.getAttribute('ptype').split('_')[0];
                     this.power_selected(color);
-                });
+                }
+            );
+        },
+
+        add_power_tooltips: function(pieces){
+            var piece,color;
+            for(var i=0;i<pieces.length;i++){
+                piece = pieces[i];
+                color = parseInt(piece.getAttribute('ptype').split('_')[0]);
+                switch(color){
+                    case 1:
+                        this.addTooltip(
+                            piece.id,
+                            _('Click to choose capturing power'),
+                            '',1500
+                        );
+                        break;
+                    case 2:
+                        this.addTooltip(
+                            piece.id,
+                            _('Click to choose movement power'),
+                            '',1500
+                        );
+                        break;
+                    case 3:
+                        this.addTooltip(
+                            'HWselectable',
+                            _('Click to choose build power and build a new ship in the color of the empowered ship'),
+                            '',1500
+                        );
+                        break;
+                    case 4:
+                        this.addTooltip(
+                            piece.id,
+                            _('Click to choose trade power'),
+                            '',1500
+                        );
+                        break;
+                    default:
+                        console.error('Bad power number: '+color);
+                }
+            }
         },
 
         onEntering_client_want_target: function(args){
             if(!this.isCurrentPlayerActive())
                 return
             var empowerednode = dojo.query('[empower]')[0];
-            var power = empowerednode.getAttribute('empower');
+            var power = parseInt(empowerednode.getAttribute('empower'));
             var targets = this.power_targets(empowerednode,power);
             targets.addClass('HWselectable');
+            var tooltip;
+            switch(power){
+                case 1:
+                    tooltip = _('Click this ship to capture it');
+                    break;
+                case 2:
+                    tooltip = _('Click to move empowered ship here');
+                    break;
+                case 3:
+                    tooltip = '';
+                    break;
+                case 4:
+                    tooltip = _('Click to trade for a ship of this color');
+                    break;
+                default:
+                    console.error('Bad power number: '+power);
+            }
+            this.addTooltipHtmlToClass('HWselectable',tooltip,'',1500);
             this.connectClass('HWselectable','onclick','target_selected');
-        },
-
-        onEntering_client_want_creation_ship: function(args){
-            if(!this.isCurrentPlayerActive())
-                return
-            this.disconnectAll();
-            var stacks = dojo.query('.HWstack');
-            stacks.addClass('HWselectable');
-            this.connectClass('HWselectable','onclick','stack_selected_ship_creation');
         },
 
         onEntering_client_want_catastrophe_target: function(args){
@@ -195,16 +303,17 @@ function (dojo, declare) {
             var systemnode = this.get_system(empowerednode);
             // Nodes to highlight
             var candidates;
+            power = parseInt(power);
             switch(power){
-                case '1':
+                case 1:
                     return dojo.query('.HWhostile.HWship',systemnode);
-                case '2':
+                case 2:
                     return this.connected_systems(systemnode).concat(
                         this.connected_stacks(systemnode));
-                case '3':
+                case 3:
                     // Build target is selected automatically, so don't highlight anything
                     return dojo.NodeList();
-                case '4':
+                case 4:
                     // TODO return candidates rather than highlighting manually
                     var ptype = empowerednode.getAttribute('ptype').split('_');
                     var old_color = ptype[0];
@@ -351,17 +460,12 @@ function (dojo, declare) {
             // Get the system node containing this piece
             var par = piecenode;
             while(!par.id.startsWith('HWsystem')){
-                console.log('parenting',par);
                 par = par.parentNode;
                 if(par === undefined || par.id === undefined){
-                    this.showMessage(
-                        _('Piece is not in a system.'),
-                        'error'
-                    );
+                    this.showMessage( _('Piece is not in a system.'), 'error');
                     return null;
                 }
             }
-            console.log('finished parenting\n\n\n');
             return par
         },
 
@@ -659,6 +763,8 @@ function (dojo, declare) {
             var selectable = dojo.query('.HWselectable');
             selectable.removeClass('HWselectable')
             this.disconnectAll();
+            for(var i=0;i<selectable.length;i++)
+                this.removeTooltip(selectable[i].id);
         },
 
         unempower_all: function(){
@@ -832,8 +938,8 @@ function (dojo, declare) {
             var power = empowerednode.getAttribute('empower');
             var target_ids = targetnode.id.split('_');
             var empower_id = empowerednode.id.split('_')[1];
-            switch(power){
-            case '1':
+            switch(parseInt(power)){
+            case 1:
                 // Capture
                 this.ajaxcallwrapper(
                     'act_power_action',
@@ -844,7 +950,7 @@ function (dojo, declare) {
                     }
                 );
                 break;
-            case '2':
+            case 2:
                 // Move or discover
                 var is_discovery = targetnode.classList.contains('HWstack');
                 if(is_discovery){
@@ -871,8 +977,8 @@ function (dojo, declare) {
                     );
                 }
                 break
-            // case '3' (green) should have been handled without a target
-            case '4':
+            // case 3 (green) should have been handled without a target
+            case 4:
                 // Trade
                 this.ajaxcallwrapper(
                     'act_power_action',
