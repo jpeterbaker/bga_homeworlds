@@ -105,10 +105,10 @@ function (dojo, declare) {
             var stacks = dojo.query('.HWstack');
             stacks.addClass('HWselectable');
             this.connectClass('HWselectable','onclick','stack_selected_star_creation');
-            this.addTooltipHtmlToClass(
-                'HWselectable',
+            this.add_tooltip(
+                stacks,
                 _('Click to add this star to your homeworld'),
-                '',1500
+                1500
             );
             // You could instead use
             //stacks.connect('onclick',this,'stack_selected_star_creation' );
@@ -121,10 +121,10 @@ function (dojo, declare) {
             this.disconnectAll();
             var stacks = dojo.query('.HWstack');
             stacks.addClass('HWselectable');
-            this.addTooltipHtmlToClass(
-                'HWselectable',
+            this.add_tooltip(
+                stacks,
                 _('Click to add this ship to your homeworld'),
-                '',1500
+                1500
             );
             this.connectClass('HWselectable','onclick','stack_selected_ship_creation');
         },
@@ -134,10 +134,10 @@ function (dojo, declare) {
                 return
             var ships = dojo.query('.HWship.HWfriendly');
             ships.addClass('HWselectable');
-            this.addTooltipHtmlToClass(
-                'HWselectable',
+            this.add_tooltip(
+                ships,
                 _('Click to empower or sacrifice this ship'),
-                '',1500
+                1500
             );
             this.connectClass(
                 'HWselectable',
@@ -155,38 +155,28 @@ function (dojo, declare) {
                 return
             var ships = dojo.query('.HWship.HWfriendly');
             ships.addClass('HWselectable');
+            var tooltip;
             switch(parseInt(args.color)){
                 case 1:
-                    this.addTooltipHtmlToClass(
-                        'HWselectable',
-                        _('Click to give this ship capturing power'),
-                        '',1500
-                    );
+                    tooltip = _('Click to give this ship capturing power');
                     break;
                 case 2:
-                    this.addTooltipHtmlToClass(
-                        'HWselectable',
-                        _('Click to give this ship movement power'),
-                        '',1500
-                    );
+                    tooltip = _('Click to give this ship movement power');
                     break;
                 case 3:
-                    this.addTooltipHtmlToClass(
-                        'HWselectable',
-                        _('Click to build another ship of this color'),
-                        '',1500
-                    );
+                    tooltip = _('Click to build another ship of this color');
                     break;
                 case 4:
-                    this.addTooltipHtmlToClass(
-                        'HWselectable',
-                        _('Click to trade this ship for another color'),
-                        '',1500
-                    );
+                    tooltip = _('Click to trade this ship for another color');
                     break;
                 default:
                     console.error('Bad power number: '+args.color);
             }
+            this.add_tooltip(
+                ships,
+                tooltip,
+                1500
+            );
             this.connectClass(
                 'HWselectable',
                 'onclick',
@@ -201,7 +191,7 @@ function (dojo, declare) {
         onEntering_client_want_power: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var empowerquery = dojo.query('[empower]')[0];
+            var empowerquery = dojo.query('[empower]');
             var empowerednode = empowerquery[0];
             // The system that the empowered ship is in
             var systemnode = this.get_system(empowerednode);
@@ -221,6 +211,16 @@ function (dojo, declare) {
                     this.power_selected(color);
                 }
             );
+        },
+
+        add_tooltip: function(nodes,tip,delay){
+            // Replacing addTooltipHtmlToClass which doesn't seem to delay
+            // when a text arg is missing
+            var node;
+            for(var i=0;i<nodes.length;i++){
+                node = nodes[i];
+                this.addTooltip(node.id,tip,'',delay);
+            }
         },
 
         add_power_tooltips: function(pieces){
@@ -245,7 +245,7 @@ function (dojo, declare) {
                         break;
                     case 3:
                         this.addTooltip(
-                            'HWselectable',
+                            piece.id,
                             _('Click to choose build power and build a new ship in the color of the empowered ship'),
                             '',1500
                         );
@@ -268,26 +268,40 @@ function (dojo, declare) {
                 return
             var empowerednode = dojo.query('[empower]')[0];
             var power = parseInt(empowerednode.getAttribute('empower'));
-            var targets = this.power_targets(empowerednode,power);
-            targets.addClass('HWselectable');
+            var targets;
             var tooltip;
             switch(power){
                 case 1:
+                    targets = this.power_targets(empowerednode,power);
+                    targets.addClass('HWselectable');
                     tooltip = _('Click this ship to capture it');
+                    this.add_tooltip(targets,tooltip,1500);
                     break;
                 case 2:
-                    tooltip = _('Click to move empowered ship here');
+                    var systemnode = this.get_system(empowerednode);
+                    var systems = this.connected_systems(systemnode);
+                    tooltip = _('Click to move empowered ship to this system');
+                    this.add_tooltip(systems,tooltip,1500);
+                    systems.addClass('HWselectable');
+
+                    var stacks = this.connected_stacks(systemnode);
+                    tooltip = _('Click to move empowered ship to a new system with this star');
+                    this.add_tooltip(stacks,tooltip,1500);
+                    stacks.addClass('HWselectable');
                     break;
                 case 3:
                     tooltip = '';
+                    this.add_tooltip(targets,tooltip,1500);
                     break;
                 case 4:
+                    targets = this.power_targets(empowerednode,power);
+                    targets = this.power_targets(empowerednode,power);
                     tooltip = _('Click to trade for a ship of this color');
+                    this.add_tooltip(targets,tooltip,1500);
                     break;
                 default:
                     console.error('Bad power number: '+power);
             }
-            this.addTooltipHtmlToClass('HWselectable',tooltip,'',1500);
             this.connectClass('HWselectable','onclick','target_selected');
         },
 
@@ -296,13 +310,17 @@ function (dojo, declare) {
                 return
             var overpopulated = this.get_overpopulated_pieces();
             overpopulated.addClass('HWselectable HWoverpopulated');
+            this.add_tooltip(
+                overpopulated,
+                _('Click to destroy all pieces of this color in this system'),
+                1500
+            );
             this.connectClass('HWselectable','onclick','catastrophe_target_selected');
         },
 
         power_targets: function(empowerednode,power){
             var systemnode = this.get_system(empowerednode);
             // Nodes to highlight
-            var candidates;
             power = parseInt(power);
             switch(power){
                 case 1:
@@ -315,11 +333,11 @@ function (dojo, declare) {
                     return dojo.NodeList();
                 case 4:
                     // TODO return candidates rather than highlighting manually
+                    var targets = dojo.NodeList();
                     var ptype = empowerednode.getAttribute('ptype').split('_');
                     var old_color = ptype[0];
                     var pips = ptype[1];
-                    var stack;
-                    var children;
+                    var stack,children;
                     for(var i=1;i<=4;i++){
                         if(i==old_color)
                             continue;
@@ -327,9 +345,9 @@ function (dojo, declare) {
                         children = dojo.query('.HWbanked',stack);
                         if(children.length==0)
                             continue;
-                        dojo.addClass(stack,'HWselectable');
+                        targets.push(stack);
                     }
-                    return dojo.NodeList();
+                    return targets;
                 default:
                     console.error('Bad power number: '+power);
             }
@@ -419,11 +437,14 @@ function (dojo, declare) {
                 case 'want_free':
                 case 'want_sacrifice_action':
                 case 'want_catastrophe':
-                    this.addActionButton(
-                        'catastrophe_button',
-                        _('Trigger catastrophe'),
-                        'catastrophe_button_selected'
-                    );
+                    // This needs to be checked in free and sacrifice action cases
+                    if(this.get_overpopulated_pieces().length > 0){
+                        this.addActionButton(
+                            'catastrophe_button',
+                            _('Trigger catastrophe'),
+                            'catastrophe_button_selected'
+                        );
+                    }
                     this.addActionButton(
                         'pass_button',
                         _('End turn'),
@@ -466,7 +487,7 @@ function (dojo, declare) {
                     return null;
                 }
             }
-            return par
+            return par;
         },
 
         // Set up the global variable this.colony_assignments
