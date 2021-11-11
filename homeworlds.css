@@ -16,7 +16,7 @@
 #HWboard{
     /* Board margin-right makes space for bank */
     margin-right:310px;
-    height:1000px;
+    /* height:1000px; */
     /*background:rgba(255,255,255,0.3);*/
 }
 #HWbank{
@@ -25,8 +25,8 @@
     or its width/height can't be used for relative sizes of stacks
     */
     position:relative;
-    width:300px;
-    height:1000px;
+    width:200px;
+    height:600px;
     float:right;
     background:rgba(0,0,0,0.3);
 }
@@ -81,6 +81,7 @@ and rows of same-sized systems are created
     background-image:url('img/sprites.png');
     background-repeat:no-repeat;
     display:inline-block;
+    background-size:145px 600px;
 }
 .HWship,.HWstar{
     /*position:relative;*/
@@ -103,50 +104,48 @@ This section sets the vertical background offset by piece color and orientation.
     background-position-y:-0px
 }
 .HWred.HWstar{
-    background-position-y:-190px
+    background-position-y:-95px
 }
 .HWyellow.HWship,.HWyellow.HWbanked{
-    background-position-y:-300px
+    background-position-y:-150px
 }
 .HWyellow.HWstar{
-    background-position-y:-490px
+    background-position-y:-245px
 }
 .HWgreen.HWship,.HWgreen.HWbanked{
-    background-position-y:-600px
+    background-position-y:-300px
 }
 .HWgreen.HWstar{
-    background-position-y:-790px
+    background-position-y:-395px
 }
 .HWblue.HWship,.HWblue.HWbanked{
-    background-position-y:-900px
+    background-position-y:-450px
 }
 .HWblue.HWstar{
-    background-position-y:-1090px
+    background-position-y:-545px
 }
 
 /* Horizontal offset by and width depend on piece size. */
 .HWlarge{
     background-position-x:-0px;
-    width:112px;
+    width:56px;
 }
 .HWmedium{
-    background-position-x:-112px;
-    width:104px;
+    background-position-x:-56px;
+    width:52px;
 }
 .HWsmall{
-    background-position-x:-216px;
-    width:84px;
+    background-position-x:-108px;
+    width:42px;
 }
 
 /* For now, height only depends on whether the piece is standing. */
 .HWship{
-    /* height:190px; original height */
-    height:190px;
     transform:rotate(var(--rotateAmount));
 }
 .HWstar{
     /* height:110px; original height */
-    height:110px;
+    height:55px;
     --rotateAmount:0deg;
 }
 
@@ -168,8 +167,8 @@ These terms will need to be generalized if 3+ player is implemented.
 }
 
 /* Banked pieces have the height of ships and point up. */
-.HWbanked{
-    height:190px;
+.HWship,.HWbanked{
+    height:95px;
 }
 .HWselectable{
     cursor:pointer;
