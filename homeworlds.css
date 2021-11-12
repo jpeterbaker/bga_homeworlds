@@ -191,27 +191,27 @@ These terms will need to be generalized if 3+ player is implemented.
     /* Reverse the shadow for hostile ships since they're rotated */
     filter:drop-shadow(-15px 15px 10px black);
 }
-.HWselectable.HWship.HWfriendly:not([empower]),.HWselectable.HWstar{
+.HWselectable.HWship.HWfriendly:not([activate]),.HWselectable.HWstar{
     /* TODO try box-shadow */
     filter:drop-shadow(15px -15px 10px black);
 }
-/* Use a custom "empower" attribute to highlight with power color */
-[empower=pending]{
+/* Use a custom "activate" attribute to highlight with power color */
+[activate=pending]{
     filter:drop-shadow(15px -15px 10px indigo);
 }
-[empower=sacrifice]{
+[activate=sacrifice]{
     width:0px;
 }
-[empower='1']{
+[activate='1']{
     filter:drop-shadow(15px -15px 10px red);
 }
-[empower='2']{
+[activate='2']{
     filter:drop-shadow(15px -15px 10px yellow);
 }
-[empower='3']{
+[activate='3']{
     filter:drop-shadow(15px -15px 10px green);
 }
-[empower='4']{
+[activate='4']{
     filter:drop-shadow(15px -15px 10px blue);
 }
 

@@ -55,13 +55,11 @@ function (dojo, declare) {
             for(var player_id in gamedatas.players){
                 player = gamedatas.players[player_id];
                 this['player_'+player.player_no] = player_id;
-                console.log('setting up player no ',player.player_no,' as ',player_id);
             }
 
             ///////////////////
             // Create pieces //
             ///////////////////
-            console.log(gamedatas);
             var colornum,pipsnum;
             var params;
             var piece_id,stack_id;
@@ -75,14 +73,6 @@ function (dojo, declare) {
             var system,homeplayer_name,system_name;
             for(system_id in gamedatas.systems) {
                 system = gamedatas.systems[system_id];
-                // Home systems have no name on the server side,
-                // so add it now
-                if(system.homeplayer_id != null){
-                    console.log(system.homeplayer_id);
-                    console.log( gamedatas.players[system.homeplayer_id]);
-                    homeplayer_name = gamedatas.players[system.homeplayer_id].player_name;
-                    system.system_name = this.get_home_name(homeplayer_name);;
-                }
                 this.setup_system(system);
             }
 
@@ -147,7 +137,7 @@ function (dojo, declare) {
             ships.addClass('HWselectable');
             this.add_tooltip(
                 ships,
-                _('Click to empower or sacrifice this ship'),
+                _('Click to activate or sacrifice this ship'),
                 1500
             );
             this.connectClass(
@@ -156,7 +146,7 @@ function (dojo, declare) {
                 function(evt){
                     evt.preventDefault();
                     dojo.stopEvent(evt);
-                    this.empower_ship(evt.currentTarget);
+                    this.activate_ship(evt.currentTarget);
                 }
             );
         },
@@ -194,7 +184,7 @@ function (dojo, declare) {
                 function(evt){
                     evt.preventDefault();
                     dojo.stopEvent(evt);
-                    this.empower_ship(evt.currentTarget,args.color);
+                    this.activate_ship(evt.currentTarget,args.color);
                 }
             );
         },
@@ -202,14 +192,14 @@ function (dojo, declare) {
         onEntering_client_want_power: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var empowerquery = dojo.query('[empower]');
-            var empowerednode = empowerquery[0];
-            // The system that the empowered ship is in
-            var systemnode = this.get_system(empowerednode);
-            // Candidates for empowering technology
+            var activatequery = dojo.query('[activate]');
+            var activatednode = activatequery[0];
+            // The system that the activated ship is in
+            var systemnode = this.get_system(activatednode);
+            // Candidates for activating technology
             var candidates = dojo.query('.HWstar,.HWfriendly.HWship',systemnode);
             candidates.addClass('HWselectable');
-            this.add_power_tooltips(candidates.concat(empowerquery));
+            this.add_power_tooltips(candidates.concat(activatequery));
             this.connectClass(
                 'HWselectable',
                 'onclick',
@@ -257,7 +247,7 @@ function (dojo, declare) {
                     case 3:
                         this.addTooltip(
                             piece.id,
-                            _('Click to choose build power and build a new ship in the color of the empowered ship'),
+                            _('Click to choose build power and build a new ship in the color of the activated ship'),
                             '',1500
                         );
                         break;
@@ -277,26 +267,26 @@ function (dojo, declare) {
         onEntering_client_want_target: function(args){
             if(!this.isCurrentPlayerActive())
                 return
-            var empowerednode = dojo.query('[empower]')[0];
-            var power = parseInt(empowerednode.getAttribute('empower'));
+            var activatednode = dojo.query('[activate]')[0];
+            var power = parseInt(activatednode.getAttribute('activate'));
             var targets;
             var tooltip;
             switch(power){
                 case 1:
-                    targets = this.power_targets(empowerednode,power);
+                    targets = this.power_targets(activatednode,power);
                     targets.addClass('HWselectable');
                     tooltip = _('Click this ship to capture it');
                     this.add_tooltip(targets,tooltip,1500);
                     break;
                 case 2:
-                    var systemnode = this.get_system(empowerednode);
+                    var systemnode = this.get_system(activatednode);
                     var systems = this.connected_systems(systemnode);
-                    tooltip = _('Click to move empowered ship to this system');
+                    tooltip = _('Click to move activated ship to this system');
                     this.add_tooltip(systems,tooltip,1500);
                     systems.addClass('HWselectable');
 
                     var stacks = this.connected_stacks(systemnode);
-                    tooltip = _('Click to move empowered ship to a new system with this star');
+                    tooltip = _('Click to move activated ship to a new system with this star');
                     this.add_tooltip(stacks,tooltip,1500);
                     stacks.addClass('HWselectable');
                     break;
@@ -305,7 +295,7 @@ function (dojo, declare) {
                     //this.add_tooltip(targets,tooltip,1500);
                     break;
                 case 4:
-                    targets = this.power_targets(empowerednode,power);
+                    targets = this.power_targets(activatednode,power);
                     targets.addClass('HWselectable');
                     tooltip = _('Click to trade for a ship of this color');
                     this.add_tooltip(targets,tooltip,1500);
@@ -329,8 +319,8 @@ function (dojo, declare) {
             this.connectClass('HWselectable','onclick','catastrophe_target_selected');
         },
 
-        power_targets: function(empowerednode,power){
-            var systemnode = this.get_system(empowerednode);
+        power_targets: function(activatednode,power){
+            var systemnode = this.get_system(activatednode);
             // Nodes to highlight
             power = parseInt(power);
             switch(power){
@@ -345,7 +335,7 @@ function (dojo, declare) {
                 case 4:
                     // TODO return candidates rather than highlighting manually
                     var targets = dojo.NodeList();
-                    var ptype = empowerednode.getAttribute('ptype').split('_');
+                    var ptype = activatednode.getAttribute('ptype').split('_');
                     var old_color = ptype[0];
                     var pips = ptype[1];
                     var stack,children;
@@ -369,7 +359,7 @@ function (dojo, declare) {
             var targets = dojo.NodeList();
 
             var system,i,j,color,result;
-            for(i=0;i<4;i++){
+            for(i=1;i<=4;i++){
                 color = '.HW'+this.color_names_eng[i];
                 for(j=0;j<systems.length;j++){
                     system = systems[j];
@@ -416,7 +406,7 @@ function (dojo, declare) {
             if(!this.isCurrentPlayerActive())
                 return
             this.deselect_all();
-            this.unempower_all();
+            this.unactivate_all();
         },
         onLeaving_client_want_catastrophe_target: function(args){
             if(!this.isCurrentPlayerActive())
@@ -501,13 +491,6 @@ function (dojo, declare) {
             return par;
         },
 
-        get_home_name: function(player_name){
-            return dojo.string.substitute(
-                _('Home of ${player_name}'),
-                {player_name:player_name}
-            );
-        },
-
         // Set up the global variable this.colony_assignments
         setup_colony_assignments: function(){
             var homes = dojo.query('.HWsystem:not([homeplayer_id=none])');
@@ -536,7 +519,7 @@ function (dojo, declare) {
         put_in_bank: function(piecenode){
             var systemnode = this.get_system(piecenode);
             dojo.removeClass(piecenode,'HWfriendly HWhostile HWstar HWship HWoverpopulated');
-            piecenode.removeAttribute('empower');
+            piecenode.removeAttribute('activate');
             dojo.addClass(piecenode,'HWbanked');
             var cnameSplit = piecenode.getAttribute('ptype').split('_');
             var color = cnameSplit[0];
@@ -570,7 +553,6 @@ function (dojo, declare) {
 
             // player ID of the player whose ships should point north
             var friendly_id = this.get_bot_player();
-            console.log('frindly id',friendly_id);
             // Add ships
             for(ship_id in system.ships){
                 ship = system.ships[ship_id];
@@ -644,7 +626,6 @@ function (dojo, declare) {
         },
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
             var params,par;
-            console.log('placing system',system_id,system_name,homeplayer_id,star_size);
             if(homeplayer_id == null){
                 params = {
                     system_id:system_id,
@@ -668,8 +649,6 @@ function (dojo, declare) {
                     homeplayer_id:'player_'+homeplayer_id
                 };
                 // The parent of a home system node is a special container
-                console.log('bot player',this.get_bot_player());
-                console.log('home player',homeplayer_id);
                 if(homeplayer_id == this.get_bot_player())
                     par = 'HWhome_container_bot';
                 else
@@ -806,9 +785,9 @@ function (dojo, declare) {
                 this.removeTooltip(selectable[i].id);
         },
 
-        unempower_all: function(){
-            var empowered = dojo.query('[empower]');
-            empowered.removeAttr('empower');
+        unactivate_all: function(){
+            var activated = dojo.query('[activate]');
+            activated.removeAttr('activate');
         },
 
         ///////////////////////////////////////////////////
@@ -906,15 +885,15 @@ function (dojo, declare) {
 
         cancel_action(){
             this.deselect_all();
-            this.unempower_all();
+            this.unactivate_all();
             args = this['latest_args'];
             this.setClientState(args.state_name,args);
         },
 
-        empower_ship: function(shipnode,color=null){
+        activate_ship: function(shipnode,color=null){
             // Free action
             if(color == null){
-                shipnode.setAttribute('empower','pending');
+                shipnode.setAttribute('activate','pending');
                 this.setClientState(
                     'client_want_power',
                     {
@@ -924,15 +903,15 @@ function (dojo, declare) {
                 );
             }
             else{
-                shipnode.setAttribute('empower',color);
+                shipnode.setAttribute('activate',color);
                 this.power_selected(color);
             }
         },
 
         power_selected: function(color){
-            // The ship being empowered
-            var empowerednode = dojo.query('[empower]')[0];
-            empowerednode.setAttribute('empower',color);
+            // The ship being activated
+            var activatednode = dojo.query('[activate]')[0];
+            activatednode.setAttribute('activate',color);
             var description;
             color = parseInt(color);
             switch(color){
@@ -961,7 +940,7 @@ function (dojo, declare) {
                 this.ajaxcallwrapper(
                     'act_power_action',
                     {
-                        piece_id:empowerednode.id.split('_')[1],
+                        piece_id:activatednode.id.split('_')[1],
                         power:3
                     }
                 );
@@ -987,18 +966,18 @@ function (dojo, declare) {
         target_selected: function(evt){
             evt.preventDefault();
             dojo.stopEvent(evt);
-            var empowerednode = dojo.query('[empower]')[0];
+            var activatednode = dojo.query('[activate]')[0];
             var targetnode = evt.currentTarget;
-            var power = empowerednode.getAttribute('empower');
+            var power = activatednode.getAttribute('activate');
             var target_ids = targetnode.id.split('_');
-            var empower_id = empowerednode.id.split('_')[1];
+            var activate_id = activatednode.id.split('_')[1];
             switch(parseInt(power)){
             case 1:
                 // Capture
                 this.ajaxcallwrapper(
                     'act_power_action',
                     {
-                        piece_id:  empower_id,
+                        piece_id:  activate_id,
                         power:     1,
                         capture_id: target_ids[1]
                     }
@@ -1011,7 +990,7 @@ function (dojo, declare) {
                     this.ajaxcallwrapper(
                         'act_power_action',
                         {
-                            piece_id:       empower_id,
+                            piece_id:       activate_id,
                             power:          2,
                             is_discovery:   1,
                             star_color_num: target_ids[1],
@@ -1023,7 +1002,7 @@ function (dojo, declare) {
                     this.ajaxcallwrapper(
                         'act_power_action',
                         {
-                            piece_id:     empower_id,
+                            piece_id:     activate_id,
                             power:        2,
                             is_discovery: 0,
                             system_id:    target_ids[1],
@@ -1037,7 +1016,7 @@ function (dojo, declare) {
                 this.ajaxcallwrapper(
                     'act_power_action',
                     {
-                        piece_id:     empower_id,
+                        piece_id:     activate_id,
                         power:        4,
                         color_num: target_ids[1]
                     }
@@ -1049,8 +1028,8 @@ function (dojo, declare) {
         },
 
         sacrifice_button_selected: function(){
-            var shipnode = dojo.query('[empower]')[0];
-            shipnode.setAttribute('empower','sacrifice');
+            var shipnode = dojo.query('[activate]')[0];
+            shipnode.setAttribute('activate','sacrifice');
             this.ajaxcallwrapper(
                 'act_sacrifice',
                 {
@@ -1109,11 +1088,6 @@ function (dojo, declare) {
             var args = notif.args;
             var systemnode;
 
-            var system_name = dojo.string.substitute(
-                _('Home of ${player_name}'),
-                {player_name:args.player_name}
-            );
-
             var systemnode_candidates = dojo.query(
                 '[homeplayer_id=player_'+args.homeplayer_id+']'
             );
@@ -1127,13 +1101,13 @@ function (dojo, declare) {
                 systemnode = systemnode_candidates[0];
                 systemnode.id = 'HWsystem_'+args.system_id;
                 var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
-                labelnode.innerHTML = system_name;
+                labelnode.innerHTML = args.system_name;
                 return;
             }
 
             var systemnode = this.place_system(
                 args.system_id,
-                system_name,
+                args.system_name,
                 args.homeplayer_id
             );
             var piecenode;

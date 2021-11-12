@@ -85,8 +85,8 @@ $machinestates = array(
     // Get free action, sacrifice, catastrophe, or pass
     11 => array(
         'name' => 'want_free',
-        'description' => clienttranslate('${actplayer} may empower or sacrifice a ship.'),
-        'descriptionmyturn' => clienttranslate('${you} may choose a ship to empower or sacrifice.'),
+        'description' => clienttranslate('${actplayer} may activate or sacrifice a ship.'),
+        'descriptionmyturn' => clienttranslate('${you} may choose a ship to activate or sacrifice.'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',
@@ -106,7 +106,7 @@ $machinestates = array(
     12 => array(
         'name' => 'want_sacrifice_action',
         'description' => clienttranslate('${actplayer} may ${action_name} a ship (${actions_remaining} actions remaining).'),
-        'descriptionmyturn' => clienttranslate('${you} may choose a ship to empower (${actions_remaining} ${action_name} actions remaining).'),
+        'descriptionmyturn' => clienttranslate('${you} may choose a ship to activate (${actions_remaining} ${action_name} actions remaining).'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',

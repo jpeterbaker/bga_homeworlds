@@ -251,17 +251,15 @@ class homeworlds extends Table {
     }
 
     function make_system($homeplayer_id=NULL){
-        // Home systems don't get names on the server side
-        // The name "Home of player_name" will be set up by the client
         if(is_null($homeplayer_id)){
             // Insert row with only default values.
             // Null name will be overwritten after we have the id
             // since id is needed for finding the next name on the list.
-            $sql = 'INSERT INTO Systems (homeplayer_id) VALUES (NULL)';
+            $sql = 'INSERT INTO Systems (homeplayer_id)
+                VALUES (NULL)';
         }
         else{
-            $sql = 'INSERT
-                INTO Systems (homeplayer_id)
+            $sql = 'INSERT INTO Systems (homeplayer_id)
                 VALUES ('.$homeplayer_id.')';
         }
         self::DbQuery($sql);
@@ -269,8 +267,6 @@ class homeworlds extends Table {
         $sql = 'SELECT MAX(system_id) FROM Systems';
         $system_id = $this->array_key_first(self::getCollectionFromDb($sql));
 
-        $system_name = null;
-        // Home systems have null names (server side)
         // Colonies get names from the list
         if(is_null($homeplayer_id)){
             $idx = ($system_id-2) % $this->name_count;
@@ -278,11 +274,18 @@ class homeworlds extends Table {
             // Add a number if this system name has been used before
             if($system_id-2 >= $this->name_count)
                 $system_name .= ' '.(1+intdiv($system_id-2,$this->name_count));
-            $sql = "UPDATE Systems
-                SET system_name='".$system_name."'
-                WHERE system_id=".$system_id;
-            self::DbQuery($sql);
         }
+        else{
+            $sql = 'SELECT player_id,player_name FROM player
+                WHERE player_id='.$homeplayer_id;
+            $result = self::getCollectionFromDb($sql);
+            $player_name = $result[$homeplayer_id]['player_name'];
+            $system_name = "Homeworld ${player_name}";
+        }
+        $sql = "UPDATE Systems
+            SET system_name='".$system_name."'
+            WHERE system_id=".$system_id;
+        self::DbQuery($sql);
         return [$system_id,$system_name];
     }
 
@@ -394,7 +397,6 @@ class homeworlds extends Table {
 
     // Ensure that current player has the right to empower piece_id with power
     function validate_power_action($power,$ship_id){
-        self::checkAction('act_power_action');
         $player_id = $this->getActivePlayerId();
 
         // Check ship ownership
@@ -505,6 +507,7 @@ class homeworlds extends Table {
             array(
                 'homeplayer_id' => $player_id,
                 'player_name'   => $player_name,
+                'system_name'   => $system_name,
                 'system_id'     => $system_id,
                 'star1_id'      => $star1_id,
                 'star2_id'      => $star2_id,
@@ -515,6 +518,7 @@ class homeworlds extends Table {
     }
 
     function capture($piece_id,$capture_id){
+        self::checkAction('act_power_action');
         $this->validate_power_action(1,$piece_id);
         $attack_ship = $this->get_piece_row($piece_id);
         $target_ship = $this->get_piece_row($capture_id);
@@ -553,6 +557,7 @@ class homeworlds extends Table {
     }
 
     function move($ship_id,$system_id){
+        self::checkAction('act_power_action');
         $this->validate_power_action(2,$ship_id);
 
         $ship = $this->get_piece_row($ship_id);
@@ -575,8 +580,10 @@ class homeworlds extends Table {
             WHERE piece_id='.$ship_id;
         self::DbQuery($sql);
 
-        $system_name = $this->get_system_row($system_id)['system_name'];
         $player_name = $this->getActivePlayerName();
+
+        $system = $this->get_system_row($system_id);
+        $system_name = $system['system_name'];
         self::notifyAllPlayers('notif_move',
             clienttranslate('${player_name} moves a ship to ${system_name}.'),
             array(
@@ -616,6 +623,7 @@ class homeworlds extends Table {
 
     function discover($ship_id,$star_color_num,$star_pips){
         // Move will be validated by move function
+        self::checkAction('act_power_action');
         //$this->validate_power_action(2,$ship_id);
 
         // Make sure such a star is in the bank
@@ -649,6 +657,7 @@ class homeworlds extends Table {
     }
 
     function build($ship_id){
+        self::checkAction('act_power_action');
         $this->validate_power_action(3,$ship_id);
 
         $old_ship = $this->get_piece_row($ship_id);
@@ -685,6 +694,7 @@ class homeworlds extends Table {
     }
 
     function trade($ship_id,$color_num){
+        self::checkAction('act_power_action');
         $this->validate_power_action(4,$ship_id);
         $old_ship  = $this->get_piece_row($ship_id);
         $system_id = $old_ship['system_id'];
@@ -786,6 +796,7 @@ class homeworlds extends Table {
     }
 
 	function pass(){
+        self::checkAction('act_pass');
         $player_name = $this->getActivePlayerName();
         self::notifyAllPlayers('notif_pass',
             clienttranslate('${player_name} ends their turn.'),
