@@ -250,6 +250,14 @@ class homeworlds extends Table {
         return NULL;
     }
 
+    function get_piece_string($piece_id){
+        // THIS WILL BREAK IF PIECES ARE CONSTRUCTED IN A DIFFERENT ORDER
+        // First piece has id 1
+        $color = intdiv($piece_id-1,9)+1;
+        $pips  = intdiv($piece_id-1-9*($color-1),3)+1;
+        return $this->color_names_eng[$color][0].$pips;
+    }
+
     function make_system($homeplayer_id=NULL){
         if(is_null($homeplayer_id)){
             // Insert row with only default values.
@@ -269,11 +277,12 @@ class homeworlds extends Table {
 
         // Colonies get names from the list
         if(is_null($homeplayer_id)){
-            $idx = ($system_id-2) % $this->name_count;
+            // This only works if there are exactly 2 players
+            $idx = ($system_id-3) % $this->name_count;
             $system_name = $this->system_names[$idx];
             // Add a number if this system name has been used before
-            if($system_id-2 >= $this->name_count)
-                $system_name .= ' '.(1+intdiv($system_id-2,$this->name_count));
+            if($system_id-3 >= $this->name_count)
+                $system_name .= ' '.(1+intdiv($system_id-3,$this->name_count));
         }
         else{
             $sql = 'SELECT player_id,player_name FROM player
@@ -458,10 +467,23 @@ class homeworlds extends Table {
         )[$system_id];
     }
 
+    function get_player_row($player_id){
+        $sql = 'SELECT * FROM player WHERE player_id='.$player_id;
+        $result = self::getCollectionFromDb($sql);
+        return $result[$this->array_key_first($result)];
+    }
+
     function get_stars($system_id){
         return self::getCollectionFromDb(
             'SELECT * FROM Pieces WHERE owner_id IS NULL AND system_id='.$system_id
         );
+    }
+
+    function get_containing_system($piece_id){
+        $sql = 'SELECT piece_id,system_id FROM Pieces
+            WHERE piece_id='.$piece_id;
+        $result = self::getCollectionFromDb($sql);
+        return $result[$piece_id]['system_id'];
     }
 
     function is_empty($system_id,$turn_over=false){
@@ -503,7 +525,7 @@ class homeworlds extends Table {
 
         self::notifyAllPlayers(
             'notif_create',
-            clienttranslate('${player_name} establishes a homeworld.'),
+            clienttranslate('${player_name} establishes a homeworld with a ${ship_str} ship at ${star1_str} and ${star2_str} binary stars.'),
             array(
                 'homeplayer_id' => $player_id,
                 'player_name'   => $player_name,
@@ -511,7 +533,10 @@ class homeworlds extends Table {
                 'system_id'     => $system_id,
                 'star1_id'      => $star1_id,
                 'star2_id'      => $star2_id,
-                'ship_id'       => $ship_id
+                'ship_id'       => $ship_id,
+                'star1_str'      => $this->get_piece_string($star1_id),
+                'star2_str'      => $this->get_piece_string($star2_id),
+                'ship_str'       => $this->get_piece_string($ship_id)
             )
         );
         $this->gamestate->nextState('trans_after_creation');
@@ -545,12 +570,17 @@ class homeworlds extends Table {
             WHERE piece_id='.$capture_id;
         self::DbQuery($sql);
 
+        $system_id = $this->get_containing_system($piece_id);
+        $system_name = $this->get_system_row($system_id)['system_name'];
+
         self::notifyAllPlayers(
             'notif_capture',
-            clienttranslate('${player_name} captures a ship.'),
+            clienttranslate('${player_name} captures a ${target_str} ship in ${system_name}.'),
             array(
                 'player_name' => $player_name,
-                'target_id'   => $capture_id
+                'target_id'   => $capture_id,
+                'target_str'  => $this->get_piece_string($capture_id),
+                'system_name' => $system_name
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
@@ -584,13 +614,18 @@ class homeworlds extends Table {
 
         $system = $this->get_system_row($system_id);
         $system_name = $system['system_name'];
+
+        $old_system = $this->get_system_row($old_system_id);
+        $old_system_name = $old_system['system_name'];
         self::notifyAllPlayers('notif_move',
-            clienttranslate('${player_name} moves a ship to ${system_name}.'),
+            clienttranslate('${player_name} moves a ${ship_str} ship from ${old_system_name} to ${system_name}.'),
             array(
                 'player_name' => $player_name,
                 'system_id'   => $system_id,
                 'ship_id'     => $ship_id,
-                'system_name' => $system_name
+                'ship_str'    => $this->get_piece_string($ship_id),
+                'system_name' => $system_name,
+                'old_system_name' => $old_system_name
             )
         );
         if($this->is_empty($old_system_id))
@@ -637,11 +672,12 @@ class homeworlds extends Table {
 
         $player_name = $this->getActivePlayerName();
         self::notifyAllPlayers('notif_discover',
-            clienttranslate('${player_name} discovers ${system_name}.'),
+            clienttranslate('${player_name} discovers a ${star_str} system named ${system_name}.'),
             array(
                 'player_name' => $player_name,
                 'system_id'   => $system_id,
                 'star_id'     => $star_id,
+                'star_str'    => $this->get_piece_string($star_id),
                 'system_name' => $system_name
             )
         );
@@ -676,17 +712,20 @@ class homeworlds extends Table {
 
         $new_ship = $result[$this->array_key_first($result)];
         $system_id = $old_ship['system_id'];
+        $system_name = $this->get_system_row($system_id)['system_name'];
         $this->make_ship($new_ship['piece_id'],$old_ship['owner_id'],$system_id);
 
         $player_name = $this->getActivePlayerName();
         $player_id   = $this->getActivePlayerId();
         self::notifyAllPlayers('notif_build',
-            clienttranslate('${player_name} builds a ship.'),
+            clienttranslate('${player_name} builds a ${ship_str} ship in ${system_name}.'),
             array(
                 'player_name' => $player_name,
                 'player_id'   => $player_id,
                 'system_id'   => $system_id,
-                'ship_id'     => $new_ship['piece_id']
+                'system_name' => $system_name,
+                'ship_id'     => $new_ship['piece_id'],
+                'ship_str'    => $this->get_piece_string($new_ship['piece_id'])
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
@@ -698,6 +737,7 @@ class homeworlds extends Table {
         $this->validate_power_action(4,$ship_id);
         $old_ship  = $this->get_piece_row($ship_id);
         $system_id = $old_ship['system_id'];
+        $system_name = $this->get_system_row($system_id)['system_name'];
 
         $new_ship_id = $this->get_id_from_bank($color_num,$old_ship['pips']);
         $this->make_ship($new_ship_id,$old_ship['owner_id'],$old_ship['system_id']);
@@ -706,13 +746,16 @@ class homeworlds extends Table {
         $player_name = $this->getActivePlayerName();
         $player_id   = $this->getActivePlayerId();
         self::notifyAllPlayers('notif_trade',
-            clienttranslate('${player_name} trades a ship.'),
+            clienttranslate('${player_name} trades a ${old_ship_str} ship for a ${new_ship_str} ship in ${system_name}.'),
             array(
-                'player_name' => $player_name,
-                'player_id'   => $player_id,
-                'system_id'   => $system_id,
-                'old_ship_id' => $ship_id,
-                'new_ship_id' => $new_ship_id
+                'player_name'  => $player_name,
+                'player_id'    => $player_id,
+                'system_id'    => $system_id,
+                'system_name'  => $system_name,
+                'old_ship_id'  => $ship_id,
+                'old_ship_str' => $this->get_piece_string($ship_id),
+                'new_ship_id'  => $new_ship_id,
+                'new_ship_str' => $this->get_piece_string($new_ship_id)
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
@@ -724,6 +767,9 @@ class homeworlds extends Table {
 
         $player_id = $this->getActivePlayerId();
         $player_name = $this->getActivePlayerName();
+
+        $system_id = $this->get_containing_system($ship_id);
+        $system_name = $this->get_system_row($system_id)['system_name'];
 
         // Make sure the ship's owner is corret
         $ship = $this->get_piece_row($ship_id);
@@ -741,10 +787,12 @@ class homeworlds extends Table {
         self::setGameStateValue('sacrifice_actions',$ship['pips']);
 
         self::notifyAllPlayers('notif_sacrifice',
-            clienttranslate('${player_name} sacrifices a ship.'),
+            clienttranslate('${player_name} sacrifices a ${ship_str} ship in ${system_name}.'),
             array(
                 'player_name' => $player_name,
-                'ship_id' => $ship_id
+                'ship_id' => $ship_id,
+                'ship_str' => $this->get_piece_string($ship_id),
+                'system_name' => $system_name
             )
         );
         $system_id = $ship['system_id'];
@@ -774,7 +822,7 @@ class homeworlds extends Table {
         $this->put_in_bank($piece_ids);
 
         $system_name = $this->get_system_row($system_id)['system_name'];
-        $color_name  = $this->color_names_local[$color-1];
+        $color_name  = $this->color_names_local[$color];
 
         self::notifyAllPlayers('notif_catastrophe',
             clienttranslate('${player_name} triggers a ${color_name} catastrophe in ${system_name}.'),
@@ -833,7 +881,7 @@ class homeworlds extends Table {
     function args_want_sacrifice_action(){
         $action_color = self::getGameStateValue('sacrifice_color');
         $actions_remaining = self::getGameStateValue('sacrifice_actions');
-        $action_name = $this->action_names[$action_color-1];
+        $action_name = $this->action_names[$action_color];
         //return array(
         //    'action_name' => 'temp action name',
         //    'actions_remaining' => 'temp action count'
@@ -908,6 +956,14 @@ class homeworlds extends Table {
             $defenders = self::getCollectionFromDb($sql);
             if(count($defenders)==0){
                 array_push($losers,$homeplayer_id);
+                $player_name = $this->get_player_row($homeplayer_id)['player_name'];
+                self::notifyAllPlayers(
+                    'notif_elimination',
+                    clienttranslate('${player_name} has no ships in their homeworld and is eliminated.'),
+                    array(
+                        'player_name'   => $player_name
+                    )
+                );
             }
         }
 

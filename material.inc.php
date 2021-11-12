@@ -57,26 +57,28 @@ $this->system_names = array(
     'Yokrip',
     'Zeeha'
 );
+$this->system_names[-1] = 'SECRET';
+
 $this->name_count = count($this->system_names);
 
 // These terms will only be used in phrases of the form
 // 3 ${action_name} actions remaining
-$this->action_names = [
-    clienttranslate('capture'),
-    clienttranslate('move'),
-    clienttranslate('build'),
-    clienttranslate('trade')
-];
-$this->color_names_eng = [
-    'red',
-    'yellow',
-    'green',
-    'blue'
-];
-$this->color_names_local = [
-    clienttranslate('red'),
-    clienttranslate('yellow'),
-    clienttranslate('green'),
-    clienttranslate('blue')
-];
+$this->action_names = array(
+    1 => clienttranslate('capture'),
+    2 => clienttranslate('move'),
+    3 => clienttranslate('build'),
+    4 => clienttranslate('trade')
+);
+$this->color_names_eng = array(
+    1 => 'red',
+    2 => 'yellow',
+    3 => 'green',
+    4 => 'blue'
+);
+$this->color_names_local = array(
+    1 => clienttranslate('red'),
+    2 => clienttranslate('yellow'),
+    3 => clienttranslate('green'),
+    4 => clienttranslate('blue')
+);
 

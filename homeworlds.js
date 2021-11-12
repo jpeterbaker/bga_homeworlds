@@ -1079,6 +1079,7 @@ function (dojo, declare) {
             dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
 
             dojo.subscribe('notif_pass', this,'ignore_notif');
+            dojo.subscribe('notif_elimination', this,'ignore_notif');
         },
 
         ignore_notif: function(notif){
