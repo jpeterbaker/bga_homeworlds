@@ -59,6 +59,8 @@ $this->system_names = array(
 );
 $this->name_count = count($this->system_names);
 
+// These terms will only be used in phrases of the form
+// 3 ${action_name} actions remaining
 $this->action_names = [
     clienttranslate('capture'),
     clienttranslate('move'),

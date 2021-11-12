@@ -103,9 +103,10 @@ class homeworlds extends Table {
         $sql=substr($sql,0,-2);
         self::DbQuery($sql);
 
-//*
+/* START DEBUG SETUP
         // Put a few pieces on the board to see if they're displayed properly
-        [$system_id,$autogen] = $this->make_system('Home of Babamots',$player_id);
+        //[$system_id,$null_name] = $this->make_system(2357472);
+        [$system_id,$null_name] = $this->make_system($player_id);
 
         $this->make_star(1,$system_id);
         $this->make_star(31,$system_id);
@@ -115,7 +116,7 @@ class homeworlds extends Table {
 
         $this->make_ship(3,666,$system_id);
         $this->make_ship(7,666,$system_id);
-//*/
+//END DEBUG SETUP */
 
         // Change used_free to 1 when free move has been used
         // (This flag is needed in after_cat state to determine
@@ -160,6 +161,7 @@ class homeworlds extends Table {
         // Get information about players
         $sql = "SELECT
             player_id,
+            player_name,
             player_score,
             player_no
         FROM player";
@@ -248,22 +250,29 @@ class homeworlds extends Table {
         return NULL;
     }
 
-    function make_system($system_name=NULL,$homeplayer_id=NULL){
+    function make_system($homeplayer_id=NULL){
+        // Home systems don't get names on the server side
+        // The name "Home of player_name" will be set up by the client
         if(is_null($homeplayer_id)){
-            $sql = "INSERT
-                INTO Systems (system_name)
-                VALUES ('".$system_name."')";
+            // Insert row with only default values.
+            // Null name will be overwritten after we have the id
+            // since id is needed for finding the next name on the list.
+            $sql = 'INSERT INTO Systems (homeplayer_id) VALUES (NULL)';
         }
         else{
-            $sql = "INSERT
-                INTO Systems (system_name,homeplayer_id)
-                VALUES ('".$system_name."',".$homeplayer_id.")";
+            $sql = 'INSERT
+                INTO Systems (homeplayer_id)
+                VALUES ('.$homeplayer_id.')';
         }
         self::DbQuery($sql);
 
         $sql = 'SELECT MAX(system_id) FROM Systems';
         $system_id = $this->array_key_first(self::getCollectionFromDb($sql));
-        if(is_null($system_name)){
+
+        $system_name = null;
+        // Home systems have null names (server side)
+        // Colonies get names from the list
+        if(is_null($homeplayer_id)){
             $idx = ($system_id-2) % $this->name_count;
             $system_name = $this->system_names[$idx];
             // Add a number if this system name has been used before
@@ -484,10 +493,7 @@ class homeworlds extends Table {
         $player_id = $this->getActivePlayerId();
         $player_name = $this->getActivePlayerName();
 
-        [$system_id,$system_name] = $this->make_system(
-            clienttranslate('Home of ${player_name}'),
-            $player_id
-        );
+        [$system_id,$system_name] = $this->make_system($player_id);
 
         $this->make_star($star1_id,$system_id);
         $this->make_star($star2_id,$system_id);
@@ -498,7 +504,6 @@ class homeworlds extends Table {
             clienttranslate('${player_name} establishes a homeworld.'),
             array(
                 'homeplayer_id' => $player_id,
-                'system_name'   => $player_name,
                 'player_name'   => $player_name,
                 'system_id'     => $system_id,
                 'star1_id'      => $star1_id,
@@ -508,6 +513,7 @@ class homeworlds extends Table {
         );
         $this->gamestate->nextState('trans_after_creation');
     }
+
     function capture($piece_id,$capture_id){
         $this->validate_power_action(1,$piece_id);
         $attack_ship = $this->get_piece_row($piece_id);
@@ -834,24 +840,23 @@ class homeworlds extends Table {
     /*
     Functions to call automatically upon entry to a state
     */
-
     function st_after_creation(){
-        $this->activeNextPlayer();
-        // Figure out which state transition is needed
-        $sql = 'SELECT system_id FROM Systems';
-        $result = self::getCollectionFromDb($sql);
-        $nhw = count($result);
+        // Skip any zombie turns
+        do{
+            $this->activeNextPlayer();
+            $player_id = $this->getActivePlayerId();
+        }while($this->isPlayerZombie($player_id));
 
-        $sql = 'SELECT player_id FROM player';
+        $sql = 'SELECT system_id FROM Systems
+            WHERE homeplayer_id='.$player_id;
         $result = self::getCollectionFromDb($sql);
-        $nplayer = count($result);
-
-        if($nhw==$nplayer)
-            // All players are set up, go to normal turn
+        if(count($result) > 0){
+            // This player has a home, so everyone has had a chance to create
+            // Go to normal turn
             $this->gamestate->nextState('trans_want_free');
-        else
-            // A player is not set up, go back to creation
-            $this->gamestate->nextState('trans_want_creation');
+            return;
+        }
+        $this->gamestate->nextState('trans_want_creation');
     }
 
     function st_after_power_action(){
@@ -941,11 +946,17 @@ class homeworlds extends Table {
 
     function zombieTurn( $state, $active_player ) {
         // If a player is missing, just end the zombie turn.
-        // Really, the game should be over though, so this shouldn't come up.
-        if ($state['type'] === "activeplayer") {
-            $this->gamestate->nextState( "zombiePass" );
-        }
+        $this->gamestate->nextState('zombiePass');
     }
+
+	function isPlayerZombie($player_id) {
+	   $players = self::loadPlayersBasicInfos();
+	   if (! isset($players[$player_id]))
+		   throw new feException("Player $player_id is not playing here");
+	   
+	   return ($players[$player_id]['player_zombie'] == 1);
+   }
+
 ///////////////////////////////////////////////////////////////////////////////////:
 
 ////////// DB upgrade

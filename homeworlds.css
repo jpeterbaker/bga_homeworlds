@@ -45,10 +45,10 @@
     bottom:0px;
 }
 .HWstack>*:nth-child(2){
-    bottom:30px;
+    bottom:20px;
 }
 .HWstack>*:nth-child(3){
-    bottom:60px;
+    bottom:40px;
 }
 
 /********
@@ -169,6 +169,10 @@ These terms will need to be generalized if 3+ player is implemented.
 /* Banked pieces have the height of ships and point up. */
 .HWship,.HWbanked{
     height:95px;
+}
+/* I'm hoping for pieces centered in their stacks */
+.HWbanked{
+    margin:auto
 }
 .HWselectable{
     cursor:pointer;

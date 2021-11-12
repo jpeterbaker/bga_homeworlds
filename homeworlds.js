@@ -48,9 +48,20 @@ function (dojo, declare) {
         "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
         setup: function( gamedatas ) {
+            ///////////////////////////////
+            // Remember player positions //
+            ///////////////////////////////
+            var player;
+            for(var player_id in gamedatas.players){
+                player = gamedatas.players[player_id];
+                this['player_'+player.player_no] = player_id;
+                console.log('setting up player no ',player.player_no,' as ',player_id);
+            }
+
             ///////////////////
             // Create pieces //
             ///////////////////
+            console.log(gamedatas);
             var colornum,pipsnum;
             var params;
             var piece_id,stack_id;
@@ -61,18 +72,18 @@ function (dojo, declare) {
                 this.setup_piece(piece,'HWbanked',stack_id);
             }
             // Create systems and their pieces
+            var system,homeplayer_name,system_name;
             for(system_id in gamedatas.systems) {
-                this.setup_system(gamedatas.systems[system_id]);
-            }
-
-            // It seems like cheating,
-            // but I'm going to record player numbers in "this."
-            // This will make it easier to have the spectator view match
-            // the view of the south player.
-            var player;
-            for(var player_id in gamedatas.players){
-                player = gamedatas.players[player_id];
-                this['player_'+player.player_no] = player_id;
+                system = gamedatas.systems[system_id];
+                // Home systems have no name on the server side,
+                // so add it now
+                if(system.homeplayer_id != null){
+                    console.log(system.homeplayer_id);
+                    console.log( gamedatas.players[system.homeplayer_id]);
+                    homeplayer_name = gamedatas.players[system.homeplayer_id].player_name;
+                    system.system_name = this.get_home_name(homeplayer_name);;
+                }
+                this.setup_system(system);
             }
 
             this.setup_colony_assignments();
@@ -290,12 +301,12 @@ function (dojo, declare) {
                     stacks.addClass('HWselectable');
                     break;
                 case 3:
-                    tooltip = '';
-                    this.add_tooltip(targets,tooltip,1500);
+                    //tooltip = '';
+                    //this.add_tooltip(targets,tooltip,1500);
                     break;
                 case 4:
                     targets = this.power_targets(empowerednode,power);
-                    targets = this.power_targets(empowerednode,power);
+                    targets.addClass('HWselectable');
                     tooltip = _('Click to trade for a ship of this color');
                     this.add_tooltip(targets,tooltip,1500);
                     break;
@@ -490,6 +501,13 @@ function (dojo, declare) {
             return par;
         },
 
+        get_home_name: function(player_name){
+            return dojo.string.substitute(
+                _('Home of ${player_name}'),
+                {player_name:player_name}
+            );
+        },
+
         // Set up the global variable this.colony_assignments
         setup_colony_assignments: function(){
             var homes = dojo.query('.HWsystem:not([homeplayer_id=none])');
@@ -550,12 +568,9 @@ function (dojo, declare) {
 
             var ship_id,star_id;
 
-            // player ID of the player whose ships should point south
-            var friendly_id;
-            if(this.isSpectator)
-                friendly_id = this.player_2;
-            else
-                friendly_id = this.player_id;
+            // player ID of the player whose ships should point north
+            var friendly_id = this.get_bot_player();
+            console.log('frindly id',friendly_id);
             // Add ships
             for(ship_id in system.ships){
                 ship = system.ships[ship_id];
@@ -629,6 +644,7 @@ function (dojo, declare) {
         },
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
             var params,par;
+            console.log('placing system',system_id,system_name,homeplayer_id,star_size);
             if(homeplayer_id == null){
                 params = {
                     system_id:system_id,
@@ -652,6 +668,8 @@ function (dojo, declare) {
                     homeplayer_id:'player_'+homeplayer_id
                 };
                 // The parent of a home system node is a special container
+                console.log('bot player',this.get_bot_player());
+                console.log('home player',homeplayer_id);
                 if(homeplayer_id == this.get_bot_player())
                     par = 'HWhome_container_bot';
                 else
@@ -915,12 +933,27 @@ function (dojo, declare) {
             // The ship being empowered
             var empowerednode = dojo.query('[empower]')[0];
             empowerednode.setAttribute('empower',color);
+            var description;
+            color = parseInt(color);
+            switch(color){
+                case 1:
+                    description = _('${you} must choose a ship to capture.');
+                    break;
+                case 2:
+                    description = _('${you} must choose a destination system or a new star to discover from the bank.');
+                    break;
+                case 3:
+                    description = 'Next state loading';
+                    break;
+                case 4:
+                    description = _('${you} must choose a new color from the bank.');
+                    break;
+                default:
+                    console.error('Bad power number: '+color);
+            }
             this.setClientState(
                 'client_want_target',
-                {
-                    descriptionmyturn :
-                    '${you} must choose a target.'
-                }
+                { descriptionmyturn : description }
             );
             if(color==3){
                 // Build
@@ -1074,10 +1107,16 @@ function (dojo, declare) {
 
         create_from_notif: function(notif){
             var args = notif.args;
+            var systemnode;
+
+            var system_name = dojo.string.substitute(
+                _('Home of ${player_name}'),
+                {player_name:args.player_name}
+            );
+
             var systemnode_candidates = dojo.query(
                 '[homeplayer_id=player_'+args.homeplayer_id+']'
             );
-            var systemnode;
             if(systemnode_candidates.length != 0){
                 // The system is already represented by a node,
                 // so this is the player who made it.
@@ -1088,13 +1127,13 @@ function (dojo, declare) {
                 systemnode = systemnode_candidates[0];
                 systemnode.id = 'HWsystem_'+args.system_id;
                 var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
-                labelnode.innerHTML = args.system_name;
+                labelnode.innerHTML = system_name;
                 return;
             }
 
             var systemnode = this.place_system(
                 args.system_id,
-                args.system_name,
+                system_name,
                 args.homeplayer_id
             );
             var piecenode;

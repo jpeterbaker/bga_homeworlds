@@ -64,8 +64,8 @@ $machinestates = array(
         'description' => '',
         'type' => 'manager',
         'action' => 'stGameSetup',
-        //'transitions' => array('' => 10) // PRODUCTION
-        'transitions' => array('' => 11) // TESTING
+        'transitions' => array('' => 10) // PRODUCTION
+        //'transitions' => array('' => 11) // TESTING
     ),
 
     //////////////////////
@@ -146,7 +146,8 @@ $machinestates = array(
         'action' => 'st_after_creation',
         'transitions' => array(
             'trans_want_creation' => 10 ,
-            'trans_want_free' => 11
+            'trans_want_free' => 11,
+            'trans_skip_zombie' => 20
         )
     ),
     21 => array(
