@@ -493,11 +493,102 @@ function (dojo, declare) {
 
         // Set up the global variable this.colony_assignments
         setup_colony_assignments: function(){
-            var homes = dojo.query('.HWsystem:not([homeplayer_id=none])');
-            if(homes.length<2)
+            var player_id_top = this.get_top_player();
+            var player_id_bot = this.get_bot_player();
+            var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']');
+            var home_bot = dojo.query('[homeplayer_id=player_'+player_id_bot+']');
+
+            if(home_top.length == 0 || home_bot.length == 0){
                 // Creation is not finished
                 return;
-            //this.colony_assignments = {1:null,2:null,3:null};
+            }
+
+            var top_stars = dojo.query('.HWstar',home_top[0]);
+            var bot_stars = dojo.query('.HWstar',home_bot[0]);
+            var all_stars = {1:top_stars,2:bot_stars};
+            /*
+             groupings[0]: an array of the sizes of colony stars that are connected to neither homeworld
+             groupings[1]: star sizes that are connected only the home of the player displayed at the top
+             groupings[2]: only to the home of the player displayed at the bottom
+             groupings[3]: to both
+            */
+            var groupings = [[],[],[],[]];
+            var pips;
+            var groupi,group,connects,i,stars,star,home_num;
+            for(pips=1;pips<=3;pips++){
+                // groupi will match the index in groupings
+                groupi = 0;
+                // For each of the two homes, 1 for top and 2 for bot
+                for(home_num=1;home_num<=2;home_num++){
+                    stars = all_stars[home_num];
+                    // Check if a star of size pips connects to these stars
+                    connects = 1;
+                    for(i=0;i<stars.length;i++){
+                        star = stars[i];
+                        if(pips == star.getAttribute('ptype').split('_')[1]){
+                            connects = 0;
+                            break;
+                        }
+                    }
+                    if(connects)
+                        groupi += home_num;
+                }
+                groupings[groupi].push(pips);
+            }
+            var adjacent_row;
+            // Handle "both" and "neither" groups
+            var groups = [0,3];
+            for(i in groups){
+                groupi = groups[i];
+                group = groupings[groupi];
+                if(group.length == 0)
+                    continue;
+                // If there is exactly one star size that connects to neither home,
+                // (likewise to both homes)
+                // it makes sense to put that size in the middle
+                // (The weird case is when there's exactly one in the "neither" category
+                // and exactly one in the "both" category")
+                if(group.length == 1){
+                    this.colony_assignments[group[0]] = 2;
+                    if(groupi==0 && groupings[3].length==1){
+                        // Here's the weird case:
+                        // put the "neither" in the middle
+                        // and "both" by the less-connected home,
+                        var both = groupings[3][0];
+                        var less_connected;
+                        if(groupings[1].length==1)
+                            less_connected = 2;
+                        else
+                            less_connected = 1;
+                        // Colony row that's 
+                        adjacent_row = 2*less_connected-1;
+                        this.colony_assignments[both] = adjacent_row;
+                        // The lower loop about singly-connected stars
+                        // Can work out the more-connected system
+                        break;
+                    }
+                }
+                else{
+                    this.colony_assignments[group[0]] = 1;
+                    this.colony_assignments[group[1]] = 3;
+                }
+            }
+            // Handle "top only" and "bot only" groups
+            groups = [1,2];
+            for(i in groups){
+                groupi = groups[i];
+                group = groupings[groupi];
+                if(group.length == 0)
+                    continue;
+                adjacent_row = 2*groupi-1;
+                // If there is any star size that connects to only one home,
+                // it makes sense to put that one such size next to that home.
+                this.colony_assignments[group[0]] = adjacent_row;
+                // If there's another size that connects to only that home,
+                // then it goes in the middle
+                if(group.length > 1)
+                    this.colony_assignments[group[1]] = 2;
+            }
         },
 
         set_turn_checkpoint: function(args,state_name){
@@ -1103,9 +1194,9 @@ function (dojo, declare) {
                 systemnode.id = 'HWsystem_'+args.system_id;
                 var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
                 labelnode.innerHTML = args.system_name;
+                this.setup_colony_assignments();
                 return;
             }
-
             var systemnode = this.place_system(
                 args.system_id,
                 args.system_name,
@@ -1128,6 +1219,7 @@ function (dojo, declare) {
                 systemnode,
                 args.homeplayer_id
             );
+            this.setup_colony_assignments();
         },
 
         capture_from_notif: function(notif){
@@ -1205,15 +1297,42 @@ function (dojo, declare) {
             var shipnode  = document.getElementById('HWpiece_'+args.ship_id);
             this.put_in_bank(shipnode);
         },
+
         catastrophe_from_notif: function(notif){
             var args = notif.args;
-            var system = document.getElementById('HWsystem_'+args.system_id);
+            var systemnode = document.getElementById('HWsystem_'+args.system_id);
             var color_name = this.color_names_eng[args.color];
 
-            var pieces = dojo.query('.HW'+color_name,system);
+            var pieces = dojo.query('.HW'+color_name,systemnode);
             for(var i=0;i<pieces.length;i++)
                 this.put_in_bank(pieces[i]);
+            // If it's a homeworld, rearrange the star map
+            if(systemnode.getAttribute('homeplayer_id')!='none')
+                this.hyperspace_bypass();
+        },
+
+        // Rearrange colonies when home system connectivity may have changed
+        hyperspace_bypass: function(){
+            var i;
+            // star_to_systems[i] is a list of the colony system nodes that
+            // have a star of size i
+            var star_to_systems = {};
+            for(i=1;i<=3;i++){
+                star_to_systems[i] = dojo.query(
+                    '.HWsystem',
+                    'HWcolony_container_'+this.colony_assignments[i]
+                );
+            }
+            this.setup_colony_assignments();
+            var containernode;
+            for(i=1;i<=3;i++){
+                containernode = document.getElementById(
+                    'HWcolony_container_'+this.colony_assignments[i]
+                );
+                star_to_systems[i].place(containernode);
+            }
         }
+
    });
 });
 
