@@ -433,6 +433,7 @@ function (dojo, declare) {
             // Only choice states get buttons
             if(!state_name.startsWith('want') && !state_name.startsWith('client'))
                 return;
+            console.log('updating buttons with args',args);
             switch(state_name){
                 // Server choice states get pass and catastrophe buttons
                 case 'want_free':
@@ -446,6 +447,7 @@ function (dojo, declare) {
                             'catastrophe_button_selected'
                         );
                     }
+                    this.setup_draw_button(args);
                     this.addActionButton(
                         'pass_button',
                         _('End turn'),
@@ -473,6 +475,34 @@ function (dojo, declare) {
                     break;
             }
             
+        },
+
+        setup_draw_button: function(args){
+            console.log('setting up draw button with args',args);
+            if(args.draw_offerer == 0){
+                // No one has offered a draw yet
+                this.addActionButton(
+                    'draw_button',
+                    _('Offer draw'),
+                    'draw_button_selected'
+                );
+            }
+            else if(args.draw_offerer == this.player_id){
+                // This player has already offered a draw
+                this.addActionButton(
+                    'cancel_draw_button',
+                    _('Cancel draw offer'),
+                    'cancel_draw_button_selected'
+                );
+            }
+            else{
+                // The other player offered a draw
+                this.addActionButton(
+                    'draw_button',
+                    _('Accept draw and end game'),
+                    'draw_button_selected'
+                );
+            }
         },
 
         ///////////////////////////////////////////////////
@@ -591,6 +621,7 @@ function (dojo, declare) {
             }
         },
 
+        // Remember server state for easy partial action canceling
         set_turn_checkpoint: function(args,state_name){
             // args needs to be deeply copied because
             // it appears to be overwritten on state change
@@ -1139,6 +1170,20 @@ function (dojo, declare) {
         pass_button_selected: function(){
             this.ajaxcallwrapper('act_pass',{});
         },
+        draw_button_selected: function(){
+            this.ajaxcallwrapper('act_offer_draw',{});
+            args = this['latest_args'];
+            args.args.draw_offerer = this.player_id;
+            console.log('offered draw, now setting state with args',args);
+            this.setClientState(args.state_name,args);
+        },
+        cancel_draw_button_selected: function(){
+            this.ajaxcallwrapper('act_cancel_offer_draw',{});
+            args = this['latest_args'];
+            args.args.draw_offerer = 0;
+            console.log('canceled draw, now setting state with args',args);
+            this.setClientState(args.state_name,args);
+        },
 
         ///////////////////////////////////////////////////
         //// Reaction to cometD notifications
@@ -1169,8 +1214,11 @@ function (dojo, declare) {
             dojo.subscribe('notif_sacrifice',   this,'sacrifice_from_notif');
             dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
 
+            // Notifications that don't need anything special
             dojo.subscribe('notif_pass', this,'ignore_notif');
             dojo.subscribe('notif_elimination', this,'ignore_notif');
+            dojo.subscribe('notif_offer_draw', this,'ignore_notif');
+            dojo.subscribe('notif_cancel_offer_draw', this,'ignore_notif');
         },
 
         ignore_notif: function(notif){

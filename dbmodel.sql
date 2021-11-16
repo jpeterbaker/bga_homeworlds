@@ -11,6 +11,8 @@
 
 -- On Jonathan's computer, player schema described in ~/bga/player_schema.png
 
+ALTER TABLE `player` ADD `homeworld_id` SMALLINT UNSIGNED DEFAULT NULL;
+
 -- Each of the 36 pieces will be listed individually
 CREATE TABLE IF NOT EXISTS `Pieces` (
     -- getCollectionFromDb uses keys as array indices,
@@ -25,13 +27,16 @@ CREATE TABLE IF NOT EXISTS `Pieces` (
     `system_id` smallint UNSIGNED DEFAULT NULL,
     -- Play-order number of owning player (null for star or bank)
     -- Corresponds to player.player_id
-    `owner_id` int UNSIGNED DEFAULT NULL
+    `owner_id` int UNSIGNED DEFAULT NULL,
+    -- Saved values of system_id and owner_id for reverting to start of turn
+    `saved_system_id` smallint UNSIGNED DEFAULT NULL,
+    `saved_owner_id` int UNSIGNED DEFAULT NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS `Systems` (
-    `system_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `system_name` VARCHAR(40) DEFAULT NULL,
-    -- Corresponds to player.player_id or NULL for a colony
-    `homeplayer_id` int UNSIGNED DEFAULT NULL
-) ENGINE=InnoDB;
+-- CREATE TABLE IF NOT EXISTS `Systems` (
+--     `system_id` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
+--     `system_name` VARCHAR(40) DEFAULT NULL,
+--     -- Corresponds to player.player_id or NULL for a colony
+--     `homeplayer_id` int UNSIGNED DEFAULT NULL
+-- ) ENGINE=InnoDB;
 

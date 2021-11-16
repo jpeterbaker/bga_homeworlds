@@ -30,9 +30,15 @@ class homeworlds extends Table {
         parent::__construct();
 
         self::initGameStateLabels( array( 
-            'used_free'         => 11,
-            'sacrifice_color'   => 12,
-            'sacrifice_actions' => 13
+            'used_free'         => 10,
+            'sacrifice_color'   => 20,
+            'sacrifice_actions' => 21,
+            'draw_offerer'      => 30,
+            'system_idx'        => 40,
+            // Name list should be set by players in lobby
+            'system_name_list_idx'  => 101,
+            'system_name_start' => 41,
+            'system_name_inc'   => 42
         ));
     }
 
@@ -123,9 +129,50 @@ class homeworlds extends Table {
         // whether to transition to want_free or want_catastrophe
         // if there has been no sacrifice)
         self::setGameStateInitialValue('used_free'  ,0);
+
         // Color zero indicates no sacrifice has occurred
         self::setGameStateInitialValue('sacrifice_color'  ,0);
+        // Number of sacrifice actions available
         self::setGameStateInitialValue('sacrifice_actions',0);
+
+        // ID of the player who has offered a draw
+        // 0 if no draw has been offered
+        // or -1 if the draw has been accepted (end game at once)
+        self::setGameStateInitialValue('draw_offerer',0);
+
+        // Number of systems that have been created
+        self::setGameStateInitialValue('system_idx',0);
+
+        // Prepare to access system name list
+        $name_list_choice = self::getGameStateValue('system_name_list_idx');
+        $system_names = $this->system_name_lists[$name_list_choice];
+        $name_count = count($system_names);
+        switch($name_list_choice){
+            case 1:
+                // nonsense
+                // Start at the beginning with same order every time
+                self::setGameStateInitialValue('system_name_start',0);
+                self::setGameStateInitialValue('system_name_inc',1);
+                // $this->system_name_start = 0;
+                // $this->system_name_inc = 1;
+                break;
+            case 2:
+                // real stars
+                // Randomize the order of appearance (same as for fictional)
+            case 3:
+                // fictional
+                // Randomize the first name and the name incrementation
+                self::setGameStateInitialValue(
+                    'system_name_start',
+                    bga_rand(1,$name_count-1)
+                );
+                self::setGameStateInitialValue(
+                    'system_name_inc',
+                    bga_rand(1,$name_count-1)
+                );
+                // $this->system_name_start = self::bga_rand(1,$this->name_count-1);
+                // $this->system_name_inc   = self::bga_rand(1,$this->name_count-1);
+        }
 
         // Setup stats
         self::initStat('player','turns_number',0);
@@ -139,6 +186,11 @@ class homeworlds extends Table {
         /************ End of the game initialization *****/
 
         self::activeNextPlayer();
+    }
+
+    function get_system_name_list(){
+        $name_list_choice = self::getGameStateValue('system_name_list_idx');
+        return $this->system_name_lists[$name_list_choice];
     }
 
     /*
@@ -176,10 +228,6 @@ class homeworlds extends Table {
         ////////////////////////////////////////
         // Get info on all the in-play pieces //
         ////////////////////////////////////////
-        $sql = "SELECT system_id,system_name,homeplayer_id
-            FROM Systems";
-        $systems = self::getCollectionFromDb($sql);
-
         $sql = "SELECT piece_id,color,pips,system_id
             FROM Pieces
             WHERE (system_id IS NOT NULL) AND (owner_id IS NULL)";
@@ -193,14 +241,21 @@ class homeworlds extends Table {
         //////////////////////////////
         // Set up system structures //
         //////////////////////////////
+        $systems = [];
         $result['systems'] = &$systems;
 
-        // Add stars to systems
+        // Add stars and names to systems
         foreach($stars as $piece_id => $row){
             // The amperstand makes it a reference that can be changed
             $system_id = $row['system_id'];
-            $system = &$systems[$system_id];
-            $system['stars'][$piece_id] = $row;
+            if(!array_key_exists($system_id,$systems)){
+                $system = [];
+                $systems[$system_id] = &$system;
+                $system['name'] = $this->get_system_name($system_id);
+                $system['stars'] = [];
+                $system['ships'] = [];
+            }
+            $systems[$system_id]['stars'][$piece_id] = $row;
         }
 
         // Add ships to systems
@@ -258,44 +313,43 @@ class homeworlds extends Table {
         return $this->color_names_eng[$color][0].$pips;
     }
 
-    function make_system($homeplayer_id=NULL){
-        if(is_null($homeplayer_id)){
-            // Insert row with only default values.
-            // Null name will be overwritten after we have the id
-            // since id is needed for finding the next name on the list.
-            $sql = 'INSERT INTO Systems (homeplayer_id)
-                VALUES (NULL)';
-        }
-        else{
-            $sql = 'INSERT INTO Systems (homeplayer_id)
-                VALUES ('.$homeplayer_id.')';
-        }
-        self::DbQuery($sql);
-
-        $sql = 'SELECT MAX(system_id) FROM Systems';
-        $system_id = $this->array_key_first(self::getCollectionFromDb($sql));
-
-        // Colonies get names from the list
-        if(is_null($homeplayer_id)){
-            // This only works if there are exactly 2 players
-            $idx = ($system_id-3) % $this->name_count;
-            $system_name = $this->system_names[$idx];
-            // Add a number if this system name has been used before
-            if($system_id-3 >= $this->name_count)
-                $system_name .= ' '.(1+intdiv($system_id-3,$this->name_count));
-        }
-        else{
+    function get_system_name($system_id){
+        $num_players = $this->getPlayersNumber();
+        $start = self::getGameStateValue('system_name_start');
+        $inc = self::getGameStateValue('system_name_inc');
+        $name_list = $this->get_system_name_list();
+        $name_count = count($name_list);
+        if($system_id<=$num_players){
+            // This is a homeworld
             $sql = 'SELECT player_id,player_name FROM player
-                WHERE player_id='.$homeplayer_id;
+                WHERE homeworld_id='.$system_id;
             $result = self::getCollectionFromDb($sql);
+            $homeplayer_id = $this->array_key_first($result);
             $player_name = $result[$homeplayer_id]['player_name'];
-            $system_name = "Homeworld ${player_name}";
+            return "Homeworld ${player_name}";
         }
-        $sql = "UPDATE Systems
-            SET system_name='".$system_name."'
-            WHERE system_id=".$system_id;
-        self::DbQuery($sql);
-        return [$system_id,$system_name];
+        // This is NOT a homeworld
+        $idx = $system_id-$num_players-1;
+        $idx_loop = ( $idx*$inc + $start) % $name_count;
+
+        $system_name = $name_list[$idx_loop];
+        if($idx >= $name_count)
+            // This system name has been used before, so suffix a number
+            $system_name .= ' '.(1+intdiv($idx,$name_count));
+        return $system_name;
+    }
+
+    function make_system($homeplayer_id=NULL){
+        self::incGameStateValue('system_idx',1);
+        $system_id = self::getGameStateValue('system_idx');
+        if(!is_null($homeplayer_id)){
+            // Set this as the player's homeworlds
+            $sql = 'UPDATE player
+                SET homeworld_id='.$system_id.'
+                WHERE player_id='.$homeplayer_id;
+            self::DbQuery($sql);
+        }
+        return $system_id;
     }
 
     // Raise a user-visible exception if piece is not in bank
@@ -392,16 +446,11 @@ class homeworlds extends Table {
         return $this->array_key_first($result);
     }
 
-    // Returns system_id of the home of this player
-    function get_home($player_id){
-        $sql = 'SELECT system_id FROM Systems
-            WHERE homeplayer_id='.$player_id;
+    function get_homeplayer($system_id){
+        $sql = 'SELECT player_id FROM player
+            WHERE homeworld_id='.$system_id;
         $result = self::getCollectionFromDb($sql);
         return $this->array_key_first($result);
-    }
-
-    function get_homeplayer($system_id){
-        return $this->get_system_row($system_id)['homeplayer_id'];
     }
 
     // Ensure that current player has the right to empower piece_id with power
@@ -461,12 +510,6 @@ class homeworlds extends Table {
         )[$piece_id];
     }
 
-    function get_system_row($system_id){
-        return self::getCollectionFromDb(
-            'SELECT * FROM Systems WHERE system_id='.$system_id
-        )[$system_id];
-    }
-
     function get_player_row($player_id){
         $sql = 'SELECT * FROM player WHERE player_id='.$player_id;
         $result = self::getCollectionFromDb($sql);
@@ -517,7 +560,8 @@ class homeworlds extends Table {
         $player_id = $this->getActivePlayerId();
         $player_name = $this->getActivePlayerName();
 
-        [$system_id,$system_name] = $this->make_system($player_id);
+        $system_id = $this->make_system($player_id);
+        $system_name = $this->get_system_name($system_id);
 
         $this->make_star($star1_id,$system_id);
         $this->make_star($star2_id,$system_id);
@@ -571,7 +615,7 @@ class homeworlds extends Table {
         self::DbQuery($sql);
 
         $system_id = $this->get_containing_system($piece_id);
-        $system_name = $this->get_system_row($system_id)['system_name'];
+        $system_name = $this->get_system_name($system_id);
 
         self::notifyAllPlayers(
             'notif_capture',
@@ -611,12 +655,9 @@ class homeworlds extends Table {
         self::DbQuery($sql);
 
         $player_name = $this->getActivePlayerName();
+        $system_name = $this->get_system_name($system_id);
 
-        $system = $this->get_system_row($system_id);
-        $system_name = $system['system_name'];
-
-        $old_system = $this->get_system_row($old_system_id);
-        $old_system_name = $old_system['system_name'];
+        $old_system_name = $this->get_system_name($old_system_id);
         self::notifyAllPlayers('notif_move',
             clienttranslate('${player_name} moves a ${ship_str} ship from ${old_system_name} to ${system_name}.'),
             array(
@@ -636,7 +677,7 @@ class homeworlds extends Table {
 
     function fade($system_id){
         // Notify client
-        $system_name = $this->get_system_row($system_id)['system_name'];
+        $system_name = $this->get_system_name($system_id);
         self::notifyAllPlayers('notif_fade',
             clienttranslate('${old_system_name} is forgotten.'),
             array(
@@ -650,10 +691,6 @@ class homeworlds extends Table {
             WHERE system_id='.$system_id;
         self::DbQuery($sql);
 
-        // Remove system
-        $sql = 'DELETE FROM Systems
-            WHERE system_id='.$system_id;
-        self::DbQuery($sql);
     }
 
     function discover($ship_id,$star_color_num,$star_pips){
@@ -668,7 +705,8 @@ class homeworlds extends Table {
                 self::_('No such piece in the bank.')
             );
         }
-        [$system_id,$system_name] = $this->make_system();
+        $system_id = $this->make_system();
+        $system_name = $this->get_system_name($system_id);
 
         $player_name = $this->getActivePlayerName();
         self::notifyAllPlayers('notif_discover',
@@ -712,7 +750,7 @@ class homeworlds extends Table {
 
         $new_ship = $result[$this->array_key_first($result)];
         $system_id = $old_ship['system_id'];
-        $system_name = $this->get_system_row($system_id)['system_name'];
+        $system_name = $this->get_system_name($system_id);
         $this->make_ship($new_ship['piece_id'],$old_ship['owner_id'],$system_id);
 
         $player_name = $this->getActivePlayerName();
@@ -737,7 +775,7 @@ class homeworlds extends Table {
         $this->validate_power_action(4,$ship_id);
         $old_ship  = $this->get_piece_row($ship_id);
         $system_id = $old_ship['system_id'];
-        $system_name = $this->get_system_row($system_id)['system_name'];
+        $system_name = $this->get_system_name($system_id);
 
         $new_ship_id = $this->get_id_from_bank($color_num,$old_ship['pips']);
         $this->make_ship($new_ship_id,$old_ship['owner_id'],$old_ship['system_id']);
@@ -769,7 +807,7 @@ class homeworlds extends Table {
         $player_name = $this->getActivePlayerName();
 
         $system_id = $this->get_containing_system($ship_id);
-        $system_name = $this->get_system_row($system_id)['system_name'];
+        $system_name = $this->get_system_name($system_id);
 
         // Make sure the ship's owner is corret
         $ship = $this->get_piece_row($ship_id);
@@ -821,7 +859,7 @@ class homeworlds extends Table {
 
         $this->put_in_bank($piece_ids);
 
-        $system_name = $this->get_system_row($system_id)['system_name'];
+        $system_name = $this->get_system_name($system_id);
         $color_name  = $this->color_names_local[$color];
 
         self::notifyAllPlayers('notif_catastrophe',
@@ -852,6 +890,56 @@ class homeworlds extends Table {
         );
         $this->gamestate->nextState('trans_end_turn');
     }
+
+	function offer_draw(){
+        self::checkAction('act_offer_draw');
+        $player_name = $this->getActivePlayerName();
+        $player_id = $this->getActivePlayerId();
+
+        $previous_offerer = self::getGameStateValue('draw_offerer');
+        if($previous_offerer == $player_id){
+            throw new BgaVisibleSystemException(
+                self::_('You have already offered a draw.')
+            );
+        }
+        else if($previous_offerer==0){
+            // This is the first offer
+            self::notifyAllPlayers('notif_offer_draw',
+                clienttranslate('${player_name} offers a draw.'),
+                array('player_name' => $player_name)
+            );
+            self::setGameStateValue('draw_offerer',$player_id);
+        }
+        else{
+            // Opponent offered a draw and it has just been accepted
+            self::notifyAllPlayers('notif_offer_draw',
+                clienttranslate('${player_name} accepts the draw.'),
+                array('player_name' => $player_name)
+            );
+            self::setGameStateValue('draw_offerer',-1);
+            $this->gamestate->nextState('trans_end_turn');
+        }
+    }
+
+	function cancel_offer_draw(){
+        self::checkAction('act_cancel_offer_draw');
+        $player_name = $this->getActivePlayerName();
+        $player_id = $this->getActivePlayerId();
+
+        $previous_offerer = self::getGameStateValue('draw_offerer');
+        if($previous_offerer != $player_id){
+            throw new BgaVisibleSystemException(
+                self::_('You do not have an active draw offer.')
+            );
+        }
+        else{
+            self::notifyAllPlayers('notif_cancel_offer_draw',
+                clienttranslate('${player_name} cancels draw offer.'),
+                array('player_name' => $player_name)
+            );
+            self::setGameStateValue('draw_offerer',0);
+        }
+    }
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
@@ -878,6 +966,11 @@ class homeworlds extends Table {
     }
     */
 
+    function args_want_free(){
+        return array(
+            'draw_offerer' => self::getGameStateValue('draw_offerer')
+        );
+    }
     function args_want_sacrifice_action(){
         $action_color = self::getGameStateValue('sacrifice_color');
         $actions_remaining = self::getGameStateValue('sacrifice_actions');
@@ -889,7 +982,13 @@ class homeworlds extends Table {
         return array(
             'action_name' => $action_name,
             'color'      => $action_color,
-            'actions_remaining' => $actions_remaining
+            'actions_remaining' => $actions_remaining,
+            'draw_offerer' => self::getGameStateValue('draw_offerer')
+        );
+    }
+    function args_want_catastrophe(){
+        return array(
+            'draw_offerer' => self::getGameStateValue('draw_offerer')
         );
     }
 
@@ -906,8 +1005,9 @@ class homeworlds extends Table {
             $player_id = $this->getActivePlayerId();
         }while($this->isPlayerZombie($player_id));
 
-        $sql = 'SELECT system_id FROM Systems
-            WHERE homeplayer_id='.$player_id;
+        $sql = 'SELECT player_id FROM player
+            WHERE player_id='.$player_id.'
+            AND homeworld_id IS NOT NULL';
         $result = self::getCollectionFromDb($sql);
         if(count($result) > 0){
             // This player has a home, so everyone has had a chance to create
@@ -938,25 +1038,36 @@ class homeworlds extends Table {
             $this->gamestate->nextState('trans_end_turn');
     }
 
+    // This is called after every turn except for creations
     function st_end_turn(){
-        $sql = 'SELECT system_id,homeplayer_id FROM Systems
-            WHERE homeplayer_id IS NOT NULL';
-        $homeworlds = self::getCollectionFromDb($sql);
+        $sql = 'SELECT player_id,player_name,homeworld_id FROM player';
+        $players = self::getCollectionFromDb($sql);
 
-        // Homeworlds fade
-        // Check for win
+        if(self::getGameStateValue('draw_offerer') < 0){
+            // Players agreed to end the game in a draw
+            $sql = 'UPDATE player
+                SET player_score=50';
+            self::DbQuery($sql);
+            $this->gamestate->nextState('trans_endGame');
+            return;
+        }
+
+        // Empty homeworlds fade at this point
+        // Check for loss conditions
         $losers = [];
-        foreach($homeworlds as $system_id => $system){
-            if($this->is_empty($system_id,true))
-                $this->fade($system_id);
-            $homeplayer_id = $system['homeplayer_id'];
+        foreach($players as $player_id => $player){
+            $homeworld_id = $player['homeworld_id'];
+            // Check for totally empty/destroyed homeworld
+            if($this->is_empty($homeworld_id,true))
+                $this->fade($homeworld_id);
+            // Check for homeworld that is not occupied by its owner
             $sql = 'SELECT piece_id FROM Pieces
-                WHERE system_id='.$system_id.'
-                AND owner_id='.$homeplayer_id;
+                WHERE system_id='.$homeworld_id.'
+                AND owner_id='.$player_id;
             $defenders = self::getCollectionFromDb($sql);
             if(count($defenders)==0){
-                array_push($losers,$homeplayer_id);
-                $player_name = $this->get_player_row($homeplayer_id)['player_name'];
+                array_push($losers,$player_id);
+                $player_name = $player['player_name'];
                 self::notifyAllPlayers(
                     'notif_elimination',
                     clienttranslate('${player_name} has no ships in their homeworld and is eliminated.'),
@@ -969,6 +1080,7 @@ class homeworlds extends Table {
 
         // Game is over
         if(count($losers)>0){
+            // All scores start at 100, only update scores of losers
             if(count($losers)==1){
                 $sql = 'UPDATE player
                     SET player_score=0

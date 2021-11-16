@@ -97,6 +97,18 @@ class action_homeworlds extends APP_GameAction {
         $this->game->pass();
         self::ajaxResponse();
     }
+
+    public function act_offer_draw(){
+        self::setAjaxMode();
+        $this->game->offer_draw();
+        self::ajaxResponse();
+    }
+
+    public function act_cancel_offer_draw(){
+        self::setAjaxMode();
+        $this->game->cancel_offer_draw();
+        self::ajaxResponse();
+    }
 }
 
 

@@ -92,8 +92,11 @@ $machinestates = array(
             'act_power_action',
             'act_sacrifice',
             'act_catastrophe',
-            'act_pass'
+            'act_pass',
+            'act_offer_draw',
+            'act_cancel_offer_draw'
         ),
+        'args' => 'args_want_free',
         'transitions' => array(
             'trans_after_power_action' => 21,
             'trans_want_sacrifice_action' => 12,
@@ -111,7 +114,9 @@ $machinestates = array(
         'possibleactions' => array(
             'act_power_action',
             'act_catastrophe',
-            'act_pass'
+            'act_pass',
+            'act_offer_draw',
+            'act_cancel_offer_draw'
         ),
         'args' => 'args_want_sacrifice_action',
         'transitions' => array(
@@ -122,15 +127,17 @@ $machinestates = array(
         )
     ),
     13 => array(
-        // TODO an args function should provide catastrophe options
         'name' => 'want_catastrophe',
         'description' => clienttranslate('${actplayer} may cause a catastrophe.'),
         'descriptionmyturn' => clienttranslate('${you} may cause a catastrophe.'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_catastrophe',
-            'act_pass'
+            'act_pass',
+            'act_offer_draw',
+            'act_cancel_offer_draw'
         ),
+        'args' => 'args_want_catastrophe',
         'transitions' => array(
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
