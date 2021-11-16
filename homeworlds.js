@@ -130,6 +130,12 @@ function (dojo, declare) {
             this.connectClass('HWselectable','onclick','stack_selected_ship_creation');
         },
 
+        onEntering_client_want_creation_confirmation: function(args){
+            if(!this.isCurrentPlayerActive())
+                return
+            // The buttons are handled in onUpdateActionButtons
+        },
+
         onEntering_want_free: function(args){
             if(!this.isCurrentPlayerActive())
                 return
@@ -208,7 +214,7 @@ function (dojo, declare) {
                     dojo.stopEvent(evt);
                     var shipnode = evt.currentTarget;
                     var powernode = evt.currentTarget;
-                    var color = powernode.getAttribute('ptype').split('_')[0];
+                    var color = this.get_color(powernode);
                     this.power_selected(color);
                 }
             );
@@ -228,7 +234,7 @@ function (dojo, declare) {
             var piece,color;
             for(var i=0;i<pieces.length;i++){
                 piece = pieces[i];
-                color = parseInt(piece.getAttribute('ptype').split('_')[0]);
+                color = this.get_color(piece);
                 switch(color){
                     case 1:
                         this.addTooltip(
@@ -335,9 +341,8 @@ function (dojo, declare) {
                 case 4:
                     // TODO return candidates rather than highlighting manually
                     var targets = dojo.NodeList();
-                    var ptype = activatednode.getAttribute('ptype').split('_');
-                    var old_color = ptype[0];
-                    var pips = ptype[1];
+                    var old_color = this.get_color(activatednode);
+                    var pips = this.get_size(activatednode);
                     var stack,children;
                     for(var i=1;i<=4;i++){
                         if(i==old_color)
@@ -406,7 +411,7 @@ function (dojo, declare) {
             if(!this.isCurrentPlayerActive())
                 return
             this.deselect_all();
-            this.unactivate_all();
+            this.deactivate_all();
         },
         onLeaving_client_want_catastrophe_target: function(args){
             if(!this.isCurrentPlayerActive())
@@ -420,12 +425,7 @@ function (dojo, declare) {
         // in this method you can manage "action buttons" that are displayed in the
         // action status bar (ie: the HTML links in the status bar).
 
-        // This function appears to be redundant. It gets called just before
-        // onEnteringState with the same parameters.
-        // BGA's intention seems to be that this is the
-        // "It's time to update action buttons" function
-        // with the idea that you'll have so many buttons that
-        // this deserves its own function
+        // This function gets called just before onEnteringState with the same parameters.
         onUpdateActionButtons: function( state_name, args ) {
             // Only active players get buttons
             if(!this.isCurrentPlayerActive())
@@ -433,7 +433,6 @@ function (dojo, declare) {
             // Only choice states get buttons
             if(!state_name.startsWith('want') && !state_name.startsWith('client'))
                 return;
-            console.log('updating buttons with args',args);
             switch(state_name){
                 // Server choice states get pass and catastrophe buttons
                 case 'want_free':
@@ -452,6 +451,13 @@ function (dojo, declare) {
                         'pass_button',
                         _('End turn'),
                         'pass_button_selected'
+                    );
+                    this.addActionButton(
+                        'restart_button',
+                        _('Restart turn'),
+                        function(evt){
+                            this.restart();
+                        }
                     );
                     break;
                 case 'client_want_power':
@@ -473,8 +479,24 @@ function (dojo, declare) {
                         }
                     );
                     break;
+                case 'client_want_creation_confirmation':
+                    this.addActionButton(
+                        'confirm_button',
+                        _('End turn'),
+                        function(evt){
+                            this.finalize_creation();
+                        }
+                    );
+                    this.addActionButton(
+                        'restart_button',
+                        _('Restart turn'),
+                        function(evt){
+                            this.restart_creation();
+                        }
+                    );
+                    break;
+                    
             }
-            
         },
 
         setup_draw_button: function(args){
@@ -508,6 +530,16 @@ function (dojo, declare) {
         ///////////////////////////////////////////////////
         //// Utility methods
 
+        get_color: function(piecenode){
+            return parseInt(piecenode.getAttribute('ptype').split('_')[0]);
+        },
+        get_size: function(piecenode){
+            return parseInt(piecenode.getAttribute('ptype').split('_')[1]);
+        },
+        get_id: function(piecenode){
+            return parseInt(piecenode.id.split('_')[1]);
+        },
+
         get_system: function(piecenode){
             // Get the system node containing this piece
             var par = piecenode;
@@ -519,6 +551,38 @@ function (dojo, declare) {
                 }
             }
             return par;
+        },
+
+        get_bad_home_warning: function(){
+            // Warn the player if they don't have green, blue, and a large ship
+            var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
+            var blues = dojo.query('.HWblue',systemnode);
+            var greens = dojo.query('.HWgreen',systemnode);
+            var large_ships = dojo.query('.HWlarge.HWship',systemnode);
+
+            var stars = dojo.query('.HWstar',systemnode);
+            var star_match = this.get_color(stars[0]) == this.get_color(stars[1]);
+
+            var message = '';
+            if(star_match)
+                message += ' '+_('Your stars are the same color and will be very vulnerable to catastrophe.');
+            if(large_ships.length == 0)
+                message += ' '+_('You do not have a large ship and will be vulnerable to direct assault.');
+            if(greens.length == 0)
+                message += ' '+_('You do not have a green piece and cannot build.');
+            if(blues.length == 0)
+                message += ' '+_('You do not have a blue piece and cannot diversify.');
+            if(message.length > 0){
+                // At least one problem was detected
+                message =
+                    '<span style="color:red">'
+                    + _('WARNING: Your homeworld has the following problem(s), and you should restart your turn unless you are an expert player:')
+                    + '</span>'
+                    + message;
+            }
+            //this.confirmationDialog(message);
+            //this.multipleChoiceDialog(message,['OK'],()=>{});
+            return message;
         },
 
         // Set up the global variable this.colony_assignments
@@ -555,7 +619,7 @@ function (dojo, declare) {
                     connects = 1;
                     for(i=0;i<stars.length;i++){
                         star = stars[i];
-                        if(pips == star.getAttribute('ptype').split('_')[1]){
+                        if(pips == this.get_size(star)){
                             connects = 0;
                             break;
                         }
@@ -643,9 +707,8 @@ function (dojo, declare) {
             dojo.removeClass(piecenode,'HWfriendly HWhostile HWstar HWship HWoverpopulated');
             piecenode.removeAttribute('activate');
             dojo.addClass(piecenode,'HWbanked');
-            var cnameSplit = piecenode.getAttribute('ptype').split('_');
-            var color = cnameSplit[0];
-            var pips  = cnameSplit[1];
+            var color = this.get_color(piecenode);
+            var pips = this.get_size(piecenode);
             var stacknode = document.getElementById('HWstack_'+color+'_'+pips);
             dojo.place(piecenode,stacknode);
             // TODO be smarter about when this is done
@@ -799,7 +862,7 @@ function (dojo, declare) {
             var size,ship;
             for(var i=0;i<ships.length;i++){
                 ship = ships[i];
-                size = parseInt(ship.getAttribute('ptype').split('_')[1]);
+                size = this.get_size(ship);
                 if(dojo.hasClass(ship,'HWfriendly'))
                     pip_counts.friendly += size;
                 else
@@ -834,10 +897,10 @@ function (dojo, declare) {
                 for(j=0;j<new_stars.length;j++){
                     breakout = 0;
                     new_star = new_stars[j];
-                    new_size = new_star.getAttribute('ptype').split('_')[1];
+                    new_size = this.get_size(new_star);
                     for(k=0;k<old_stars.length;k++){
                         old_star = old_stars[k];
-                        old_size = old_star.getAttribute('ptype').split('_')[1];
+                        old_size = this.get_size(old_star);
                         if(new_size==old_size){
                             // Not connected
                             systems.splice(i,1);
@@ -873,7 +936,7 @@ function (dojo, declare) {
                 new_size = stack.id.split('_')[2];
                 for(j=0;j<stars.length;j++){
                     star = stars[j];
-                    old_size = star.getAttribute('ptype').split('_')[1];
+                    old_size = this.get_size(old_star);
                     if(new_size==old_size){
                         // Not connected
                         stacks.splice(i,1);
@@ -907,7 +970,7 @@ function (dojo, declare) {
                 this.removeTooltip(selectable[i].id);
         },
 
-        unactivate_all: function(){
+        deactivate_all: function(){
             var activated = dojo.query('[activate]');
             activated.removeAttr('activate');
         },
@@ -962,7 +1025,7 @@ function (dojo, declare) {
                     'client_want_creation_ship',
                     {
                         descriptionmyturn :
-                        '${you} must choose an initial ship.'
+                        _('${you} must choose an initial ship.')
                     }
                 );
             }
@@ -994,20 +1057,47 @@ function (dojo, declare) {
                 systemnode,
                 this.player_id
             );
-            var starnodes = dojo.query('.HWstar',systemnode);
-            this.ajaxcallwrapper(
-                'act_creation',
+            var message = this.get_bad_home_warning();
+            if(message.length == 0)
+                message = _('${you} must end or restart your turn.');
+            this.setClientState(
+                'client_want_creation_confirmation',
                 {
-                    star1_id: starnodes[0].id.split('_')[1],
-                    star2_id: starnodes[1].id.split('_')[1],
-                    ship_id:  piecenode.id.split('_')[1]
+                    descriptionmyturn : message
                 }
             );
         },
 
+        finalize_creation: function(){
+            var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
+            var shipnode   = dojo.query('.HWship',systemnode)[0];
+            var starnodes  = dojo.query('.HWstar',systemnode);
+            this.ajaxcallwrapper(
+                'act_creation',
+                {
+                    star1_id: this.get_id(starnodes[0]),
+                    star2_id: this.get_id(starnodes[1]),
+                    ship_id:  this.get_id(shipnode)
+                }
+            );
+        },
+
+        restart_creation: function(){
+            var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
+            var contents = dojo.query('.HWship,.HWstar',systemnode);
+            console.log('returning contents of',systemnode);
+            for(var i=0;i<contents.length;i++){
+                console.log(contents[i]);
+                this.put_in_bank(contents[i]);
+            }
+            systemnode.remove();
+            args = this['latest_args'];
+            this.setClientState(args.state_name,args);
+        },
+
         cancel_action(){
             this.deselect_all();
-            this.unactivate_all();
+            this.deactivate_all();
             args = this['latest_args'];
             this.setClientState(args.state_name,args);
         },
@@ -1020,7 +1110,7 @@ function (dojo, declare) {
                     'client_want_power',
                     {
                         descriptionmyturn :
-                        '${you} must choose a star or friendly ship in the same system.'
+                        _('${you} must choose a star or friendly ship in the same system.')
                     }
                 );
             }
@@ -1062,7 +1152,7 @@ function (dojo, declare) {
                 this.ajaxcallwrapper(
                     'act_power_action',
                     {
-                        piece_id:activatednode.id.split('_')[1],
+                        piece_id:this.get_id(activatednode),
                         power:3
                     }
                 );
@@ -1074,7 +1164,7 @@ function (dojo, declare) {
             evt.preventDefault();
             dojo.stopEvent(evt);
             var targetnode = evt.currentTarget;
-            var target_color = targetnode.getAttribute('ptype').split('_')[0];
+            var target_color = this.get_color(targetnode);
             var target_system = this.get_system(targetnode);
             this.ajaxcallwrapper(
                 'act_catastrophe',
@@ -1092,7 +1182,7 @@ function (dojo, declare) {
             var targetnode = evt.currentTarget;
             var power = activatednode.getAttribute('activate');
             var target_ids = targetnode.id.split('_');
-            var activate_id = activatednode.id.split('_')[1];
+            var activate_id = this.get_id(activatednode);
             switch(parseInt(power)){
             case 1:
                 // Capture
@@ -1155,7 +1245,7 @@ function (dojo, declare) {
             this.ajaxcallwrapper(
                 'act_sacrifice',
                 {
-                    ship_id: shipnode.id.split('_')[1]
+                    ship_id: this.get_id(shipnode)
                 }
             );
         },
@@ -1306,7 +1396,7 @@ function (dojo, declare) {
         discover_from_notif: function(notif){
             var args = notif.args;
             var starnode   = document.getElementById('HWpiece_'+args.star_id);
-            var star_size = starnode.getAttribute('ptype').split('_')[1];
+            var star_size = this.get_size(starnode);
             var systemnode = this.place_system(
                 args.system_id,
                 args.system_name,
