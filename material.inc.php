@@ -57,23 +57,57 @@ $this->system_name_lists = array(
         'Zeeha'
     ],
     2 => [
-        'Billy'
+        'Altair',
+        'Betelgeuse',
+        'Castor',
+        'Deneb',
+        'Electra',
+        'Fomalhaut',
+        'Gemma',
+        'Hadar',
+        'Izar',
+        'Jabbah',
+        'Kastra',
+        'Lesath',
+        'Menkar',
+        'Nashira',
+        'Okul',
+        'Polaris',
+        'Rigel',
+        'Sirius',
+        'Taygeta',
+        'Ursa Major',
+        'Vega',
+        'Zosma',
     ],
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     3 => [
         // Focal planet of the "Dragonriders of Pern" novels
         'Pern',
         // (Dune) Focal planet of Frank Herbert's "Dune" series
         'Arrakis',
-        // Homeworld of Luke Skywalker in "Star Wars"
-        'Tatooine',
         // Residence planet of Yoda in "Star Wars"
         'Dagobah',
         // Homeworld of the Masters in the "Tripods" novels
         'Trion',
         // Homeworld of the Klingons in "Star Trek"
         'Qo\'noS',
-        // Homeworld of the Vulcans in "Star Trek"
-        'Vulcan',
         // Focal planet of "The Lord of the Rings" novels
         'Arda',
         // Focal planet of the "Discworld" novels
@@ -86,6 +120,8 @@ $this->system_name_lists = array(
         'Gallifrey',
         // Location of the planet builders in "The Hitchhiker's Guide to the Galaxy" novels
         'Magrathea',
+        // Homeworld of the Vulcans in "Star Trek"
+        'Vulcan',
         // Human capital world in "Battlestar Galactica"
         'Caprica',
         // Homeworld of the Arachnids (Bugs) in "Starship Troopers"
@@ -104,24 +140,58 @@ $this->system_name_lists = array(
         'Altea',
         // Focal planet of "Solaris"
         'Solaris',
-        // Repeated setting in "Firefly"
+        // Protoss homeworld in "StarCraft"
+        'Aiur',
+        // Repeated setting in "Firefly." Also a planet in "Elite Dangerous"
         'Persephone',
         // Captial world of the Alliance in "Firefly"
         'Ariel',
         // Terran homeworld in "StarCraft"
         'Tarsonis',
-        // Zerg base planet in "StarCraft"
-        'Char',
-        // Protoss homeworld in "StarCraft"
-        'Aiur',
         // Focal planet in "Warcraft"
         'Azeroth',
         // Homeworld of the Orcs in "Warcraft"
         'Draenor',
-        // Focal planet in "Avatar"
+        // Focal planet in "Avatar." Also a central planet in "Borderlands"
         'Pandora',
-        // Frequently seen planet in many works
+        // Frequent setting in many fictional works
         'Earth',
+        // Homeworld of Luke Skywalker in "Star Wars"
+        'Tatooine',
+        // Human military hub in "Halo"
+        'Reach',
+        // Homeworld of Thor in Marvel Comics
+        'Asgard',
+        // The living planet in Marvel Comics
+        'Ego',
+        // Major setting in "A Wrinkle in Time"
+        'Camazotz',
+        // Homeworld of Hans Rebka in the "Heritage" novels
+        'Teufel',
+        // Homeworld of the Daleks in "Doctor Who"
+        'Skaro',
+        // Zerg base planet in "StarCraft"
+        'Char',
+        // Homeworld of the Vedrans in "Andromeda"
+        'Tarn-Vedra',
+        // Homeworld of the Minbari in "Babylon 5"
+        'Minbar',
+        // Homeworld of Teal'c in "Stargate"
+        'Chulak',
+        // Location of the pivotal battle of Serenity in "Firefly." Also a world in Dragonball Z
+        'Hera',
+        // Obscure planet in Dimension X in "Teenage Mutant Ninja Turtles"
+        'Balaraphon',
+        // Prominent world in "Borderlands"
+        'Promethea',
+        // Potential victim planet in "Spaceballs"
+        'Druidia',
+        // Homeworld of the Antareans in "Cocoon"
+        'Antarea',
+        // Focal planet of "Flash Gordon"
+        'Mongo',
+        // Focal planet of "Lost in Space"
+        'Priplanus',
     ],
 );
 

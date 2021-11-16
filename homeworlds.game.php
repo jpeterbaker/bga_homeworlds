@@ -82,7 +82,7 @@ class homeworlds extends Table {
                 '".addslashes( $player['player_avatar'] )."'
             )";
         }
-        $sql .= implode($values,',');
+        $sql .= implode(',',$values);
         self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
         self::reloadPlayersBasicInfos();
@@ -264,7 +264,6 @@ class homeworlds extends Table {
             $system = &$systems[$system_id];
             $system['ships'][$piece_id] = $row;
         }
-
         return $result;
     }
 
@@ -502,6 +501,41 @@ class homeworlds extends Table {
         }
         // Free action check passed
         self::setGameStateValue('used_free',1);
+    }
+
+    // For each piece in the list that isn't already saved,
+    // put its current values in saved columns
+    function save_state($piece_ids){
+        $sql = 'UPDATE Pieces
+            SET saved=TRUE,saved_system_id=system_id,saved_owner_id=owner_id
+            WHERE NOT saved AND (piece_id=';
+        if(!is_array($piece_ids)){
+            // $piece_ids is a single ID
+            $sql .= $piece_ids;
+        }
+        else{
+            $sql .= implode(' OR piece_id=',$piece_ids);
+        }
+        $sql .= ')';
+        self::DbQuery($sql);
+    }
+
+    // Put all saved values back into the regular columns
+    // and set saved columns back to NULL.
+    // Return the IDs of restored pieces
+    function restore_state(){
+        $sql = 'SELECT piece_id FROM Piecs
+            WHERE saved';
+        $result = self::getCollectionFromDb($sql);
+        $sql = 'UPDATE Pieces
+            SET system_id=saved_system_id,
+                owner_id=saved_owner_id,
+                saved=FALSE,
+                saved_system_id=NULL,
+                saved_owner_id=NULL
+            WHERE saved';
+        self::DbQuery($sql);
+        return $result;
     }
 
     function get_piece_row($piece_id){
