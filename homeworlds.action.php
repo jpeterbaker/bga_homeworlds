@@ -98,6 +98,12 @@ class action_homeworlds extends APP_GameAction {
         self::ajaxResponse();
     }
 
+    public function act_restart_turn(){
+        self::setAjaxMode();
+        $this->game->restart();
+        self::ajaxResponse();
+    }
+
     public function act_offer_draw(){
         self::setAjaxMode();
         $this->game->offer_draw();

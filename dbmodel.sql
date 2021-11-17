@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `Pieces` (
     -- Corresponds to player.player_id
     `owner_id` int UNSIGNED DEFAULT NULL,
     -- True if values have been remembered in the saved_* columns
-    `saved` BOOLEAN NOT NULL DEFAULT FALSE,
+    -- `saved` BOOLEAN NOT NULL DEFAULT FALSE,
     -- Saved values of system_id and owner_id for reverting to start of turn
     `saved_system_id` smallint UNSIGNED DEFAULT NULL,
     `saved_owner_id` int UNSIGNED DEFAULT NULL

@@ -192,6 +192,18 @@ $this->system_name_lists = array(
         'Mongo',
         // Focal planet of "Lost in Space"
         'Priplanus',
+        // Major setting of "Among Us"
+        'Polus',
+        // Focal planet of a scientific fiction project by C. M. Kosemen
+        'Snaiad',
+        // Headquarters of the Green Lantern Corps
+        'Oa',
+        // A planet visited by Calvin/Spaceman Spiff. Also a TV Trope
+        'Zok',
+        // (Pluto, possibly) Homeworld of the Mi-go in the Lovecraft Mythos
+        'Yuggoth',
+        // Recurring planet in works of Hal Clement
+        'Mesklin',
     ],
 );
 

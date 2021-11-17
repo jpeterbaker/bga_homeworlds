@@ -47,7 +47,7 @@ function (dojo, declare) {
 
         "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
-        setup: function( gamedatas ) {
+        setup: function(gamedatas) {
             ///////////////////////////////
             // Remember player positions //
             ///////////////////////////////
@@ -60,6 +60,14 @@ function (dojo, declare) {
             ///////////////////
             // Create pieces //
             ///////////////////
+            this.setup_pieces(gamedatas);
+
+            // Setup game notifications to handle (see "setupNotifications" method below)
+            this.setupNotifications();
+        },
+
+        setup_pieces: function(gamedatas){
+            console.log('setting up with gamedatas',gamedatas);
             var colornum,pipsnum;
             var params;
             var piece_id,stack_id;
@@ -70,16 +78,18 @@ function (dojo, declare) {
                 this.setup_piece(piece,'HWbanked',stack_id);
             }
             // Create systems and their pieces
-            var system,homeplayer_name,system_name;
+            var system;
             for(system_id in gamedatas.systems) {
                 system = gamedatas.systems[system_id];
                 this.setup_system(system);
             }
 
             this.setup_colony_assignments();
+        },
 
-            // Setup game notifications to handle (see "setupNotifications" method below)
-            this.setupNotifications();
+        clear_all: function(){
+            var pieces_and_systems = dojo.query('.HWsystem,.HWship,.HWstar,.HWbanked');
+            pieces_and_systems.remove();
         },
 
         ///////////////////////////////////////////////////
@@ -446,17 +456,18 @@ function (dojo, declare) {
                             'catastrophe_button_selected'
                         );
                     }
-                    this.setup_draw_button(args);
+                case 'want_restart_turn':
                     this.addActionButton(
                         'pass_button',
                         _('End turn'),
                         'pass_button_selected'
                     );
+                    this.setup_draw_button(args);
                     this.addActionButton(
                         'restart_button',
                         _('Restart turn'),
                         function(evt){
-                            this.restart();
+                            this.restart_button_selected();
                         }
                     );
                     break;
@@ -500,7 +511,6 @@ function (dojo, declare) {
         },
 
         setup_draw_button: function(args){
-            console.log('setting up draw button with args',args);
             if(args.draw_offerer == 0){
                 // No one has offered a draw yet
                 this.addActionButton(
@@ -576,9 +586,12 @@ function (dojo, declare) {
                 // At least one problem was detected
                 message =
                     '<span style="color:red">'
-                    + _('WARNING: Your homeworld has the following problem(s), and you should restart your turn unless you are an expert player:')
+                    + _('WARNING: Your homeworld has the following problems:')
                     + '</span>'
-                    + message;
+                    + message
+                    + ' <span style="color:red">'
+                    + _('You should restart your turn unless this was deliberate.')
+                    + '</span>';
             }
             //this.confirmationDialog(message);
             //this.multipleChoiceDialog(message,['OK'],()=>{});
@@ -794,7 +807,8 @@ function (dojo, declare) {
             dojo.place(piecenode,systemnode);
             dojo.removeClass(piecenode,'HWbanked');
             dojo.addClass(piecenode,'HWship');
-            // Owner may be changing
+            // If owner is specified, set it
+            // Otherwise, leave it alone
             if(owner_id != null){
                 if(owner_id==this.get_bot_player())
                     dojo.addClass(piecenode,'HWfriendly');
@@ -936,7 +950,7 @@ function (dojo, declare) {
                 new_size = stack.id.split('_')[2];
                 for(j=0;j<stars.length;j++){
                     star = stars[j];
-                    old_size = this.get_size(old_star);
+                    old_size = this.get_size(star);
                     if(new_size==old_size){
                         // Not connected
                         stacks.splice(i,1);
@@ -1085,9 +1099,7 @@ function (dojo, declare) {
         restart_creation: function(){
             var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
             var contents = dojo.query('.HWship,.HWstar',systemnode);
-            console.log('returning contents of',systemnode);
             for(var i=0;i<contents.length;i++){
-                console.log(contents[i]);
                 this.put_in_bank(contents[i]);
             }
             systemnode.remove();
@@ -1258,20 +1270,54 @@ function (dojo, declare) {
         },
 
         pass_button_selected: function(){
+            var home_bot = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
+            var defenders = dojo.query('.HWfriendly.HWship',home_bot);
+            if(defenders.length==0){
+                // This move is self-elimination
+                var player_id_top = this.get_top_player();
+                var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']')[0];
+                var enemy_defenders = dojo.query('.HWhostile.HWship',home_top);
+                var message;
+                if(enemy_defenders.length==0){
+                    message = _('You have removed your last defender from your homeworld and eliminated your opponent\'s defense at the same time. If you end your turn now, the game will end in a draw. Confirm this choice or restart your turn.');
+                }
+                else{
+                    message = _('You have removed your last defender from your homeworld If you end your turn now, the game will end and you will lose. Confirm this choice or restart your turn.');
+                }
+                this.confirmationDialog(
+                    message,
+                    // Yes handler
+                    dojo.hitch(
+                        this,
+                        function(){
+                            this.ajaxcallwrapper('act_pass',{});
+                        }
+                    ),
+                    // No handler
+                    dojo.hitch(
+                        this,
+                        function(){
+                            this.ajaxcallwrapper('act_restart_turn',{});
+                        }
+                    ),
+                );
+                return;
+            }
             this.ajaxcallwrapper('act_pass',{});
+        },
+        restart_button_selected: function(){
+            this.ajaxcallwrapper('act_restart_turn',{});
         },
         draw_button_selected: function(){
             this.ajaxcallwrapper('act_offer_draw',{});
             args = this['latest_args'];
             args.args.draw_offerer = this.player_id;
-            console.log('offered draw, now setting state with args',args);
             this.setClientState(args.state_name,args);
         },
         cancel_draw_button_selected: function(){
             this.ajaxcallwrapper('act_cancel_offer_draw',{});
             args = this['latest_args'];
             args.args.draw_offerer = 0;
-            console.log('canceled draw, now setting state with args',args);
             this.setClientState(args.state_name,args);
         },
 
@@ -1304,6 +1350,7 @@ function (dojo, declare) {
             dojo.subscribe('notif_sacrifice',   this,'sacrifice_from_notif');
             dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
 
+            dojo.subscribe('notif_restart', this,'restart_from_notif');
             // Notifications that don't need anything special
             dojo.subscribe('notif_pass', this,'ignore_notif');
             dojo.subscribe('notif_elimination', this,'ignore_notif');
@@ -1447,6 +1494,66 @@ function (dojo, declare) {
             // If it's a homeworld, rearrange the star map
             if(systemnode.getAttribute('homeplayer_id')!='none')
                 this.hyperspace_bypass();
+        },
+
+        restart_from_notif: function(notif){
+            this.clear_all();
+            this.setup_pieces(notif.args.gamedatas);
+            return;
+            /*
+            var pieces = notif.restored_pieces;
+            var piece_id,piece,piecenode,systemnode;
+            // Restore missing systems by finding their stars
+            for(piece_id in pieces){
+                piece = pieces[piece_id];
+                if(piece.owner_id != null || piece.system_id==null)
+                    // This is a ship or banked piece
+                    continue;
+                systemnode = document.getElementById('HWsystem_'+piece.system_id);
+                if(systemnode)
+                    // System already exists. This must have been a homestar.
+                    continue;
+                this.place_system(
+                );
+            }
+                piecenode = document.getElementById('HWpiece_'+piece_id);
+                this.restore_piece(piecenode,piece);
+            }
+            // Check for empty systems
+            var systems = dojo.query('.HWsystem');
+            var systemnode,stars;
+            for(var i=0;i<systems.length;i++){
+                systemnode = systems[i];
+                stars = dojo.query('.HWstar',systemnode);
+                if(stars.length == 0){
+                    // System doesn't exist after restoration
+                    systemnode.remove();
+                }
+            }
+            */
+        },
+
+        // Apply the JSON properties from piece_row to the piecenode
+        restore_piece: function(piecenode,piece_row){
+            if(piece_row.system_id == null){
+                this.put_in_bank(piecenode)
+                return;
+            }
+            var systemnode = document.getElementById('HWsystem_'+piece_row.system_id);
+            if(systemnode == null){
+                systemnode = this.place_system(
+                    piece_row.system_id,
+                    '',
+                    null,
+                    star_size=null
+                );
+            }
+            if(piece_row.owner_id != null){
+                this.place_ship(piecenode,systemnode,piece_row.owner_id);
+                return;
+            }
+            // It must have been a star
+
         },
 
         // Rearrange colonies when home system connectivity may have changed

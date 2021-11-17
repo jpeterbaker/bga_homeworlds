@@ -35,10 +35,11 @@ class homeworlds extends Table {
             'sacrifice_actions' => 21,
             'draw_offerer'      => 30,
             'system_idx'        => 40,
+            'saved_system_idx'  => 41,
             // Name list should be set by players in lobby
             'system_name_list_idx'  => 101,
-            'system_name_start' => 41,
-            'system_name_inc'   => 42
+            'system_name_start' => 42,
+            'system_name_inc'   => 43
         ));
     }
 
@@ -142,6 +143,7 @@ class homeworlds extends Table {
 
         // Number of systems that have been created
         self::setGameStateInitialValue('system_idx',0);
+        self::setGameStateInitialValue('saved_system_idx',0);
 
         // Prepare to access system name list
         $name_list_choice = self::getGameStateValue('system_name_list_idx');
@@ -151,27 +153,23 @@ class homeworlds extends Table {
             case 1:
                 // nonsense
                 // Start at the beginning with same order every time
-                self::setGameStateInitialValue('system_name_start',0);
-                self::setGameStateInitialValue('system_name_inc',1);
-                // $this->system_name_start = 0;
-                // $this->system_name_inc = 1;
-                break;
+                // Same as next case
             case 2:
                 // real stars
-                // Randomize the order of appearance (same as for fictional)
+                self::setGameStateInitialValue('system_name_start',0);
+                self::setGameStateInitialValue('system_name_inc',1);
+                break;
             case 3:
                 // fictional
                 // Randomize the first name and the name incrementation
                 self::setGameStateInitialValue(
                     'system_name_start',
-                    bga_rand(1,$name_count-1)
+                    bga_rand(0,$name_count-1)
                 );
                 self::setGameStateInitialValue(
                     'system_name_inc',
                     bga_rand(1,$name_count-1)
                 );
-                // $this->system_name_start = self::bga_rand(1,$this->name_count-1);
-                // $this->system_name_inc   = self::bga_rand(1,$this->name_count-1);
         }
 
         // Setup stats
@@ -242,18 +240,18 @@ class homeworlds extends Table {
         // Set up system structures //
         //////////////////////////////
         $systems = [];
-        $result['systems'] = &$systems;
+        // The amperstand makes it a reference that can be changed
+        $result['systems'] =& $systems;
 
         // Add stars and names to systems
         foreach($stars as $piece_id => $row){
-            // The amperstand makes it a reference that can be changed
             $system_id = $row['system_id'];
             if(!array_key_exists($system_id,$systems)){
-                $system = [];
-                $systems[$system_id] = &$system;
-                $system['name'] = $this->get_system_name($system_id);
-                $system['stars'] = [];
-                $system['ships'] = [];
+                $systems[$system_id]['system_id'] = $system_id;
+                $systems[$system_id]['homeplayer_id'] = $this->get_homeplayer($system_id);
+                $systems[$system_id]['system_name'] = $this->get_system_name($system_id);
+                $systems[$system_id]['stars'] = [];
+                $systems[$system_id]['ships'] = [];
             }
             $systems[$system_id]['stars'][$piece_id] = $row;
         }
@@ -261,8 +259,7 @@ class homeworlds extends Table {
         // Add ships to systems
         foreach($ships as $piece_id => $row){
             $system_id = $row['system_id'];
-            $system = &$systems[$system_id];
-            $system['ships'][$piece_id] = $row;
+            $systems[$system_id]['ships'][$piece_id] = $row;
         }
         return $result;
     }
@@ -446,6 +443,8 @@ class homeworlds extends Table {
     }
 
     function get_homeplayer($system_id){
+        if($system_id > $this->getPlayersNumber())
+            return null;
         $sql = 'SELECT player_id FROM player
             WHERE homeworld_id='.$system_id;
         $result = self::getCollectionFromDb($sql);
@@ -505,37 +504,51 @@ class homeworlds extends Table {
 
     // For each piece in the list that isn't already saved,
     // put its current values in saved columns
-    function save_state($piece_ids){
+    //function save_state($piece_ids){
+    function save_state(){
+        ////////////////////////////
+        // Clever careful version //
+        ////////////////////////////
+        // (might be slower due to needing several DB operations on complex turns)
+        // $sql = 'UPDATE Pieces
+        //     SET saved=TRUE,saved_system_id=system_id,saved_owner_id=owner_id
+        //     WHERE NOT saved AND (piece_id=';
+        // if(!is_array($piece_ids)){
+        //     // $piece_ids is a single ID
+        //     $sql .= $piece_ids;
+        // }
+        // else{
+        //     $sql .= implode(' OR piece_id=',$piece_ids);
+        // }
+        // $sql .= ')';
+        //////////////////
+        // Lazy version //
+        //////////////////
         $sql = 'UPDATE Pieces
-            SET saved=TRUE,saved_system_id=system_id,saved_owner_id=owner_id
-            WHERE NOT saved AND (piece_id=';
-        if(!is_array($piece_ids)){
-            // $piece_ids is a single ID
-            $sql .= $piece_ids;
-        }
-        else{
-            $sql .= implode(' OR piece_id=',$piece_ids);
-        }
-        $sql .= ')';
+            SET saved_owner_id=owner_id,saved_system_id=system_id';
         self::DbQuery($sql);
+        self::setGameStateValue(
+            'saved_system_idx',
+            self::getGameStateValue('system_idx')
+        );
     }
 
     // Put all saved values back into the regular columns
     // and set saved columns back to NULL.
-    // Return the IDs of restored pieces
+    // Return the IDs and previous owners and systems of restored pieces
     function restore_state(){
-        $sql = 'SELECT piece_id FROM Piecs
-            WHERE saved';
-        $result = self::getCollectionFromDb($sql);
+        //$sql = 'SELECT piece_id,owner_id,system_id FROM Pieces
+        //    WHERE saved';
+        //$result = self::getCollectionFromDb($sql);
         $sql = 'UPDATE Pieces
             SET system_id=saved_system_id,
-                owner_id=saved_owner_id,
-                saved=FALSE,
-                saved_system_id=NULL,
-                saved_owner_id=NULL
-            WHERE saved';
+                owner_id=saved_owner_id';
         self::DbQuery($sql);
-        return $result;
+        self::setGameStateValue(
+            'system_idx',
+            self::getGameStateValue('saved_system_idx')
+        );
+        //return $result;
     }
 
     function get_piece_row($piece_id){
@@ -925,6 +938,34 @@ class homeworlds extends Table {
         $this->gamestate->nextState('trans_end_turn');
     }
 
+	function restart(){
+        self::checkAction('act_restart_turn');
+        $player_name = $this->getActivePlayerName();
+        $this->restore_state();
+        /*
+        // Make an array of system names for the client
+        $system_names = [];
+        foreach($restored as $piece_row){
+            $system_id = $piece_row['system_id'];
+            if(!is_null())
+                $system_names[$system_id] = $this->get_system_name($system_id);
+        }
+        */
+        $gamedatas = $this->getAllDatas();
+        self::notifyAllPlayers('notif_restart',
+            clienttranslate('${player_name} restarts their turn.'),
+            array(
+                'player_name' => $player_name,
+                'gamedatas' => $gamedatas
+            )
+        );
+        self::setGameStateValue('used_free',0);
+        self::setGameStateValue('sacrifice_color',0);
+        self::setGameStateValue('sacrifice_actions',0);
+
+        $this->gamestate->nextState('trans_restart');
+    }
+
 	function offer_draw(){
         self::checkAction('act_offer_draw');
         $player_name = $this->getActivePlayerName();
@@ -1025,6 +1066,11 @@ class homeworlds extends Table {
             'draw_offerer' => self::getGameStateValue('draw_offerer')
         );
     }
+    function args_want_restart_turn(){
+        return array(
+            'draw_offerer' => self::getGameStateValue('draw_offerer')
+        );
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
@@ -1046,6 +1092,7 @@ class homeworlds extends Table {
         if(count($result) > 0){
             // This player has a home, so everyone has had a chance to create
             // Go to normal turn
+            $this->save_state();
             $this->gamestate->nextState('trans_want_free');
             return;
         }
@@ -1058,7 +1105,7 @@ class homeworlds extends Table {
 		elseif($this->exist_overpopulations())
             $this->gamestate->nextState('trans_want_catastrophe');
         else
-            $this->gamestate->nextState('trans_end_turn');
+            $this->gamestate->nextState('trans_want_restart_turn');
     }
 
 	function st_after_catastrophe(){
@@ -1069,7 +1116,7 @@ class homeworlds extends Table {
         elseif($this->exist_overpopulations())
             $this->gamestate->nextState('trans_want_catastrophe');
         else
-            $this->gamestate->nextState('trans_end_turn');
+            $this->gamestate->nextState('trans_want_restart_turn');
     }
 
     // This is called after every turn except for creations
@@ -1128,9 +1175,13 @@ class homeworlds extends Table {
             $this->gamestate->nextState('trans_endGame');
             return;
         }
+
+        // Get ready for next turn
         self::setGameStateValue('used_free',0);
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
+
+        $this->save_state();
 
         $player_id = $this->getActivePlayerId();
         $this->giveExtraTime($player_id);

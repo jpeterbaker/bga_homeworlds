@@ -88,11 +88,13 @@ $machinestates = array(
         'description' => clienttranslate('${actplayer} may activate or sacrifice a ship.'),
         'descriptionmyturn' => clienttranslate('${you} may choose a ship to activate or sacrifice.'),
         'type' => 'activeplayer',
+        'updateGameProgression' => true,
         'possibleactions' => array(
             'act_power_action',
             'act_sacrifice',
             'act_catastrophe',
             'act_pass',
+            'act_restart_turn',
             'act_offer_draw',
             'act_cancel_offer_draw'
         ),
@@ -102,6 +104,7 @@ $machinestates = array(
             'trans_want_sacrifice_action' => 12,
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
+            'trans_restart' => 11,
             'zombiePass' => 30
         )
     ),
@@ -115,6 +118,7 @@ $machinestates = array(
             'act_power_action',
             'act_catastrophe',
             'act_pass',
+            'act_restart_turn',
             'act_offer_draw',
             'act_cancel_offer_draw'
         ),
@@ -123,6 +127,7 @@ $machinestates = array(
             'trans_after_power_action' => 21,
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
+            'trans_restart' => 11,
             'zombiePass' => 30
         )
     ),
@@ -134,6 +139,7 @@ $machinestates = array(
         'possibleactions' => array(
             'act_catastrophe',
             'act_pass',
+            'act_restart_turn',
             'act_offer_draw',
             'act_cancel_offer_draw'
         ),
@@ -141,6 +147,25 @@ $machinestates = array(
         'transitions' => array(
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
+            'trans_restart' => 11,
+            'zombiePass' => 30
+        )
+    ),
+    14 => array(
+        'name' => 'want_restart_turn',
+        'description' => clienttranslate('${actplayer} may restart their turn.'),
+        'descriptionmyturn' => clienttranslate('${you} may restart your turn.'),
+        'type' => 'activeplayer',
+        'possibleactions' => array(
+            'act_pass',
+            'act_restart_turn',
+            'act_offer_draw',
+            'act_cancel_offer_draw'
+        ),
+        'args' => 'args_want_restart_turn',
+        'transitions' => array(
+            'trans_end_turn' => 30,
+            'trans_restart' => 11,
             'zombiePass' => 30
         )
     ),
@@ -164,7 +189,8 @@ $machinestates = array(
         'transitions' => array(
             'trans_end_turn' => 30,
             'trans_want_sacrifice_action' => 12,
-            'trans_want_catastrophe' => 13
+            'trans_want_catastrophe' => 13,
+            'trans_want_restart_turn' =>14
         )
     ),
     23 => array(
@@ -172,10 +198,11 @@ $machinestates = array(
         'type' => 'game',
         'action' => 'st_after_catastrophe',
         'transitions' => array(
-            'trans_end_turn' => 30,
+            'trans_want_free' => 11,
             'trans_want_sacrifice_action' => 12,
             'trans_want_catastrophe' => 13,
-            'trans_want_free' => 11
+            'trans_want_restart_turn' =>14,
+            'trans_end_turn' => 30,
         )
     ),
     30 => array(
