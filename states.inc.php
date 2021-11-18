@@ -111,8 +111,8 @@ $machinestates = array(
     // Get sac action, catastrophe, or pass
     12 => array(
         'name' => 'want_sacrifice_action',
-        'description' => clienttranslate('${actplayer} may ${action_name} a ship (${actions_remaining} actions remaining).'),
-        'descriptionmyturn' => clienttranslate('${you} may choose a ship to activate (${actions_remaining} ${action_name} actions remaining).'),
+        'description' => clienttranslate('${actplayer} may ${action_name} a ship (${actions_remaining} action(s) remaining).'),
+        'descriptionmyturn' => clienttranslate('${you} may choose a ship to activate (${actions_remaining} ${action_name} action(s) remaining).'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_power_action',

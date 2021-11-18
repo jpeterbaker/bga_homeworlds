@@ -67,7 +67,6 @@ function (dojo, declare) {
         },
 
         setup_pieces: function(gamedatas){
-            console.log('setting up with gamedatas',gamedatas);
             var colornum,pipsnum;
             var params;
             var piece_id,stack_id;
@@ -83,8 +82,10 @@ function (dojo, declare) {
                 system = gamedatas.systems[system_id];
                 this.setup_system(system);
             }
-
-            this.setup_colony_assignments();
+            // If colonies already existed,
+            // they were placed according to old colony assignments
+            // It's not enough to just remake colony assignments
+            this.arrange_colonies();
         },
 
         clear_all: function(){
@@ -637,8 +638,9 @@ function (dojo, declare) {
                             break;
                         }
                     }
-                    if(connects)
+                    if(connects){
                         groupi += home_num;
+                    }
                 }
                 groupings[groupi].push(pips);
             }
@@ -715,6 +717,21 @@ function (dojo, declare) {
             return JSON.parse(JSON.stringify(x));
         },
 
+        animate_to_bank: function(nodes){
+            var banknode = document.getElementById('HWbank');
+            var n = nodes.length;
+            var anis = [];
+            if(n === undefined){
+                // Hopefully it's a single node
+                nodes = [nodes];
+                n = 1;
+            }
+            for(var i=0;i<n;i++){
+                anis.push(this.slideToObject(nodes[i],banknode,500,i*200));
+            }
+            return dojo.fx.combine(anis);
+        },
+
         put_in_bank: function(piecenode){
             var systemnode = this.get_system(piecenode);
             dojo.removeClass(piecenode,'HWfriendly HWhostile HWstar HWship HWoverpopulated');
@@ -766,6 +783,8 @@ function (dojo, declare) {
                 star = system.stars[star_id];
                 this.setup_piece(star,'HWstar',starcontainer);
             }
+
+            this.on_system_change(systemnode);
         },
 
         setup_piece: function(piece,more_classes,container){
@@ -1279,10 +1298,10 @@ function (dojo, declare) {
                 var enemy_defenders = dojo.query('.HWhostile.HWship',home_top);
                 var message;
                 if(enemy_defenders.length==0){
-                    message = _('You have removed your last defender from your homeworld and eliminated your opponent\'s defense at the same time. If you end your turn now, the game will end in a draw. Confirm this choice or restart your turn.');
+                    message = _('You have removed your last defender from your homeworld and eliminated your opponent\'s defense at the same time. If you end your turn now, the game will end in a draw. Is this what you want to do?');
                 }
                 else{
-                    message = _('You have removed your last defender from your homeworld If you end your turn now, the game will end and you will lose. Confirm this choice or restart your turn.');
+                    message = _('You have removed your last defender from your homeworld. If you end your turn now, the game will end and you will lose. Is this what you want to do?');
                 }
                 this.confirmationDialog(
                     message,
@@ -1379,6 +1398,7 @@ function (dojo, declare) {
                 systemnode.id = 'HWsystem_'+args.system_id;
                 var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
                 labelnode.innerHTML = args.system_name;
+                // We don't need to arrange colonies since there are no colonies
                 this.setup_colony_assignments();
                 return;
             }
@@ -1404,10 +1424,12 @@ function (dojo, declare) {
                 systemnode,
                 args.homeplayer_id
             );
+            // We don't need to arrange colonies since there are no colonies
             this.setup_colony_assignments();
         },
 
         capture_from_notif: function(notif){
+            // Captures are sort of naturally animated by the rotation transition
             var args = notif.args;
             var shipnode = document.getElementById('HWpiece_'+args.target_id);
             if(this.isCurrentPlayerActive()){
@@ -1424,7 +1446,6 @@ function (dojo, declare) {
             var args = notif.args;
             var systemnode   = document.getElementById('HWsystem_'+args.system_id);
             var piecenodes = dojo.query('.HWship,.HWstar',systemnode);
-            var piecenode;
             for(var i=0;i<piecenodes.length;i++)
                 this.put_in_bank(piecenodes[i]);
             systemnode.remove();
@@ -1469,6 +1490,14 @@ function (dojo, declare) {
             var systemnode  = document.getElementById('HWsystem_'+args.system_id);
             var oldshipnode = document.getElementById('HWpiece_'+args.old_ship_id);
             var newshipnode = document.getElementById('HWpiece_'+args.new_ship_id);
+
+            /*
+            dojo.fx.combine([
+                this.animate_to_bank(oldshipnode),
+                this.slideToObject(newshipnode,systemnode,500,0)
+            ]).play();
+            */
+
             this.place_ship(
                 newshipnode,
                 systemnode,
@@ -1480,6 +1509,10 @@ function (dojo, declare) {
         sacrifice_from_notif: function(notif){
             var args = notif.args;
             var shipnode  = document.getElementById('HWpiece_'+args.ship_id);
+            /*
+            var ani = this.animate_to_bank(shipnode);
+            ani.play();
+            */
             this.put_in_bank(shipnode);
         },
 
@@ -1489,14 +1522,19 @@ function (dojo, declare) {
             var color_name = this.color_names_eng[args.color];
 
             var pieces = dojo.query('.HW'+color_name,systemnode);
+            /*
+            var ani = this.animate_to_bank(pieces);
+            ani.play();
+            */
             for(var i=0;i<pieces.length;i++)
                 this.put_in_bank(pieces[i]);
             // If it's a homeworld, rearrange the star map
             if(systemnode.getAttribute('homeplayer_id')!='none')
-                this.hyperspace_bypass();
+                this.arrange_colonies();
         },
 
         restart_from_notif: function(notif){
+            // It's sloppy, but for now, I'm doing a full board reconstruction
             this.clear_all();
             this.setup_pieces(notif.args.gamedatas);
             return;
@@ -1534,6 +1572,7 @@ function (dojo, declare) {
         },
 
         // Apply the JSON properties from piece_row to the piecenode
+        /*
         restore_piece: function(piecenode,piece_row){
             if(piece_row.system_id == null){
                 this.put_in_bank(piecenode)
@@ -1555,9 +1594,10 @@ function (dojo, declare) {
             // It must have been a star
 
         },
+        */
 
         // Rearrange colonies when home system connectivity may have changed
-        hyperspace_bypass: function(){
+        arrange_colonies: function(){
             var i;
             // star_to_systems[i] is a list of the colony system nodes that
             // have a star of size i

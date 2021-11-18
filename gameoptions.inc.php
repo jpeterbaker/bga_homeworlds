@@ -29,16 +29,13 @@ $game_options = array(
         'name' => totranslate('System names'),
         'values' => array(
             1 => array(
-                'name'      => totranslate('Nonsense'),
-                'tmdisplay' => totranslate('Nonsense system names with sequential initials')
+                'name' => totranslate('Nonsense system names with sequential initials')
             ),
             2 => array(
-                'name'      => totranslate('Stars'),
-                'tmdisplay' => totranslate('Real-world star names')
+                'name' => totranslate('Real-world star names')
             ),
             3 => array(
-                'name'      => totranslate('Popular'),
-                'tmdisplay' => totranslate('World names from popular fiction')
+                'name' => totranslate('World names from popular fiction')
             )
         )
     )
