@@ -1440,6 +1440,8 @@ function (dojo, declare) {
                 dojo.removeClass(shipnode,'HWfriendly');
                 dojo.addClass(shipnode,'HWhostile');
             }
+            var systemnode = this.get_system(shipnode);
+            this.on_system_change(systemnode);
         },
 
         fade_from_notif: function(notif){
