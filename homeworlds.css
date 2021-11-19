@@ -172,7 +172,9 @@ These terms will need to be generalized if 3+ player is implemented.
 }
 /* I'm hoping for pieces centered in their stacks */
 .HWbanked{
-    margin:auto
+    margin:auto;
+    left:0;
+    right:0
 }
 .HWselectable{
     cursor:pointer;
@@ -200,7 +202,7 @@ These terms will need to be generalized if 3+ player is implemented.
     filter:drop-shadow(15px -15px 10px indigo);
 }
 [activate=sacrifice]{
-    width:0px;
+    opacity:0;
 }
 [activate='1']{
     filter:drop-shadow(15px -15px 10px red);
