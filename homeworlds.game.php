@@ -56,6 +56,7 @@ class homeworlds extends Table {
     the game is ready to be played.
     */
     protected function setupNewGame( $players, $options = array() ) {
+
         // Set the colors of the players with HTML color code
         // The default below is red/green/blue/orange/brown
         // The number of colors defined here must correspond to the maximum number of players allowed for the gams
@@ -123,6 +124,7 @@ class homeworlds extends Table {
 
         $this->make_ship(3,666,$system_id);
         $this->make_ship(7,666,$system_id);
+
 //END DEBUG SETUP */
 
         // Change used_free to 1 when free move has been used
@@ -259,6 +261,14 @@ class homeworlds extends Table {
         // Add ships to systems
         foreach($ships as $piece_id => $row){
             $system_id = $row['system_id'];
+            if(is_null($system_id) || $system_id == ""){
+                self::error('Ship has no system. Database appears to be corrupt.');
+                $sql = 'UPDATE Pieces
+                    SET owner_id=NULL
+                    WHERE system_id IS NULL';
+                self::DbQuery($sql);
+                continue;
+            }
             $systems[$system_id]['ships'][$piece_id] = $row;
         }
         return $result;
@@ -465,11 +475,6 @@ class homeworlds extends Table {
                 self::_("You can only empower your own ships."));
         }
 
-        // Check if free move has been used
-        if(self::getGameStateValue('used_free') == 1)
-            throw new BgaVisibleSystemException(
-                self::_('Free action has already been used.'));
-
         // Check sacrifice power availability
         $sacrifice_color = self::getGameStateValue('sacrifice_color');
         if($sacrifice_color != 0){
@@ -484,9 +489,17 @@ class homeworlds extends Table {
                     self::_('No sacrifice actions remaining.'));
             }
             // Sacrifice action check passed
+            // Decrement available action counter
             self::incGameStateValue('sacrifice_actions',-1);
+            // This counts as the free move
+            self::setGameStateValue('used_free',1);
             return;
         }
+
+        // Check if free move has been used
+        if(self::getGameStateValue('used_free') == 1)
+            throw new BgaVisibleSystemException(
+                self::_('Free action has already been used.'));
 
         // Check free power availability
         $ship = $result[$ship_id];
@@ -505,6 +518,8 @@ class homeworlds extends Table {
     // For each piece in the list that isn't already saved,
     // put its current values in saved columns
     //function save_state($piece_ids){
+
+    // Save the current state of all pieces
     function save_state(){
         ////////////////////////////
         // Clever careful version //
@@ -534,8 +549,8 @@ class homeworlds extends Table {
     }
 
     // Put all saved values back into the regular columns
-    // and set saved columns back to NULL.
-    // Return the IDs and previous owners and systems of restored pieces
+    // The old saved start is retained in case of another restart
+    // Also restore the system counter
     function restore_state(){
         //$sql = 'SELECT piece_id,owner_id,system_id FROM Pieces
         //    WHERE saved';
@@ -544,6 +559,7 @@ class homeworlds extends Table {
             SET system_id=saved_system_id,
                 owner_id=saved_owner_id';
         self::DbQuery($sql);
+
         self::setGameStateValue(
             'system_idx',
             self::getGameStateValue('saved_system_idx')
@@ -1109,14 +1125,20 @@ class homeworlds extends Table {
     }
 
 	function st_after_catastrophe(){
-        if(self::getGameStateValue('sacrifice_actions') > 0)
+        if(self::getGameStateValue('sacrifice_actions') > 0){
+            $this->say('sacrifice actions remaining: '.self::getGameStateValue('sacrifice_actions'));
             $this->gamestate->nextState('trans_want_sacrifice_action');
-        elseif(self::getGameStateValue('used_free') == 0)
+        }
+        elseif(self::getGameStateValue('used_free') == 0){
+            $this->say('sacrifice actions remaining: '.self::getGameStateValue('sacrifice_actions'));
             $this->gamestate->nextState('trans_want_free');
-        elseif($this->exist_overpopulations())
+        }
+        elseif($this->exist_overpopulations()){
             $this->gamestate->nextState('trans_want_catastrophe');
-        else
+        }
+        else{
             $this->gamestate->nextState('trans_want_restart_turn');
+        }
     }
 
     // This is called after every turn except for creations
@@ -1159,7 +1181,7 @@ class homeworlds extends Table {
             }
         }
 
-        // Game is over
+        // If game is over
         if(count($losers)>0){
             // All scores start at 100, only update scores of losers
             if(count($losers)==1){

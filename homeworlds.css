@@ -15,7 +15,7 @@
 
 #HWboard{
     /* Board margin-right makes space for bank */
-    margin-right:310px;
+    margin-right:210px;
     /* height:1000px; */
     /*background:rgba(255,255,255,0.3);*/
 }
@@ -78,10 +78,11 @@ and rows of same-sized systems are created
 
 /* All pieces use the same sprite background */
 .HWship,.HWstar,.HWbanked {
-    background-image:url('img/sprites.png');
+    background-image:url('img/sprites.svg');
     background-repeat:no-repeat;
     display:inline-block;
-    background-size:145px 600px;
+    /* full size: 256px 1200; */
+    background-size:128px 600px;
 }
 .HWship,.HWstar{
     /*position:relative;*/
@@ -93,6 +94,8 @@ and rows of same-sized systems are created
     text-align:center;
 }
 .HWsystem_label{
+    margin-left:5px;
+    margin-right:5px;
     float:bottom;
 }
 
@@ -100,53 +103,112 @@ and rows of same-sized systems are created
 The background image has every piece sprite.
 This section sets the vertical background offset by piece color and orientation.
 */
-.HWred.ship,.HWred.HWbanked{
-    background-position-y:-0px
+
+/* Offset for the top of the color section in the sprite image */
+.HWred{
+    --offsetC:-6px
 }
-.HWred.HWstar{
-    background-position-y:-95px
+.HWyellow{
+    --offsetC:-156px
 }
-.HWyellow.HWship,.HWyellow.HWbanked{
-    background-position-y:-150px
+.HWgreen{
+    --offsetC:-305.5px
 }
-.HWyellow.HWstar{
-    background-position-y:-245px
+.HWblue{
+    --offsetC:-455px
 }
-.HWgreen.HWship,.HWgreen.HWbanked{
-    background-position-y:-300px
+
+/* Additional offsetP for the top of the piece */
+.HWlarge.HWship,.HWlarge.HWbanked{
+    --offsetP:-0px;
+    margin-top:5px;
+    height:86px
 }
-.HWgreen.HWstar{
-    background-position-y:-395px
+.HWmedium.HWship,.HWmedium.HWbanked{
+    --offsetP:-9px;
+    margin-top:14px;
+    height:68px
 }
-.HWblue.HWship,.HWblue.HWbanked{
-    background-position-y:-450px
+.HWsmall.HWship,.HWsmall.HWbanked{
+    --offsetP:-18px;
+    margin-top:23px;
+    height:50px
 }
-.HWblue.HWstar{
-    background-position-y:-545px
+.HWlarge.HWstar{
+    --offsetP:-93px;
+    margin-top:5px;
+    height:49px
+}
+.HWmedium.HWstar{
+    --offsetP:-98px;
+    margin-top:10px;
+    height:39px
+}
+.HWsmall.HWstar{
+    --offsetP:-103.5px;
+    margin-top:15.5px;
+    height:29px
+}
+
+/* Add the offsets together */
+
+.HWship,.HWstar,.HWbanked{
+    background-position-y:calc(var(--offsetC) + var(--offsetP))
+}
+
+/* Non-banked pieces get bottom margin matching top margin for symmetry */
+.HWlarge.HWship{
+    margin-bottom:5px;
+}
+.HWmedium.HWship{
+    margin-bottom:14px;
+}
+.HWsmall.HWship{
+    margin-bottom:23px;
+}
+.HWlarge.HWstar{
+    margin-bottom:5px;
+}
+.HWmedium.HWstar{
+    margin-bottom:10px;
+}
+.HWsmall.HWstar{
+    margin-bottom:15.5px;
 }
 
 /* Horizontal offset by and width depend on piece size. */
 .HWlarge{
-    background-position-x:-0px;
-    width:56px;
+    background-position-x:-1.5px;
+    width:49px;
 }
 .HWmedium{
-    background-position-x:-56px;
-    width:52px;
+    background-position-x:-54.5px;
+    width:39px;
 }
 .HWsmall{
-    background-position-x:-108px;
-    width:42px;
+    background-position-x:-98px;
+    width:29px;
 }
 
-/* For now, height only depends on whether the piece is standing. */
 .HWship{
     transform:rotate(var(--rotateAmount));
 }
 .HWstar{
-    /* height:110px; original height */
-    height:55px;
     --rotateAmount:0deg;
+}
+
+/*
+Give ships and stars a little horizontal margin
+Use margin to center banked pieces
+*/
+.HWship,.HWstar{
+    margin-left:5px;
+    margin-right:5px;
+}
+.HWbanked{
+    margin:auto;
+    left:0;
+    right:0
 }
 
 /*
@@ -166,23 +228,14 @@ These terms will need to be generalized if 3+ player is implemented.
     --rotateAmount:0deg;
 }
 
-/* Banked pieces have the height of ships and point up. */
-.HWship,.HWbanked{
-    height:95px;
-}
-/* I'm hoping for pieces centered in their stacks */
-.HWbanked{
-    margin:auto;
-    left:0;
-    right:0
-}
+/* Selectable stuff */
+
 .HWselectable{
     cursor:pointer;
 }
 .HWselectable.HWship:hover,.HWselectable.HWstar:hover{
-    transform:translate(0px,-10px) rotate(var(--rotateAmount));
+    transform:translate(0px,-5px) rotate(var(--rotateAmount));
 }
-
 .HWselectable.HWstack,.HWselectable.HWsystem,.HWselectable#page-content{
     background-color:rgba(255,255,255,0.3);
 }
@@ -205,16 +258,16 @@ These terms will need to be generalized if 3+ player is implemented.
     opacity:0;
 }
 [activate='1']{
-    filter:drop-shadow(15px -15px 10px red);
+    filter:drop-shadow(10px -10px 10px red);
 }
 [activate='2']{
-    filter:drop-shadow(15px -15px 10px yellow);
+    filter:drop-shadow(10px -10px 10px yellow);
 }
 [activate='3']{
-    filter:drop-shadow(15px -15px 10px green);
+    filter:drop-shadow(10px -10px 10px green);
 }
 [activate='4']{
-    filter:drop-shadow(15px -15px 10px blue);
+    filter:drop-shadow(10px -10px 10px blue);
 }
 
 /*

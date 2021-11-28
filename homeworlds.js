@@ -783,7 +783,6 @@ function (dojo, declare) {
                 star = system.stars[star_id];
                 this.setup_piece(star,'HWstar',starcontainer);
             }
-
             this.on_system_change(systemnode);
         },
 
@@ -844,6 +843,11 @@ function (dojo, declare) {
         },
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
             var params,par;
+            console.log('placing system');
+            console.log('id',system_id);
+            console.log('name',system_name);
+            console.log('home',homeplayer_id);
+            console.log('size',star_size);
             if(homeplayer_id == null){
                 params = {
                     system_id:system_id,
@@ -851,10 +855,14 @@ function (dojo, declare) {
                     homeplayer_id:'none'
                 };
                 if(star_size==null){
+                    console.log('erroring');
                     this.showMessage(
                         'Placing a colony with unknown star.',
                         'error'
                     );
+                    // Returning is a stopgap measure to prevent unresponsiveness
+                    // in the eliscinsky scenario
+                    return;
                     par = 'HWcolony_container_1';
                 }
                 else
@@ -873,6 +881,7 @@ function (dojo, declare) {
                     par = 'HWhome_container_top';
             }
 
+            console.log('params',params);
             var systemnode = dojo.place(
                 this.format_block('jstpl_system',params),
                 par
@@ -1058,7 +1067,7 @@ function (dojo, declare) {
                     'client_want_creation_ship',
                     {
                         descriptionmyturn :
-                        _('${you} must choose an initial ship.')
+                        _('${you} must choose an initial ship from the bank.')
                     }
                 );
             }
@@ -1141,7 +1150,7 @@ function (dojo, declare) {
                     'client_want_power',
                     {
                         descriptionmyturn :
-                        _('${you} must choose a star or friendly ship in the same system.')
+                        _('${you} may sacrifice this ship or select the power of a star or friendly ship in the same system .')
                     }
                 );
             }
@@ -1159,16 +1168,16 @@ function (dojo, declare) {
             color = parseInt(color);
             switch(color){
                 case 1:
-                    description = _('${you} must choose a ship to capture.');
+                    description = _('${you} may choose an enemy ship in the same system to capture.');
                     break;
                 case 2:
-                    description = _('${you} must choose a destination system or a new star to discover from the bank.');
+                    description = _('${you} may choose a destination system or a new star to discover from the bank.');
                     break;
                 case 3:
                     description = 'Next state loading';
                     break;
                 case 4:
-                    description = _('${you} must choose a new color from the bank.');
+                    description = _('${you} may choose a same-sized piece of a new color from the bank.');
                     break;
                 default:
                     console.error('Bad power number: '+color);
