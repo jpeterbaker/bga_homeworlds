@@ -860,9 +860,6 @@ function (dojo, declare) {
                         'Placing a colony with unknown star.',
                         'error'
                     );
-                    // Returning is a stopgap measure to prevent unresponsiveness
-                    // in the eliscinsky scenario
-                    return;
                     par = 'HWcolony_container_1';
                 }
                 else
@@ -1150,7 +1147,7 @@ function (dojo, declare) {
                     'client_want_power',
                     {
                         descriptionmyturn :
-                        _('${you} may sacrifice this ship or select the power of a star or friendly ship in the same system .')
+                        _('${you} may sacrifice this ship or select the power of a star or friendly ship in the same system.')
                     }
                 );
             }
@@ -1300,17 +1297,19 @@ function (dojo, declare) {
         pass_button_selected: function(){
             var home_bot = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
             var defenders = dojo.query('.HWfriendly.HWship',home_bot);
-            if(defenders.length==0){
+            var stars = dojo.query('.HWstar',home_bot);
+            if(defenders.length==0 || stars.length==0){
                 // This move is self-elimination
                 var player_id_top = this.get_top_player();
                 var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']')[0];
                 var enemy_defenders = dojo.query('.HWhostile.HWship',home_top);
+                var enemy_stars = dojo.query('.HWstar',home_top);
                 var message;
-                if(enemy_defenders.length==0){
-                    message = _('You have removed your last defender from your homeworld and eliminated your opponent\'s defense at the same time. If you end your turn now, the game will end in a draw. Is this what you want to do?');
+                if(enemy_defenders.length==0 || enemy_stars.length==0){
+                    message = _('Both homeworlds are destroyed or unoccupied by their owners. If you end your turn now, the game will end in a draw. Is this what you want to do?');
                 }
                 else{
-                    message = _('You have removed your last defender from your homeworld. If you end your turn now, the game will end and you will lose. Is this what you want to do?');
+                    message = _('Your homeworld is destroyed or undefended. If you end your turn now, the game will end and you will lose. Is this what you want to do?');
                 }
                 this.confirmationDialog(
                     message,

@@ -261,14 +261,6 @@ class homeworlds extends Table {
         // Add ships to systems
         foreach($ships as $piece_id => $row){
             $system_id = $row['system_id'];
-            if(is_null($system_id) || $system_id == ""){
-                self::error('Ship has no system. Database appears to be corrupt.');
-                $sql = 'UPDATE Pieces
-                    SET owner_id=NULL
-                    WHERE system_id IS NULL';
-                self::DbQuery($sql);
-                continue;
-            }
             $systems[$system_id]['ships'][$piece_id] = $row;
         }
         return $result;
@@ -491,12 +483,12 @@ class homeworlds extends Table {
             // Sacrifice action check passed
             // Decrement available action counter
             self::incGameStateValue('sacrifice_actions',-1);
-            // This counts as the free move
-            self::setGameStateValue('used_free',1);
+            // The "used_free" gameStateValue is set by the sacrifice function
             return;
         }
 
         // Check if free move has been used
+        // This check appears to be redundant since power actions are 
         if(self::getGameStateValue('used_free') == 1)
             throw new BgaVisibleSystemException(
                 self::_('Free action has already been used.'));
@@ -750,7 +742,8 @@ class homeworlds extends Table {
         );
         // Put any remaining pieces in bank
         $sql = 'UPDATE Pieces
-            SET system_id=NULL
+            SET system_id=NULL,
+                owner_id=NULL
             WHERE system_id='.$system_id;
         self::DbQuery($sql);
 
@@ -879,7 +872,7 @@ class homeworlds extends Table {
                 self::_('You may only sacrifice your own ships.')
             );
         }
-        // We shouldn't need to separately check that they haven't already sacrificed
+        // We shouldn't need to separately check that they haven't used free move
         // since act_sacrifice is only available in want_free state
 
         $this->put_in_bank($ship_id);
@@ -901,6 +894,8 @@ class homeworlds extends Table {
             $this->fade($system_id);
         $this->gamestate->nextState('trans_want_sacrifice_action');
         self::incStat(1,'ships_sacrificed',$player_id);
+        // Sacrifice counts as the free move
+        self::setGameStateValue('used_free',1);
     }
 
     function catastrophe($system_id,$color){
@@ -1125,20 +1120,14 @@ class homeworlds extends Table {
     }
 
 	function st_after_catastrophe(){
-        if(self::getGameStateValue('sacrifice_actions') > 0){
-            $this->say('sacrifice actions remaining: '.self::getGameStateValue('sacrifice_actions'));
+        if(self::getGameStateValue('sacrifice_actions') > 0)
             $this->gamestate->nextState('trans_want_sacrifice_action');
-        }
-        elseif(self::getGameStateValue('used_free') == 0){
-            $this->say('sacrifice actions remaining: '.self::getGameStateValue('sacrifice_actions'));
+        elseif(self::getGameStateValue('used_free') == 0)
             $this->gamestate->nextState('trans_want_free');
-        }
-        elseif($this->exist_overpopulations()){
+        elseif($this->exist_overpopulations())
             $this->gamestate->nextState('trans_want_catastrophe');
-        }
-        else{
+        else
             $this->gamestate->nextState('trans_want_restart_turn');
-        }
     }
 
     // This is called after every turn except for creations
