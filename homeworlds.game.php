@@ -34,12 +34,19 @@ class homeworlds extends Table {
             'sacrifice_color'   => 20,
             'sacrifice_actions' => 21,
             'draw_offerer'      => 30,
+            // System name tracking
+            'system_name_list_idx'  => 101, // This is a setup option
             'system_idx'        => 40,
             'saved_system_idx'  => 41,
-            // Name list should be set by players in lobby
-            'system_name_list_idx'  => 101,
             'system_name_start' => 42,
-            'system_name_inc'   => 43
+            'system_name_inc'   => 43,
+            // Track statistics until end of turn (in case of restart)
+            'turn_ships_captured'       => 51,
+            'turn_systems_discovered'   => 52,
+            'turn_ships_built'          => 53,
+            'turn_ships_traded'         => 54,
+            'turn_ships_sacrificed'     => 55,
+            'turn_catastrophes_trigged' => 56
         ));
     }
 
@@ -147,6 +154,13 @@ class homeworlds extends Table {
         self::setGameStateInitialValue('system_idx',0);
         self::setGameStateInitialValue('saved_system_idx',0);
 
+        // Actions taken this turn (added to stats unless turn is reset)
+        self::setGameStateInitialValue('turn_ships_captured',0);
+        self::setGameStateInitialValue('turn_systems_discovered',0);
+        self::setGameStateInitialValue('turn_ships_built',0);
+        self::setGameStateInitialValue('turn_ships_traded',0);
+        self::setGameStateInitialValue('turn_ships_sacrificed',0);
+        self::setGameStateInitialValue('turn_catastrophes_trigged',0);
         // Prepare to access system name list
         $name_list_choice = self::getGameStateValue('system_name_list_idx');
         $system_names = $this->system_name_lists[$name_list_choice];
@@ -556,6 +570,13 @@ class homeworlds extends Table {
             'system_idx',
             self::getGameStateValue('saved_system_idx')
         );
+
+        self::setGameStateValue('turn_ships_captured',0);
+        self::setGameStateValue('turn_systems_discovered',0);
+        self::setGameStateValue('turn_ships_built',0);
+        self::setGameStateValue('turn_ships_traded',0);
+        self::setGameStateValue('turn_ships_sacrificed',0);
+        self::setGameStateValue('turn_catastrophes_trigged',0);
         //return $result;
     }
 
@@ -783,7 +804,7 @@ class homeworlds extends Table {
 
         // State change will happen in move
         $this->move($ship_id,$system_id);
-        self::incStat(1,'systems_discovered',$this->getActivePlayerId());
+        self::incGameStateValue('turn_systems_discovered',1);
     }
 
     function build($ship_id){
@@ -823,7 +844,7 @@ class homeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
-        self::incStat(1,'ships_built',$this->getActivePlayerId());
+        self::incGameStateValue('turn_ships_built',1);
     }
 
     function trade($ship_id,$color_num){
@@ -853,7 +874,7 @@ class homeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
-        self::incStat(1,'ships_traded',$player_id);
+        self::incGameStateValue('turn_ships_traded',1);
     }
 
     function sacrifice($ship_id){
@@ -893,7 +914,7 @@ class homeworlds extends Table {
         if($this->is_empty($system_id))
             $this->fade($system_id);
         $this->gamestate->nextState('trans_want_sacrifice_action');
-        self::incStat(1,'ships_sacrificed',$player_id);
+        self::incGameStateValue('turn_ships_sacrificed',1);
         // Sacrifice counts as the free move
         self::setGameStateValue('used_free',1);
     }
@@ -936,7 +957,7 @@ class homeworlds extends Table {
             $this->fade($system_id);
 
         $this->gamestate->nextState('trans_after_catastrophe');
-        self::incStat(1,'catastrophes_trigged',$this->getActivePlayerId());
+        self::incGameStateValue('turn_catastrophes_trigged',1);
     }
 
 	function pass(){
@@ -1132,6 +1153,8 @@ class homeworlds extends Table {
 
     // This is called after every turn except for creations
     function st_end_turn(){
+        $this->update_stats();
+
         $sql = 'SELECT player_id,player_name,homeworld_id FROM player';
         $players = self::getCollectionFromDb($sql);
 
@@ -1199,7 +1222,32 @@ class homeworlds extends Table {
 
         $this->activeNextPlayer();
         $this->gamestate->nextState('trans_want_free');
+    }
+
+    // Move stats from gamestate variables to stat variables of current player
+    function update_stats(){
+        $player_id = $this->getActivePlayerId();
         self::incStat(1,'turns_number',$player_id);
+
+        self::incStat(self::getGameStateValue('turn_ships_captured'),
+            'ships_captured',$player_id);
+        self::incStat(self::getGameStateValue('turn_systems_discovered'),
+            'systems_discovered',$player_id);
+        self::incStat(self::getGameStateValue('turn_ships_built'),
+            'ships_built',$player_id);
+        self::incStat(self::getGameStateValue('turn_ships_traded'),
+            'ships_traded',$player_id);
+        self::incStat(self::getGameStateValue('turn_ships_sacrificed'),
+            'ships_sacrificed',$player_id);
+        self::incStat(self::getGameStateValue('turn_catastrophes_trigged'),
+            'catastrophes_trigged',$player_id);
+
+        self::setGameStateValue('turn_ships_captured',0);
+        self::setGameStateValue('turn_systems_discovered',0);
+        self::setGameStateValue('turn_ships_built',0);
+        self::setGameStateValue('turn_ships_traded',0);
+        self::setGameStateValue('turn_ships_sacrificed',0);
+        self::setGameStateValue('turn_catastrophes_trigged',0);
     }
 
 //////////////////////////////////////////////////////////////////////////////
