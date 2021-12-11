@@ -293,13 +293,75 @@ class homeworlds extends Table {
     */
     function getGameProgression() {
         // For Homeworlds, this is hard to estimate.
-        // Let's say that progress is the proportion of pieces that are in play.
-        $sql = 'SELECT piece_id FROM Pieces
-            WHERE system_id IS NOT NULL';
-        $result = self::getCollectionFromDb($sql);
-        // Number of pieces in play
-        $n_in_play = count($result);
-        return intdiv(100*$n_in_play,36);
+
+        if(0){
+            /*
+            VERSION 1:
+            Progress is the proportion of pieces that are in play
+            */
+            $sql = 'SELECT piece_id FROM Pieces
+                WHERE system_id IS NOT NULL';
+            $result = self::getCollectionFromDb($sql);
+            // Number of pieces in play
+            $n_in_play = count($result);
+            return intdiv(100*$n_in_play,36);
+        }
+        elseif(1){
+            /*
+            VERSION 2:
+            Progress approaches 100% assymptotically
+                1-1/(12*ply+1)
+            */
+            $sql = 'SELECT player_id FROM player';
+            $player_ids = self::getCollectionFromDb($sql);
+            $plys = 0;
+            foreach($player_ids as $player_id=>$row){
+                $plys += self::getStat('turns_number',$player_id);
+            }
+            return round(100*( 1-1/($plys/30+1) ));
+        }
+        else{
+            /*
+            VERSION 3:
+            Progress estimate smoothly transitions from simple estimate f to a fancy estimate g
+                f is a linear function of the number of turns
+                    Besides very short games where someone quits,
+                    the mode game length on SDG is about 40 ply
+                    f=0% at 0 ply
+                    f=100% at 40 ply
+                g is increased by a player's material advantage and by bank exhaustion
+                    g=0% if neither player has a ship
+                    g=75% if players have equal pip count and bank is empty
+                    g=100% if either player has every piece as a ship
+            */
+
+            $sql = 'SELECT piece_id,owner_id FROM Pieces
+                WHERE owner_id IS NOT NULL';
+            $pieces = self::getCollectionFromDb($sql);
+            // Check for the extremely unlikely case that all ships are eliminated
+            if(count($pieces)==0){
+                return 100;
+            }
+            // Total material for each player, order doesn't matter
+            $m0 = 0;
+            $m1 = 0;
+            // ID of the player corresponding to $m0
+            $p0id = $pieces[$this->array_key_first($pieces)]['owner_id'];
+            foreach($pieces as $piece_id=>$row){
+                $pips = $row['pips'];
+                $owner_id = $row['owner_id'];
+                if($owner_id == $p0id)
+                    $m0 += $pips;
+                else{
+                    $m1 += $pips;
+                }
+            }
+            $theta = atan2($m1,$m0);
+            $g = ($m0+$m2)/72 * (0.75+0.25*abs(4*$theta/pi - 1));
+
+            // As a shortcut, use
+            $f = min(1, self::getStat('turns_number',$p0id)/20 );
+        }
     }
 
 //////////////////////////////////////////////////////////////////////////////

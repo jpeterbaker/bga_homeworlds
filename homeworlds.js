@@ -444,8 +444,14 @@ function (dojo, declare) {
             // Only choice states get buttons
             if(!state_name.startsWith('want') && !state_name.startsWith('client'))
                 return;
+
+            // Set default pass button params
+            // These will be changed if passing is not expected,
+            // i.e., if there are things the player could still do
+            var pass_button_message = _('End turn');
+            var pass_button_color = 'blue';
             switch(state_name){
-                // Server choice states get pass and catastrophe buttons
+                // Server choice states get catastrophe button
                 case 'want_free':
                 case 'want_sacrifice_action':
                 case 'want_catastrophe':
@@ -457,11 +463,21 @@ function (dojo, declare) {
                             'catastrophe_button_selected'
                         );
                     }
+                    // In these states, there are still actions available
+                    pass_button_message = _('Pass');
+                    pass_button_color = 'red'
+                // NO BREAK
+                // The above states get pass, draw, and restart buttons
                 case 'want_restart_turn':
                     this.addActionButton(
                         'pass_button',
-                        _('End turn'),
-                        'pass_button_selected'
+                        pass_button_message,
+                        function(evt){
+                            this.pass_button_selected(state_name);
+                        },
+                        null, // destination (deprecated)
+                        null, // blinking (default false)
+                        pass_button_color
                     );
                     this.setup_draw_button(args);
                     this.addActionButton(
@@ -507,7 +523,6 @@ function (dojo, declare) {
                         }
                     );
                     break;
-                    
             }
         },
 
@@ -843,11 +858,6 @@ function (dojo, declare) {
         },
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
             var params,par;
-            console.log('placing system');
-            console.log('id',system_id);
-            console.log('name',system_name);
-            console.log('home',homeplayer_id);
-            console.log('size',star_size);
             if(homeplayer_id == null){
                 params = {
                     system_id:system_id,
@@ -855,7 +865,6 @@ function (dojo, declare) {
                     homeplayer_id:'none'
                 };
                 if(star_size==null){
-                    console.log('erroring');
                     this.showMessage(
                         'Placing a colony with unknown star.',
                         'error'
@@ -878,7 +887,6 @@ function (dojo, declare) {
                     par = 'HWhome_container_top';
             }
 
-            console.log('params',params);
             var systemnode = dojo.place(
                 this.format_block('jstpl_system',params),
                 par
@@ -1294,7 +1302,36 @@ function (dojo, declare) {
             );
         },
 
-        pass_button_selected: function(){
+        pass_button_selected: function(state_name){
+            // Check if there are actions still available
+            // 'want_restart_turn' is the only state where
+            // no forward board actions are available
+            if(state_name == 'want_restart_turn'){
+                this.end_turn_with_self_elim_check();
+                return;
+            }
+            var message;
+            if(state_name == 'want_catastrophe'){
+                message = _('There is an overpopulation. Are you sure you want to end your turn without triggering a catastrophe?');
+            }
+            else{
+                message = _('You still have action(s) available. Are you sure you want to end your turn now?');
+            }
+            this.confirmationDialog(
+                message,
+                // Yes handler
+                dojo.hitch(
+                    this,
+                    function(){
+                        this.end_turn_with_self_elim_check();
+                    }
+                ),
+                // No handler, if any
+            );
+        },
+
+        // Check for self-elimination and call server if approved
+        end_turn_with_self_elim_check: function(){
             var home_bot = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
             var defenders = dojo.query('.HWfriendly.HWship',home_bot);
             var stars = dojo.query('.HWstar',home_bot);
@@ -1336,10 +1373,29 @@ function (dojo, declare) {
             this.ajaxcallwrapper('act_restart_turn',{});
         },
         draw_button_selected: function(){
-            this.ajaxcallwrapper('act_offer_draw',{});
             args = this['latest_args'];
-            args.args.draw_offerer = this.player_id;
-            this.setClientState(args.state_name,args);
+            // If the other player offered the draw,
+            // then this is an offer acceptance that should be confirmed
+            if(args.args.draw_offerer != 0){
+                message = _('Are you sure that you want to end the game in a draw?');
+                this.confirmationDialog(
+                    message,
+                    // Yes handler
+                    dojo.hitch(
+                        this,
+                        function(){
+                            this.ajaxcallwrapper('act_offer_draw',{});
+                        }
+                    )
+                    // No handler, if any
+                );
+            }
+            else{
+                // This player is offering a draw
+                this.ajaxcallwrapper('act_offer_draw',{});
+                args.args.draw_offerer = this.player_id;
+                this.setClientState(args.state_name,args);
+            }
         },
         cancel_draw_button_selected: function(){
             this.ajaxcallwrapper('act_cancel_offer_draw',{});
