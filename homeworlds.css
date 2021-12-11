@@ -18,6 +18,7 @@
     margin-right:210px;
     /* height:1000px; */
     /*background:rgba(255,255,255,0.3);*/
+    display:block;
 }
 #HWbank{
     /*
@@ -30,6 +31,7 @@
     float:right;
     background:rgba(0,0,0,0.3);
 }
+
 /* A stack is a place for identical pieces in the bank */
 .HWstack{
     display:inline-block;
@@ -70,6 +72,7 @@ and rows of same-sized systems are created
 .HWcenterizer{
     text-align:center;
     display:block;
+    min-height:50px;
 }
 /* A centered, collection-fitting container for same-sized systems */
 .HWsystem_container{
