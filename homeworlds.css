@@ -318,3 +318,11 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
     }
 }
 
+/* Modifications to main BGA display */
+.player_score_value{
+    display:none
+}
+.fa-star{
+    display:none
+}
+
