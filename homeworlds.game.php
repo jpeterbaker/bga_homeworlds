@@ -1257,6 +1257,13 @@ class homeworlds extends Table {
 
         // If game is over
         if(count($losers)>0){
+            // TODO remove this once all games are using new system where
+            // scores are set to zero at the beginning
+            // (These lines just protect old games from declaring incorrect winner)
+            $sql = 'UPDATE player
+                SET player_score=0';
+            self::DbQuery($sql);
+
             if(count($losers)==1){
                 // Set score of non-loser to 1
                 $sql = 'UPDATE player

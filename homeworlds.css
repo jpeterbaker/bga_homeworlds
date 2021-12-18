@@ -88,7 +88,7 @@ and rows of same-sized systems are created
     background-size:128px 600px;
 }
 .HWship,.HWstar{
-    /*position:relative;*/
+    position:relative;
     transition:.5s;
 }
 
@@ -102,6 +102,75 @@ and rows of same-sized systems are created
     float:bottom;
 }
 
+/* Position symbol indicator on pieces for colorblind friendliness */
+.HWcolor_symbol{
+    font-size:20px;
+    text-align:center;
+    position:absolute;
+    left:0;
+    right:0;
+    /*
+    Make text non-selectable
+    Adapted from
+    https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting
+    */
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+              user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}
+/* To get the symbol in a vertically good spot,
+ pieces need a margin according to their size */
+
+/* The green looks too high if it's in the same spot as the others.
+Set the height of green symbol separately */
+.HWgreen.HWlarge.HWbanked>.HWcolor_symbol,.HWgreen.HWlarge.HWship>.HWcolor_symbol{
+    margin-top:40px;
+}
+.HWgreen.HWmedium.HWbanked>.HWcolor_symbol.HWgreen,.HWmedium.HWship>.HWcolor_symbol{
+    margin-top:33px;
+}
+.HWgreen.HWsmall.HWbanked>.HWcolor_symbol,.HWgreen.HWsmall.HWship>.HWcolor_symbol{
+    margin-top:-20px;
+}
+
+.HWgreen.HWlarge.HWstar>.HWcolor_symbol{
+    margin-top:13px;
+}
+.HWgreen.HWmedium.HWstar>.HWcolor_symbol{
+    margin-top:10px;
+}
+.HWgreen.HWsmall.HWstar>.HWcolor_symbol{
+    margin-top:-16px;
+}
+
+.HWlarge.HWbanked>.HWcolor_symbol,.HWlarge.HWship>.HWcolor_symbol{
+    margin-top:35px;
+}
+.HWmedium.HWbanked>.HWcolor_symbol,.HWmedium.HWship>.HWcolor_symbol{
+    margin-top:28px;
+}
+.HWsmall.HWbanked>.HWcolor_symbol,.HWsmall.HWship>.HWcolor_symbol{
+    margin-top:-25px;
+}
+
+.HWlarge.HWstar>.HWcolor_symbol{
+    margin-top:5px;
+}
+.HWmedium.HWstar>.HWcolor_symbol{
+    margin-top:5px;
+}
+.HWsmall.HWstar>.HWcolor_symbol{
+    margin-top:-21px;
+}
+
+/* Hide the symbol on covered children */
+.HWbanked:not(:last-child)>.HWcolor_symbol{
+    display:none;
+}
+
+
+
 /*
 The background image has every piece sprite.
 This section sets the vertical background offset by piece color and orientation.
@@ -112,7 +181,7 @@ This section sets the vertical background offset by piece color and orientation.
     --offsetC:-6px
 }
 .HWyellow{
-    --offsetC:-156px
+    --offsetC:-156px;
 }
 .HWgreen{
     --offsetC:-305.5px
@@ -324,5 +393,8 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
 }
 .fa-star{
     display:none
+}
+.HWfirst_player_indicator{
+    font-size:75%;
 }
 

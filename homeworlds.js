@@ -809,16 +809,52 @@ function (dojo, declare) {
         },
 
         setup_piece: function(piece,more_classes,container){
+            var color_symbol;
+            switch(parseInt(piece.color)){
+                case 1:
+                    // Red capture
+                    // 12-pointed star
+                    color_symbol = '&#10041;';
+                    break;
+                case 2:
+                    // Yellow move
+                    // Arrowhead
+                    color_symbol = '&#11165;';
+                    break;
+                case 3:
+                    // Green build
+                    // Square cap
+                    //color_symbol = '&#8851;';
+                    // Three horizontal lines
+                    //color_symbol = '&#9776;';
+                    // Half-filled square
+                    //color_symbol = '&#11027;';
+                    // Pair of squares
+                    color_symbol = '&#10697;';
+                    break;
+                case 4:
+                    // Blue trade
+                    // Circling arrows
+                    color_symbol = '&#128472;';
+                    break;
+                default:
+                    this.showMessage(
+                        'Unknown piece color during symbol placement: '+piece.color,
+                        'error'
+                    );
+            }
+                    
             var params = {
                 piece_id     : piece.piece_id,
                 colorname    : this.color_names_eng[piece.color],
                 pipsname     : this.size_names_eng[piece.pips],
                 colornum     : piece.color,
+                color_symbol : color_symbol,
                 pipsnum      : piece.pips,
                 more_classes : more_classes
             };
             var piece_html = this.format_block('jstpl_piece',params);
-            dojo.place( piece_html, container);
+            dojo.place(piece_html,container);
         },
 
         ajaxcallwrapper: function(action, args, handler) {
