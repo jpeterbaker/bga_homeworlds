@@ -133,8 +133,8 @@ $machinestates = array(
     ),
     13 => array(
         'name' => 'want_catastrophe',
-        'description' => clienttranslate('${actplayer} may cause a catastrophe.'),
-        'descriptionmyturn' => clienttranslate('${you} may cause a catastrophe.'),
+        'description' => clienttranslate('${actplayer} may trigger a catastrophe.'),
+        'descriptionmyturn' => clienttranslate('${you} may trigger a catastrophe.'),
         'type' => 'activeplayer',
         'possibleactions' => array(
             'act_catastrophe',

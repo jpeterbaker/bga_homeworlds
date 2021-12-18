@@ -99,7 +99,7 @@ class homeworlds extends Table {
         /************ Start the game initialization *****/
 
         $sql = 'UPDATE player
-            SET player_score=100';
+            SET player_score=0';
         self::DbQuery($sql);
 
         /////////////////////////////////////////////////
@@ -1223,7 +1223,7 @@ class homeworlds extends Table {
         if(self::getGameStateValue('draw_offerer') < 0){
             // Players agreed to end the game in a draw
             $sql = 'UPDATE player
-                SET player_score=50';
+                SET player_score=1';
             self::DbQuery($sql);
             $this->gamestate->nextState('trans_endGame');
             return;
@@ -1257,15 +1257,16 @@ class homeworlds extends Table {
 
         // If game is over
         if(count($losers)>0){
-            // All scores start at 100, only update scores of losers
             if(count($losers)==1){
+                // Set score of non-loser to 1
                 $sql = 'UPDATE player
-                    SET player_score=0
-                    WHERE player_id='.$losers[0];
+                    SET player_score=1
+                    WHERE player_id!='.$losers[0];
             }
             else{
+                // It's a draw, set all scores to 1
                 $sql = 'UPDATE player
-                    SET player_score=50';
+                    SET player_score=1';
             }
             self::DbQuery($sql);
             $this->gamestate->nextState('trans_endGame');

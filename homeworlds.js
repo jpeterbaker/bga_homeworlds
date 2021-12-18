@@ -57,6 +57,13 @@ function (dojo, declare) {
                 this['player_'+player.player_no] = player_id;
             }
 
+            // Display first player indicator in the player panel
+            var player_label = _('First player');
+            dojo.place(
+                "<div class='HWfirst_player_indicator'>"+player_label+"</div>",
+                'player_board_'+this.player_1
+            );
+
             ///////////////////
             // Create pieces //
             ///////////////////
@@ -1298,7 +1305,7 @@ function (dojo, declare) {
         catastrophe_button_selected: function(){
             this.setClientState(
                 'client_want_catastrophe_target',
-                {descriptionmyturn:_('${you} may trigger a catastrophe.')}
+                {descriptionmyturn:_('${you} may select an overpopulated piece to trigger a catastrophe.')}
             );
         },
 
@@ -1306,10 +1313,13 @@ function (dojo, declare) {
             // Check if there are actions still available
             // 'want_restart_turn' is the only state where
             // no forward board actions are available
+            // From that state, just check for self-elimination
             if(state_name == 'want_restart_turn'){
                 this.end_turn_with_self_elim_check();
                 return;
             }
+            // Otherwise, the player has an action or catastrophe available
+            // Verify that they want to ignore remaining options
             var message;
             if(state_name == 'want_catastrophe'){
                 message = _('There is an overpopulation. Are you sure you want to end your turn without triggering a catastrophe?');
@@ -1496,7 +1506,7 @@ function (dojo, declare) {
             // Captures are sort of naturally animated by the rotation transition
             var args = notif.args;
             var shipnode = document.getElementById('HWpiece_'+args.target_id);
-            if(this.isCurrentPlayerActive()){
+            if(dojo.hasClass(shipnode,'HWhostile')){
                 dojo.removeClass(shipnode,'HWhostile');
                 dojo.addClass(shipnode,'HWfriendly');
             }
