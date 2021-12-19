@@ -41,4 +41,23 @@ $game_options = array(
     )
 );
 
+$game_preferences = array(
+    102 => array(
+        'name' => totranslate('Colorblind mode'),
+        // You wouldn't think so, but the cssPref class only gets applied on page load
+        'needReload' => true,
+        'values' => array(
+            0 => array(
+				'name' => totranslate('Off'),
+				'cssPref' => 'colorblind_off'
+            ),
+            1 => array(
+                'name' => totranslate('On'),
+                'cssPref' => 'colorblind_on'
+            )
+        ),
+        'default' => 0
+    )
+);
+
 

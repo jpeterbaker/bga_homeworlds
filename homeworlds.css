@@ -102,7 +102,7 @@ and rows of same-sized systems are created
     float:bottom;
 }
 
-/* Position symbol indicator on pieces for colorblind friendliness */
+/* Symbol indicator appears on pieces for colorblind friendliness */
 .HWcolor_symbol{
     font-size:20px;
     text-align:center;
@@ -127,11 +127,11 @@ Set the height of green symbol separately */
 .HWgreen.HWlarge.HWbanked>.HWcolor_symbol,.HWgreen.HWlarge.HWship>.HWcolor_symbol{
     margin-top:40px;
 }
-.HWgreen.HWmedium.HWbanked>.HWcolor_symbol.HWgreen,.HWmedium.HWship>.HWcolor_symbol{
-    margin-top:33px;
+.HWgreen.HWmedium.HWbanked>.HWcolor_symbol,.HWgreen.HWmedium.HWship>.HWcolor_symbol{
+    margin-top:34px;
 }
 .HWgreen.HWsmall.HWbanked>.HWcolor_symbol,.HWgreen.HWsmall.HWship>.HWcolor_symbol{
-    margin-top:-20px;
+    margin-top:22px;
 }
 
 .HWgreen.HWlarge.HWstar>.HWcolor_symbol{
@@ -141,27 +141,27 @@ Set the height of green symbol separately */
     margin-top:10px;
 }
 .HWgreen.HWsmall.HWstar>.HWcolor_symbol{
-    margin-top:-16px;
+    margin-top:5px;
 }
 
 .HWlarge.HWbanked>.HWcolor_symbol,.HWlarge.HWship>.HWcolor_symbol{
     margin-top:35px;
 }
 .HWmedium.HWbanked>.HWcolor_symbol,.HWmedium.HWship>.HWcolor_symbol{
-    margin-top:28px;
+    margin-top:25px;
 }
 .HWsmall.HWbanked>.HWcolor_symbol,.HWsmall.HWship>.HWcolor_symbol{
-    margin-top:-25px;
+    margin-top:10px;
 }
 
 .HWlarge.HWstar>.HWcolor_symbol{
-    margin-top:5px;
+    margin-top:10px;
 }
 .HWmedium.HWstar>.HWcolor_symbol{
     margin-top:5px;
 }
 .HWsmall.HWstar>.HWcolor_symbol{
-    margin-top:-21px;
+    margin-top:0px;
 }
 
 /* Hide the symbol on covered children */
@@ -169,6 +169,10 @@ Set the height of green symbol separately */
     display:none;
 }
 
+/* Hide the symbol when colorblind mode is off */
+html.colorblind_off .HWcolor_symbol{
+    display:none;
+}
 
 
 /*
