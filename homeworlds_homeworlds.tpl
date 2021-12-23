@@ -36,7 +36,7 @@
 
 <script type="text/javascript">
     var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>"
-    var jstpl_piece = "<div class='HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol'>${color_symbol}</div></div>"
+    var jstpl_piece = "<div class='HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HW${colorname}'></div></div>"
 </script>
 
 {OVERALL_GAME_FOOTER}

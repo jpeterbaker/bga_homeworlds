@@ -83,9 +83,9 @@ and rows of same-sized systems are created
 .HWship,.HWstar,.HWbanked {
     background-image:url('img/sprites.svg');
     background-repeat:no-repeat;
+    background-size:128px 600px;
     display:inline-block;
     /* full size: 256px 1200; */
-    background-size:128px 600px;
 }
 .HWship,.HWstar{
     position:relative;
@@ -104,64 +104,50 @@ and rows of same-sized systems are created
 
 /* Symbol indicator appears on pieces for colorblind friendliness */
 .HWcolor_symbol{
-    font-size:20px;
-    text-align:center;
     position:absolute;
+    height:20px;
+    width:20px;
     left:0;
     right:0;
-    /*
-    Make text non-selectable
-    Adapted from
-    https://stackoverflow.com/questions/826782/how-to-disable-text-selection-highlighting
-    */
-    -webkit-touch-callout: none; /* iOS Safari */
-      -webkit-user-select: none; /* Safari */
-              user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome, Edge, Opera and Firefox */
+    margin:auto;
+    background-image:url('img/colorblind.svg');
+    background-repeat:no-repeat;
+    background-size:20px 80px;
 }
 /* To get the symbol in a vertically good spot,
  pieces need a margin according to their size */
 
-/* The green looks too high if it's in the same spot as the others.
-Set the height of green symbol separately */
-.HWgreen.HWlarge.HWbanked>.HWcolor_symbol,.HWgreen.HWlarge.HWship>.HWcolor_symbol{
-    margin-top:40px;
+.HWcolor_symbol.HWred{
+    background-position-y:-0px;
 }
-.HWgreen.HWmedium.HWbanked>.HWcolor_symbol,.HWgreen.HWmedium.HWship>.HWcolor_symbol{
-    margin-top:34px;
+.HWcolor_symbol.HWyellow{
+    background-position-y:-20px;
 }
-.HWgreen.HWsmall.HWbanked>.HWcolor_symbol,.HWgreen.HWsmall.HWship>.HWcolor_symbol{
-    margin-top:22px;
+.HWcolor_symbol.HWgreen{
+    background-position-y:-40px;
 }
-
-.HWgreen.HWlarge.HWstar>.HWcolor_symbol{
-    margin-top:13px;
-}
-.HWgreen.HWmedium.HWstar>.HWcolor_symbol{
-    margin-top:10px;
-}
-.HWgreen.HWsmall.HWstar>.HWcolor_symbol{
-    margin-top:5px;
+.HWcolor_symbol.HWblue{
+    background-position-y:-60px;
 }
 
 .HWlarge.HWbanked>.HWcolor_symbol,.HWlarge.HWship>.HWcolor_symbol{
-    margin-top:35px;
+    margin-top:40px;
 }
 .HWmedium.HWbanked>.HWcolor_symbol,.HWmedium.HWship>.HWcolor_symbol{
-    margin-top:25px;
+    margin-top:32px;
 }
 .HWsmall.HWbanked>.HWcolor_symbol,.HWsmall.HWship>.HWcolor_symbol{
-    margin-top:10px;
+    margin-top:15px;
 }
 
 .HWlarge.HWstar>.HWcolor_symbol{
-    margin-top:10px;
+    margin-top:15px;
 }
 .HWmedium.HWstar>.HWcolor_symbol{
-    margin-top:5px;
+    margin-top:10px;
 }
 .HWsmall.HWstar>.HWcolor_symbol{
-    margin-top:0px;
+    margin-top:5px;
 }
 
 /* Hide the symbol on covered children */
@@ -173,7 +159,6 @@ Set the height of green symbol separately */
 html.colorblind_off .HWcolor_symbol{
     display:none;
 }
-
 
 /*
 The background image has every piece sprite.
