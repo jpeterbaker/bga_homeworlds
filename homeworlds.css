@@ -117,16 +117,16 @@ and rows of same-sized systems are created
 /* To get the symbol in a vertically good spot,
  pieces need a margin according to their size */
 
-.HWcolor_symbol.HWred{
+.HWsymbol_red{
     background-position-y:-0px;
 }
-.HWcolor_symbol.HWyellow{
+.HWsymbol_yellow{
     background-position-y:-20px;
 }
-.HWcolor_symbol.HWgreen{
+.HWsymbol_green{
     background-position-y:-40px;
 }
-.HWcolor_symbol.HWblue{
+.HWsymbol_blue{
     background-position-y:-60px;
 }
 
