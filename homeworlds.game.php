@@ -899,7 +899,8 @@ class homeworlds extends Table {
             array(
                 'player_name' => $player_name,
                 'player_id'   => $player_id,
-                'system_id'   => $system_id,
+                //'system_id'   => $system_id,
+                'old_ship_id' => $ship_id,
                 'system_name' => $system_name,
                 'ship_id'     => $new_ship['piece_id'],
                 'ship_str'    => $this->get_piece_string($new_ship['piece_id'])
@@ -927,7 +928,7 @@ class homeworlds extends Table {
             array(
                 'player_name'  => $player_name,
                 'player_id'    => $player_id,
-                'system_id'    => $system_id,
+                //'system_id'    => $system_id,
                 'system_name'  => $system_name,
                 'old_ship_id'  => $ship_id,
                 'old_ship_str' => $this->get_piece_string($ship_id),

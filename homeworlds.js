@@ -576,7 +576,8 @@ function (dojo, declare) {
         get_system: function(piecenode){
             // Get the system node containing this piece
             var par = piecenode;
-            while(!par.id.startsWith('HWsystem')){
+            while(!dojo.hasClass(par,'HWsystem')){
+            //while(!par.id.startsWith('HWsystem')){
                 par = par.parentNode;
                 if(par === undefined || par.id === undefined){
                     this.showMessage( _('Piece is not in a system.'), 'error');
@@ -843,8 +844,29 @@ function (dojo, declare) {
             }
         },
 
-        place_ship: function(piecenode,systemnode,owner_id=null){
-            dojo.place(piecenode,systemnode);
+        /*
+        Place a ship in a system and update classes as appropriate
+        piecenode: the piece node that should be placed as a ship
+        targetnode: the node where piecenode should be placed
+            If this is a system, piecenode will become a child of targetnode
+            If this is a ship, piecenode will be placed after targetnode as a sibling 
+            (this parameter is not used if neighbor is provided)
+            (if neighbor is not provided, then systemnode must be)
+        owner_id: the ID of the player who should own the ship
+            (if null, the HWfriendly and HWhostile classes will not be modified)
+        neighbor: if provided, piecenode will be placed after this node with the same parent
+            (if systemnode is not provided, then neighbor must be)
+        */
+        place_ship: function(piecenode,targetnode,owner_id=null){
+            var systemnode;
+            if(dojo.hasClass(targetnode,'HWsystem')){
+                dojo.place(piecenode,targetnode);
+                systemnode = targetnode;
+            }
+            else{
+                dojo.place(piecenode,targetnode,'after');
+                systemnode = this.get_system(targetnode);
+            }
             dojo.removeClass(piecenode,'HWbanked');
             dojo.addClass(piecenode,'HWship');
             // If owner is specified, set it
@@ -1552,18 +1574,20 @@ function (dojo, declare) {
 
         build_from_notif: function(notif){
             var args = notif.args;
-            var systemnode = document.getElementById('HWsystem_'+args.system_id);
-            var shipnode   = document.getElementById('HWpiece_'+args.ship_id);
+            //var systemnode = document.getElementById('HWsystem_'+args.system_id);
+            var oldshipnode = document.getElementById('HWpiece_'+args.old_ship_id);
+            var shipnode    = document.getElementById('HWpiece_'+args.ship_id);
             this.place_ship(
                 shipnode,
-                systemnode,
+                //systemnode,
+                oldshipnode,
                 args.player_id
             );
         },
 
         trade_from_notif: function(notif){
             var args = notif.args;
-            var systemnode  = document.getElementById('HWsystem_'+args.system_id);
+            //var systemnode  = document.getElementById('HWsystem_'+args.system_id);
             var oldshipnode = document.getElementById('HWpiece_'+args.old_ship_id);
             var newshipnode = document.getElementById('HWpiece_'+args.new_ship_id);
 
@@ -1576,7 +1600,8 @@ function (dojo, declare) {
 
             this.place_ship(
                 newshipnode,
-                systemnode,
+                //systemnode,
+                oldshipnode,
                 args.player_id
             );
             this.put_in_bank(oldshipnode);
