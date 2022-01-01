@@ -667,25 +667,31 @@ class homeworlds extends Table {
         return $result[$piece_id]['system_id'];
     }
 
+    // NOTE: If turn_over is true and stars are all destroyed,
+    // this method returns false (system should have already faded)
     function is_empty($system_id,$turn_over=false){
-        // If the turn is not over and it's a home system, it's not empty
-        if(!$turn_over && !is_null($this->get_homeplayer($system_id))){
-            return false;
-        }
-        // Check for lack of ships
-        $sql = 'SELECT piece_id FROM Pieces
-            WHERE system_id='.$system_id.'
-                AND owner_id IS NOT NULL';
-        $ships = self::getCollectionFromDb($sql);
-        if(count($ships)==0)
-            return true;
-
         // Check for lack of stars
         $sql = 'SELECT piece_id FROM Pieces
             WHERE system_id='.$system_id.'
                 AND owner_id IS NULL';
         $stars = self::getCollectionFromDb($sql);
-        return count($stars)==0;
+        if(count($stars)==0)
+            return !$turn_over;
+
+        // Home systems that still have stars are ONLY removed at the end of the turn
+        // (the no-star case was checked first)
+        if(!$turn_over && !is_null($this->get_homeplayer($system_id))){
+            return false;
+        }
+
+        // Check for lack of ships
+        $sql = 'SELECT piece_id FROM Pieces
+            WHERE system_id='.$system_id.'
+                AND owner_id IS NOT NULL';
+        $ships = self::getCollectionFromDb($sql);
+        $no_ships = count($ships)==0;
+
+        return $no_ships;
     }
 
 //////////////////////////////////////////////////////////////////////////////
