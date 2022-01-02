@@ -1709,64 +1709,9 @@ function (dojo, declare) {
             // It's sloppy, but for now, I'm doing a full board reconstruction
             this.clear_all();
             this.setup_pieces(notif.args.gamedatas);
-            return;
-            /*
-            var pieces = notif.restored_pieces;
-            var piece_id,piece,piecenode,systemnode;
-            // Restore missing systems by finding their stars
-            for(piece_id in pieces){
-                piece = pieces[piece_id];
-                if(piece.owner_id != null || piece.system_id==null)
-                    // This is a ship or banked piece
-                    continue;
-                systemnode = document.getElementById('HWsystem_'+piece.system_id);
-                if(systemnode)
-                    // System already exists. This must have been a homestar.
-                    continue;
-                this.place_system(
-                );
-            }
-                piecenode = document.getElementById('HWpiece_'+piece_id);
-                this.restore_piece(piecenode,piece);
-            }
-            // Check for empty systems
-            var systems = dojo.query('.HWsystem');
-            var systemnode,stars;
-            for(var i=0;i<systems.length;i++){
-                systemnode = systems[i];
-                stars = dojo.query('.HWstar',systemnode);
-                if(stars.length == 0){
-                    // System doesn't exist after restoration
-                    systemnode.remove();
-                }
-            }
-            */
+            var tokennode = document.getElementById('HWturn_token');
+            this.disconnect(tokennode,'onclick');
         },
-
-        // Apply the JSON properties from piece_row to the piecenode
-        /*
-        restore_piece: function(piecenode,piece_row){
-            if(piece_row.system_id == null){
-                this.put_in_bank(piecenode)
-                return;
-            }
-            var systemnode = document.getElementById('HWsystem_'+piece_row.system_id);
-            if(systemnode == null){
-                systemnode = this.place_system(
-                    piece_row.system_id,
-                    '',
-                    null,
-                    star_size=null
-                );
-            }
-            if(piece_row.owner_id != null){
-                this.place_ship(piecenode,systemnode,piece_row.owner_id);
-                return;
-            }
-            // It must have been a star
-
-        },
-        */
 
         // Turn has ended, move the token
         pass_from_notif: function(notif){

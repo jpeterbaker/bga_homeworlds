@@ -711,6 +711,9 @@ class homeworlds extends Table {
         $this->make_star($star2_id,$system_id);
         $this->make_ship( $ship_id,$player_id,$system_id);
 
+        // Transition needs to come BEFORE notification because
+        // notification sends turn token to current player
+        // which needs to be up to date
         $this->gamestate->nextState('trans_after_creation');
         self::notifyAllPlayers(
             'notif_create',
@@ -1032,6 +1035,9 @@ class homeworlds extends Table {
 	function pass(){
         self::checkAction('act_pass');
         $player_name = $this->getActivePlayerName();
+        // Transition needs to come BEFORE notification because
+        // notification sends turn token to current player
+        // which needs to be up to date
         $this->gamestate->nextState('trans_end_turn');
         self::notifyAllPlayers('notif_pass',
             clienttranslate('${player_name} ends their turn.'),
@@ -1064,6 +1070,9 @@ class homeworlds extends Table {
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
 
+        // Transition needs to come AFTER notify because
+        // turn token function gets cleared by notification
+        // and set up again by transition
         $this->gamestate->nextState('trans_restart');
     }
 
