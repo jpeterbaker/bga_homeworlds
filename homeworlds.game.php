@@ -711,6 +711,7 @@ class homeworlds extends Table {
         $this->make_star($star2_id,$system_id);
         $this->make_ship( $ship_id,$player_id,$system_id);
 
+        $this->gamestate->nextState('trans_after_creation');
         self::notifyAllPlayers(
             'notif_create',
             clienttranslate('${player_name} establishes a homeworld with a ${ship_str} ship at ${star1_str} and ${star2_str} binary stars.'),
@@ -727,7 +728,6 @@ class homeworlds extends Table {
                 'ship_str'       => $this->get_piece_string($ship_id)
             )
         );
-        $this->gamestate->nextState('trans_after_creation');
     }
 
     function capture($piece_id,$capture_id){
@@ -1032,11 +1032,11 @@ class homeworlds extends Table {
 	function pass(){
         self::checkAction('act_pass');
         $player_name = $this->getActivePlayerName();
+        $this->gamestate->nextState('trans_end_turn');
         self::notifyAllPlayers('notif_pass',
             clienttranslate('${player_name} ends their turn.'),
             array('player_name' => $player_name)
         );
-        $this->gamestate->nextState('trans_end_turn');
     }
 
 	function restart(){

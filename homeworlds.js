@@ -48,9 +48,7 @@ function (dojo, declare) {
         "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
         setup: function(gamedatas) {
-            ///////////////////////////////
-            // Remember player positions //
-            ///////////////////////////////
+            // Remember player positions
             var player;
             for(var player_id in gamedatas.players){
                 player = gamedatas.players[player_id];
@@ -64,10 +62,16 @@ function (dojo, declare) {
                 'player_board_'+this.player_1
             );
 
-            ///////////////////
-            // Create pieces //
-            ///////////////////
             this.setup_pieces(gamedatas);
+
+            // Setup turn token
+            var token_pos;
+            if(this.getActivePlayerId() == this.get_bot_player())
+                token_pos = 'bot';
+            else
+                token_pos = 'top';
+            var token_space = document.getElementById('HWtoken_space_'+token_pos);
+            dojo.place("<div id='HWturn_token'></div>",token_space);
 
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
@@ -130,7 +134,7 @@ function (dojo, declare) {
                 1500
             );
             // You could instead use
-            //stacks.connect('onclick',this,'stack_selected_star_creation' );
+            // stacks.connect('onclick',this,'stack_selected_star_creation' );
             // but then this.disconnect wouldn't work
         },
 
@@ -164,14 +168,17 @@ function (dojo, declare) {
                 _('Click to activate or sacrifice this ship'),
                 1500
             );
-            this.connectClass(
-                'HWselectable',
-                'onclick',
+            var f = dojo.hitch(
+                this,
                 function(evt){
                     evt.preventDefault();
                     dojo.stopEvent(evt);
                     this.activate_ship(evt.currentTarget);
                 }
+            );
+            this.connect_nodes(
+                ships,
+                f
             );
         },
 
@@ -202,15 +209,15 @@ function (dojo, declare) {
                 tooltip,
                 1500
             );
-            this.connectClass(
-                'HWselectable',
-                'onclick',
+            var f = dojo.hitch(
+                this,
                 function(evt){
                     evt.preventDefault();
                     dojo.stopEvent(evt);
                     this.activate_ship(evt.currentTarget,args.color);
                 }
             );
+            this.connect_nodes(ships,f);
         },
 
         onEntering_client_want_power: function(args){
@@ -224,9 +231,9 @@ function (dojo, declare) {
             var candidates = dojo.query('.HWstar,.HWfriendly.HWship',systemnode);
             candidates.addClass('HWselectable');
             this.add_power_tooltips(candidates.concat(activatequery));
-            this.connectClass(
-                'HWselectable',
-                'onclick',
+
+            var f = dojo.hitch(
+                this,
                 function(evt){
                     evt.preventDefault();
                     dojo.stopEvent(evt);
@@ -236,6 +243,14 @@ function (dojo, declare) {
                     this.power_selected(color);
                 }
             );
+            this.connect_nodes(candidates,f);
+        },
+
+        // Set the function f to be called when any element of nodes is clicked
+        // f should accept a click event as a parameter
+        connect_nodes: function(nodes, f){
+            for(var i=0;i<nodes.length;i++)
+                this.connect(nodes[i],'onclick',f);
         },
 
         add_tooltip: function(nodes,tip,delay){
@@ -486,7 +501,24 @@ function (dojo, declare) {
                         null, // blinking (default false)
                         pass_button_color
                     );
+                    // Token needs to be selectable when pass button is available
+                    var tokennode = document.getElementById('HWturn_token');
+                    this.connect(
+                        tokennode,
+                        'onclick',
+                        function(evt){
+                            this.pass_button_selected(state_name);
+                        }
+                    );
+                    this.add_tooltip(
+                        [tokennode],
+                        _('Click to end your turn.'),
+                        1500
+                    );
+                    dojo.addClass(tokennode,'HWselectable');
+
                     this.setup_draw_button(args);
+
                     this.addActionButton(
                         'restart_button',
                         _('Restart turn'),
@@ -879,14 +911,16 @@ function (dojo, declare) {
             }
             this.on_system_change(systemnode);
         },
+
         place_star: function(piecenode,systemnode){
             var containernode = dojo.query('.HWstar_container',systemnode)[0];
             dojo.place(piecenode,containernode);
             dojo.removeClass(piecenode,'HWbanked');
             dojo.addClass(piecenode,'HWstar');
         },
+
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
-            var params,par;
+            var params,par,pos;
             if(homeplayer_id == null){
                 params = {
                     system_id:system_id,
@@ -902,6 +936,7 @@ function (dojo, declare) {
                 }
                 else
                     par = 'HWcolony_container_'+this.colony_assignments[star_size];
+                pos = 'last';
             }
             else{
                 params = {
@@ -910,15 +945,22 @@ function (dojo, declare) {
                     homeplayer_id:'player_'+homeplayer_id
                 };
                 // The parent of a home system node is a special container
-                if(homeplayer_id == this.get_bot_player())
+                if(homeplayer_id == this.get_bot_player()){
                     par = 'HWhome_container_bot';
-                else
+                    // Putting system first makes token below above if needed
+                    pos = 'first';
+                }
+                else{
                     par = 'HWhome_container_top';
+                    // Putting system last makes token appear above if needed
+                    pos = 'last';
+                }
             }
 
             var systemnode = dojo.place(
                 this.format_block('jstpl_system',params),
-                par
+                par,
+                pos
             );
             return systemnode;
         },
@@ -956,6 +998,33 @@ function (dojo, declare) {
                 // Pip count is equal, put it in the middle
                 dojo.removeClass(systemnode,'HWfriendly HWhostile');
             }
+        },
+
+        update_token: function(){
+            var tokenid = 'HWturn_token';
+            if(this.getActivePlayerId() == this.get_bot_player())
+                token_pos = 'bot';
+            else
+                token_pos = 'top';
+            var spaceid = 'HWtoken_space_'+token_pos;
+
+            var animation = this.slideToObject(tokenid,spaceid,1000);
+            // The token is in the right spot for now,
+            // but it hasn't moved in the DOM tree.
+            // It's still "in" the old space, just offset in space.
+            // If the window size changes or systems move, it will be out of place.
+            // It needs to be put in the new space and have the offset removed,
+            // but these changes need to be done AFTER the animation completes,
+            // so they need to be in a callback.
+            dojo.connect(
+                animation,
+                'onEnd',
+                function(){
+                    dojo.place(tokenid,spaceid);
+                    dojo.removeAttr(tokenid,'style');
+                }
+            );
+            animation.play();
         },
 
         connected_systems: function(systemnode){
@@ -1466,8 +1535,8 @@ function (dojo, declare) {
             dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
 
             dojo.subscribe('notif_restart', this,'restart_from_notif');
+            dojo.subscribe('notif_pass', this,'pass_from_notif');
             // Notifications that don't need anything special
-            dojo.subscribe('notif_pass', this,'ignore_notif');
             dojo.subscribe('notif_elimination', this,'ignore_notif');
             dojo.subscribe('notif_offer_draw', this,'ignore_notif');
             dojo.subscribe('notif_cancel_offer_draw', this,'ignore_notif');
@@ -1494,8 +1563,9 @@ function (dojo, declare) {
                 systemnode.id = 'HWsystem_'+args.system_id;
                 var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
                 labelnode.innerHTML = args.system_name;
-                // We don't need to arrange colonies since there are no colonies
+                // We don't need to arrange_colonies since there are no colonies
                 this.setup_colony_assignments();
+                this.update_token();
                 return;
             }
             var systemnode = this.place_system(
@@ -1520,8 +1590,9 @@ function (dojo, declare) {
                 systemnode,
                 args.homeplayer_id
             );
-            // We don't need to arrange colonies since there are no colonies
+            // We don't need to arrange_colonies since there are no colonies
             this.setup_colony_assignments();
+            this.update_token();
         },
 
         capture_from_notif: function(notif){
@@ -1696,6 +1767,11 @@ function (dojo, declare) {
 
         },
         */
+
+        // Turn has ended, move the token
+        pass_from_notif: function(notif){
+            this.update_token();
+        },
 
         // Rearrange colonies when home system connectivity may have changed
         arrange_colonies: function(){

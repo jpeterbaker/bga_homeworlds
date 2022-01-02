@@ -77,6 +77,7 @@ and rows of same-sized systems are created
 /* A centered, collection-fitting container for same-sized systems */
 .HWsystem_container{
     display:inline-block;
+    vertical-align:top;
 }
 
 /* All pieces use the same sprite background */
@@ -87,7 +88,7 @@ and rows of same-sized systems are created
     display:inline-block;
     /* full size: 256px 1200; */
 }
-.HWship,.HWstar{
+.HWship,.HWstar,#HWturn_token{
     position:relative;
     transition:.5s;
 }
@@ -254,7 +255,7 @@ This section sets the vertical background offset by piece color and orientation.
 .HWship{
     transform:rotate(var(--rotateAmount));
 }
-.HWstar{
+.HWstar,#HWturn_token{
     --rotateAmount:0deg;
 }
 
@@ -289,28 +290,34 @@ These terms will need to be generalized if 3+ player is implemented.
     --rotateAmount:0deg;
 }
 
-/* Selectable stuff */
+/***************
+Selectable stuff
+***************/
 
 .HWselectable{
     cursor:pointer;
 }
-.HWselectable.HWship:hover,.HWselectable.HWstar:hover{
-    transform:translate(0px,-5px) rotate(var(--rotateAmount));
-}
-.HWselectable.HWstack,.HWselectable.HWsystem,.HWselectable#page-content{
+
+/* Selectable stacks and systems get a white background that brightens on hover */
+.HWselectable.HWstack,.HWselectable.HWsystem{
     background-color:rgba(255,255,255,0.3);
 }
 .HWselectable.HWstack:hover,.HWselectable.HWsystem:hover{
     background-color:rgba(255,255,255,0.6);
 }
+
+/* Selectable ships and stars get a shadow and rise on hover*/
+.HWselectable.HWship.HWfriendly:not([activate]),.HWselectable.HWstar{
+    filter:drop-shadow(15px -15px 10px black);
+}
 .HWhostile.HWship.HWselectable{
     /* Reverse the shadow for hostile ships since they're rotated */
     filter:drop-shadow(-15px 15px 10px black);
 }
-.HWselectable.HWship.HWfriendly:not([activate]),.HWselectable.HWstar{
-    /* TODO try box-shadow */
-    filter:drop-shadow(15px -15px 10px black);
+.HWselectable.HWship:hover,.HWselectable.HWstar:hover,.HWselectable#HWturn_token:hover{
+    transform:translate(0px,-5px) rotate(var(--rotateAmount));
 }
+
 /* Use a custom "activate" attribute to highlight with power color */
 [activate=pending]{
     filter:drop-shadow(15px -15px 10px indigo);
@@ -386,4 +393,23 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
 .HWfirst_player_indicator{
     font-size:75%;
 }
+
+/* Turn token */
+.HWtoken_space{
+    position:relative;/*Relative or absolute position needed for sliding*/
+    height:110px;
+    width:110px;
+    display:inline-block;
+    float:right;
+    margin-top:5px; /* Token moves up slightly on hover */
+}
+#HWturn_token{
+    position:relative;/*Relative or absolute position needed for sliding*/
+    background-image:url('img/turn_token.png');
+    background-repeat:no-repeat;
+    background-size:110px 110px;
+    height:110px;
+    width:110px;
+}
+
 
