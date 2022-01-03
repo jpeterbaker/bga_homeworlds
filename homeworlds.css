@@ -397,19 +397,19 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
 /* Turn token */
 .HWtoken_space{
     position:relative;/*Relative or absolute position needed for sliding*/
-    height:110px;
-    width:110px;
+    height:96px;
+    width:96px;
     display:inline-block;
-    float:right;
+    float:left;
     margin-top:5px; /* Token moves up slightly on hover */
 }
 #HWturn_token{
     position:relative;/*Relative or absolute position needed for sliding*/
     background-image:url('img/turn_token.png');
     background-repeat:no-repeat;
-    background-size:110px 110px;
-    height:110px;
-    width:110px;
+    background-size:96px 96px;
+    height:96px;
+    width:96px;
 }
 
 

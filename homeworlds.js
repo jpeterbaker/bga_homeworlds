@@ -419,7 +419,11 @@ function (dojo, declare) {
             if (this[methodName] !== undefined)
                 this[methodName]();
         },
-
+        onLeaving_client_want_creation_confirmation: function(){
+            if(!this.isCurrentPlayerActive())
+                return
+            this.deselect_all();
+        },
         onLeaving_client_want_creation_ship: function(){
             if(!this.isCurrentPlayerActive())
                 return
@@ -452,6 +456,11 @@ function (dojo, declare) {
             this.deselect_all();
             var selectable = dojo.query('.HWoverpopulated');
             selectable.removeClass('HWoverpopulated')
+        },
+        onLeaving_want_restart_turn: function(){
+            if(!this.isCurrentPlayerActive())
+                return
+            this.deselect_all();
         },
 
         // onUpdateActionButtons:
@@ -502,20 +511,7 @@ function (dojo, declare) {
                         pass_button_color
                     );
                     // Token needs to be selectable when pass button is available
-                    var tokennode = document.getElementById('HWturn_token');
-                    this.connect(
-                        tokennode,
-                        'onclick',
-                        function(evt){
-                            this.pass_button_selected(state_name);
-                        }
-                    );
-                    this.add_tooltip(
-                        [tokennode],
-                        _('Click to end your turn.'),
-                        1500
-                    );
-                    dojo.addClass(tokennode,'HWselectable');
+                    this.selectablize_token(state_name);
 
                     this.setup_draw_button(args);
 
@@ -561,6 +557,7 @@ function (dojo, declare) {
                             this.restart_creation();
                         }
                     );
+                    this.selectablize_token(state_name);
                     break;
             }
         },
@@ -1000,31 +997,72 @@ function (dojo, declare) {
             }
         },
 
+        selectablize_token: function(state_name){
+            var tokennode = document.getElementById('HWturn_token');
+            // Remove old connection, if any
+            this.disconnect(tokennode,'onclick');
+            if(state_name == 'client_want_creation_confirmation'){
+                this.connect(
+                    tokennode,
+                    'onclick',
+                    function(evt){
+                        this.finalize_creation();
+                    }
+                );
+            }
+            else{
+                this.connect(
+                    tokennode,
+                    'onclick',
+                    function(evt){
+                        this.pass_button_selected(state_name);
+                    }
+                );
+            }
+            this.add_tooltip(
+                [tokennode],
+                _('Click to end your turn.'),
+                1500
+            );
+            dojo.addClass(tokennode,'HWselectable');
+        },
+
+        // Move the token to the NEXT player
+        // This should be called before the state transition
+        // (e.g. by the pass notification)
+        // because the player AFTER the active player gets the token
         update_token: function(){
             var tokenid = 'HWturn_token';
             if(this.getActivePlayerId() == this.get_bot_player())
-                token_pos = 'bot';
-            else
                 token_pos = 'top';
+            else
+                token_pos = 'bot';
             var spaceid = 'HWtoken_space_'+token_pos;
 
-            var animation = this.slideToObject(tokenid,spaceid,1000);
-            // The token is in the right spot for now,
+            var t = 400;
+            var animation_slide = this.slideToObject(tokenid,spaceid,t);
+            // This animation will put the token in the right spot,
             // but it hasn't moved in the DOM tree.
             // It's still "in" the old space, just offset in space.
             // If the window size changes or systems move, it will be out of place.
             // It needs to be put in the new space and have the offset removed,
             // but these changes need to be done AFTER the animation completes,
             // so they need to be in a callback.
+
+            // Simply putting the DOM-adjusting callback on the main animation causes a jump,
+            // so I'm going to try putting it on a delayed animation that comes later
+            var animation_delay = this.slideToObject('HWdelayer',spaceid,0,t+500);
+
             dojo.connect(
-                animation,
+                animation_delay,
                 'onEnd',
                 function(){
+                    // Without sleep, this seems to make the animation jump at the end
                     dojo.place(tokenid,spaceid);
                     dojo.removeAttr(tokenid,'style');
                 }
             );
-            animation.play();
+            dojo.fx.combine([animation_slide,animation_delay]).play();
         },
 
         connected_systems: function(systemnode){
@@ -1709,11 +1747,10 @@ function (dojo, declare) {
             // It's sloppy, but for now, I'm doing a full board reconstruction
             this.clear_all();
             this.setup_pieces(notif.args.gamedatas);
-            var tokennode = document.getElementById('HWturn_token');
-            this.disconnect(tokennode,'onclick');
         },
 
         // Turn has ended, move the token
+        // The player who just finished their turn is active
         pass_from_notif: function(notif){
             this.update_token();
         },

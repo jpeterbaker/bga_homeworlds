@@ -9,6 +9,9 @@
 - - See http://en.boardgamearena.com/#!doc/Studio for more information.
 -->
 
+<!-- An undisplayed node that will be useful for animation-related workarounds -->
+<div id='HWdelayer' style='display:none'></div>
+
 <div id='HWbank'>
     <!-- BEGIN stack -->
     <div id='HWstack_{COLOR}_{PIPS}' class='HWstack' style='left:{LEFT}%;top:{TOP}%'> </div>
