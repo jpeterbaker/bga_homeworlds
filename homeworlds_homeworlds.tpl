@@ -9,8 +9,9 @@
 - - See http://en.boardgamearena.com/#!doc/Studio for more information.
 -->
 
-<!-- An undisplayed node that will be useful for animation-related workarounds -->
-<div id='HWdelayer' style='display:none'></div>
+<!-- This node will be easy to find when debugging.
+Changing its style will affect the other markers -->
+<div class='HWanimarker' id='HWspare_ani_marker'></div>
 
 <div id='HWbank'>
     <!-- BEGIN stack -->
@@ -42,7 +43,8 @@
 </div>
 
 <script type="text/javascript">
-    var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>"
+    var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='none'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>"
+    var jstpl_homesystem = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>Homeworld <span class='playername' style='color:#${homeplayer_color};background-color:#${name_background_color}'>${homeplayer_name}</span></div></div></div>"
     var jstpl_piece = "<div class='HWpiece HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HWsymbol_${colorname}'></div></div>"
 </script>
 

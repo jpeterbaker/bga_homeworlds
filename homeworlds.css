@@ -64,6 +64,10 @@
 /* A homeworld system with a non-none homeplayer_id attribute*/
 .HWsystem:not([homeplayer_id=none]){
     border:2px dashed black;
+    /* Include if player-colored borders are wanted
+    outline-width:2px;
+    outline-style:solid;
+    */
 }
 /*
 A dummy div so that the system container can be centered
@@ -314,8 +318,12 @@ Selectable stuff
     /* Reverse the shadow for hostile ships since they're rotated */
     filter:drop-shadow(-15px 15px 10px black);
 }
-.HWselectable.HWship:hover,.HWselectable.HWstar:hover,.HWselectable#HWturn_token:hover{
+.HWselectable.HWpiece:hover,.HWselectable#HWturn_token:hover{
     transform:translate(0px,-5px) rotate(var(--rotateAmount));
+}
+
+#HWturn_token.HWonly_option{
+    filter:drop-shadow(15px -15px 10px black);
 }
 
 /* Use a custom "activate" attribute to highlight with power color */
@@ -323,7 +331,7 @@ Selectable stuff
     filter:drop-shadow(15px -15px 10px indigo);
 }
 [activate=sacrifice]{
-    opacity:0;
+    /*opacity:0;*/
 }
 [activate='1']{
     filter:drop-shadow(10px -10px 10px red);
@@ -397,19 +405,46 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
 /* Turn token */
 .HWtoken_space{
     position:relative;/*Relative or absolute position needed for sliding*/
+    /* Token moves up 5px on hover, systems are normally 96px high because large ships are 86 px and have 5px above and below*/
     height:96px;
     width:96px;
+    margin-top:5px;
     display:inline-block;
     float:left;
-    margin-top:5px; /* Token moves up slightly on hover */
 }
 #HWturn_token{
     position:relative;/*Relative or absolute position needed for sliding*/
-    background-image:url('img/turn_token.png');
+    background-image:url('img/turn_token.svg');
     background-repeat:no-repeat;
-    background-size:96px 96px;
-    height:96px;
-    width:96px;
+    background-size:100%;
+    height:100%;
+    width:100%;
 }
 
+/* Animation marker shouldn't appear */
+.HWanimarker{
+    /*
+    display:none;
+    This seems to make pieces invisible when markers are used for animations
+    */
+    position:relative;
+    height:0px;
+    width:0px;
+    /* A size and background make it easier to find when debugging */
+    /*height:50px;*/
+    /*width:50px;*/
+    /*background-color:rebeccapurple;*/
+    /**/
+}
+
+/*
+The centering margins of banked pieces mess up animations otherwise
+This should probably be the same as for stars and ships to avoid jumpiness,
+but I don't want to include it in the same command since this is the
+animation section.
+*/
+.HWsliding:not(#HWturn_token){
+    margin-left:5px;
+    margin-right:5px;
+}
 

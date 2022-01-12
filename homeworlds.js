@@ -156,6 +156,7 @@ function (dojo, declare) {
             if(!this.isCurrentPlayerActive())
                 return
             // The buttons are handled in onUpdateActionButtons
+            dojo.addClass('HWturn_token','HWonly_option');
         },
 
         onEntering_want_free: function(args){
@@ -244,6 +245,12 @@ function (dojo, declare) {
                 }
             );
             this.connect_nodes(candidates,f);
+        },
+
+        onEntering_want_restart_turn: function(args){
+            if(!this.isCurrentPlayerActive())
+                return
+            dojo.addClass('HWturn_token','HWonly_option');
         },
 
         // Set the function f to be called when any element of nodes is clicked
@@ -423,6 +430,7 @@ function (dojo, declare) {
             if(!this.isCurrentPlayerActive())
                 return
             this.deselect_all();
+            dojo.removeClass('HWturn_token','HWonly_option');
         },
         onLeaving_client_want_creation_ship: function(){
             if(!this.isCurrentPlayerActive())
@@ -461,6 +469,7 @@ function (dojo, declare) {
             if(!this.isCurrentPlayerActive())
                 return
             this.deselect_all();
+            dojo.removeClass('HWturn_token','HWonly_option');
         },
 
         // onUpdateActionButtons:
@@ -769,22 +778,9 @@ function (dojo, declare) {
             return JSON.parse(JSON.stringify(x));
         },
 
-        animate_to_bank: function(nodes){
-            var banknode = document.getElementById('HWbank');
-            var n = nodes.length;
-            var anis = [];
-            if(n === undefined){
-                // Hopefully it's a single node
-                nodes = [nodes];
-                n = 1;
-            }
-            for(var i=0;i<n;i++){
-                anis.push(this.slideToObject(nodes[i],banknode,500,i*200));
-            }
-            return dojo.fx.combine(anis);
-        },
-
         put_in_bank: function(piecenode){
+            var ani_origin = this.place_animation_marker(piecenode,true);
+
             var systemnode = this.get_system(piecenode);
             dojo.removeClass(piecenode,'HWfriendly HWhostile HWstar HWship HWoverpopulated');
             piecenode.removeAttribute('activate');
@@ -794,9 +790,10 @@ function (dojo, declare) {
             var stacknode = document.getElementById('HWstack_'+color+'_'+pips);
             dojo.place(piecenode,stacknode);
             // TODO be smarter about when this is done
-            // Re-sort the ships in this system
-            // and the systems within the row
             this.on_system_change(systemnode);
+
+            var ani_target = this.place_animation_marker(piecenode,false);
+            this.slide_between(piecenode,ani_origin,ani_target);
         },
 
         // Make a system at setup from JSON object (creating new pieces)
@@ -874,6 +871,101 @@ function (dojo, declare) {
         },
 
         /*
+        Create and return an un-displayed node that is in the location of the given node.
+        The given node can then be moved in the DOM tree and then animated from
+        the un-displayed node to its new location
+
+        If old is set to true, piecenode is going to be taken from the DOM tree,
+        so the marker needs to save the spot in the DOM tree.
+        If old is false, the piecenode is already in the new place in the DOM tree,
+        so the marker needs to save the new display location and its place in the DOM tree doesn't matter.
+
+        The markers should be destroyed when unneeded to avoid (small) memory leaks.
+        Destruction will be performed by slide_between if marker is passed
+        */
+        place_animation_marker: function(piecenode,old=true){
+            var html = "<div class='HWanimarker' id='"+piecenode.id+old+"'></div>";
+            var marker = dojo.place(html,'HWboard');
+            // Get the current style including CSS stuff
+            //var style = getComputedStyle(piecenode);
+            // Give the same margins to marker
+            //console.log('margin style:',style.margin);
+            //dojo.setStyle(marker,'margin',style.margin);
+            //dojo.setStyle(marker,'height',style.height);
+            //dojo.setStyle(marker,'width',style.width);
+
+            if(!old){
+                // The node is in its new position now. Just save it.
+                this.placeOnObject(marker,piecenode);
+                console.log('marker',marker,'placed on',piecenode);
+                return marker;
+            }
+
+            // The node is in its old position.
+            // Put the marker next to it in the DOM tree
+            // so the marker will move correspondingly if elements shift
+            // when the node changes in the tree.
+            console.log('marker',marker,'placed on',piecenode.parentNode);
+            if(piecenode.id=='HWturn_token' || dojo.hasClass(piecenode,'HWbanked')){
+                this.placeOnObject(marker,piecenode.parentNode);
+            }
+            else if(dojo.hasClass(piecenode,'HWstar')){
+                dojo.place(marker,piecenode,'after');
+            }
+            else if(dojo.hasClass(piecenode,'HWfriendly')){
+                dojo.addClass(marker,'HWfriendly');
+                dojo.place(marker,piecenode,'after');
+            }
+            else if(dojo.hasClass(piecenode,'HWhostile')){
+                dojo.addClass(marker,'HWhostile');
+                dojo.place(marker,piecenode,'after');
+            }
+            else{
+                this.showMessage(
+                    'Attempting unknown animation.',
+                    'error'
+                );
+            }
+            return marker;
+        },
+
+        /*
+        Run an animation moving node from origin to target (all nodes)
+        The node should already be in the desired place in the DOM tree
+
+        origin and target nodes will be deleted when animation is complete
+        */
+        slide_between: function(node,origin,target,delay=0,remove_markers=true){
+            console.log('sliding',node,'from',origin,'to',target);
+            var t = 400;
+            var delay_html = "<div id='HWdelayer"+node.id+"' style='display:none'></div>";
+            var delayer = dojo.place(delay_html,'HWboard');
+            dojo.addClass(node,'HWsliding');
+            this.placeOnObject(node,origin);
+            var animation_slide = this.slideToObject(node.id,target.id,t,delay);
+            var animation_delay = this.slideToObject(delayer.id,delayer.id,0,delay+t+500);
+
+            dojo.connect(
+                animation_delay,
+                'onEnd',
+                function(){
+                    // Animation callbacks appear to be called too early.
+                    // Applying this callback to the animation itself
+                    // seems to make the animation jump at the end.
+                    dojo.removeAttr(node,'style');
+                    dojo.removeClass(node,'HWsliding');
+                    delayer.remove();
+                    if(remove_markers){
+                        origin.remove();
+                        target.remove();
+                    }
+                }
+            );
+            var ani = dojo.fx.combine([animation_slide,animation_delay]);
+            ani.play();
+        },
+
+        /*
         Place a ship in a system and update classes as appropriate
         piecenode: the piece node that should be placed as a ship
         targetnode: the node where piecenode should be placed
@@ -887,7 +979,9 @@ function (dojo, declare) {
             (if systemnode is not provided, then neighbor must be)
         */
         place_ship: function(piecenode,targetnode,owner_id=null){
+            var ani_origin = this.place_animation_marker(piecenode,true);
             var systemnode;
+
             if(dojo.hasClass(targetnode,'HWsystem')){
                 dojo.place(piecenode,targetnode);
                 systemnode = targetnode;
@@ -907,22 +1001,30 @@ function (dojo, declare) {
                     dojo.addClass(piecenode,'HWhostile');
             }
             this.on_system_change(systemnode);
+
+            var ani_target = this.place_animation_marker(piecenode,false);
+            this.slide_between(piecenode,ani_origin,ani_target);
         },
 
         place_star: function(piecenode,systemnode){
+            var ani_origin = this.place_animation_marker(piecenode,true);
+
             var containernode = dojo.query('.HWstar_container',systemnode)[0];
             dojo.place(piecenode,containernode);
             dojo.removeClass(piecenode,'HWbanked');
             dojo.addClass(piecenode,'HWstar');
+
+            var ani_target = this.place_animation_marker(piecenode,false);
+            this.slide_between(piecenode,ani_origin,ani_target);
         },
 
         place_system: function(system_id,system_name,homeplayer_id=null,star_size=null){
-            var params,par,pos;
+            var params,par,pos,template;
             if(homeplayer_id == null){
+                // COLONY SETUP
                 params = {
                     system_id:system_id,
-                    system_name:system_name,
-                    homeplayer_id:'none'
+                    system_name:system_name
                 };
                 if(star_size==null){
                     this.showMessage(
@@ -934,14 +1036,27 @@ function (dojo, declare) {
                 else
                     par = 'HWcolony_container_'+this.colony_assignments[star_size];
                 pos = 'last';
+                template = 'jstpl_system';
             }
             else{
+                // HOMEWORLD SETUP
+                var color = this.gamedatas.players[homeplayer_id].color;
+                var player_name = this.gamedatas.players[homeplayer_id].name;
+                var bgcolor = 'transparent';
+                // If the color is hard to see on the wood background, change BG
+                if(
+                    color == "ffa500" || // Yellow
+                    color == "72c3b1" || // Cyan
+                    color == "bdd002"){  // Khaki green
+                    bgcolor = '777777';
+                }
                 params = {
                     system_id:system_id,
-                    system_name:system_name,
-                    homeplayer_id:'player_'+homeplayer_id
+                    homeplayer_id:'player_'+homeplayer_id,
+                    homeplayer_name:player_name,
+                    homeplayer_color:color,
+                    name_background_color:bgcolor
                 };
-                // The parent of a home system node is a special container
                 if(homeplayer_id == this.get_bot_player()){
                     par = 'HWhome_container_bot';
                     // Putting system first makes token below above if needed
@@ -952,13 +1067,22 @@ function (dojo, declare) {
                     // Putting system last makes token appear above if needed
                     pos = 'last';
                 }
+                template = 'jstpl_homesystem';
             }
 
             var systemnode = dojo.place(
-                this.format_block('jstpl_system',params),
+                this.format_block(template,params),
                 par,
                 pos
             );
+            /* Apply a player-colored border
+            if(homeplayer_id != null){
+                // Now that the homeworld is created, add a color border
+                var color = this.gamedatas.players[homeplayer_id].color;
+                dojo.style(systemnode,'outlineColor','#'+color);
+                console.log('setting outline of',systemnode,'to',color);
+            }
+            */
             return systemnode;
         },
 
@@ -1032,37 +1156,20 @@ function (dojo, declare) {
         // (e.g. by the pass notification)
         // because the player AFTER the active player gets the token
         update_token: function(){
-            var tokenid = 'HWturn_token';
+            var tokennode = document.getElementById('HWturn_token');
+
+            var ani_origin = this.place_animation_marker(tokennode,true);
+
+            var token_pos;
             if(this.getActivePlayerId() == this.get_bot_player())
                 token_pos = 'top';
             else
                 token_pos = 'bot';
-            var spaceid = 'HWtoken_space_'+token_pos;
+            var spacenode = document.getElementById('HWtoken_space_'+token_pos);
+            dojo.place(tokennode,spacenode);
 
-            var t = 400;
-            var animation_slide = this.slideToObject(tokenid,spaceid,t);
-            // This animation will put the token in the right spot,
-            // but it hasn't moved in the DOM tree.
-            // It's still "in" the old space, just offset in space.
-            // If the window size changes or systems move, it will be out of place.
-            // It needs to be put in the new space and have the offset removed,
-            // but these changes need to be done AFTER the animation completes,
-            // so they need to be in a callback.
-
-            // Simply putting the DOM-adjusting callback on the main animation causes a jump,
-            // so I'm going to try putting it on a delayed animation that comes later
-            var animation_delay = this.slideToObject('HWdelayer',spaceid,0,t+500);
-
-            dojo.connect(
-                animation_delay,
-                'onEnd',
-                function(){
-                    // Without sleep, this seems to make the animation jump at the end
-                    dojo.place(tokenid,spaceid);
-                    dojo.removeAttr(tokenid,'style');
-                }
-            );
-            dojo.fx.combine([animation_slide,animation_delay]).play();
+            var ani_target = this.place_animation_marker(tokennode,false);
+            this.slide_between(tokennode,ani_origin,ani_target);
         },
 
         connected_systems: function(systemnode){
@@ -1600,7 +1707,8 @@ function (dojo, declare) {
                 systemnode = systemnode_candidates[0];
                 systemnode.id = 'HWsystem_'+args.system_id;
                 var labelnode = dojo.query('.HWsystem_label',systemnode)[0];
-                labelnode.innerHTML = args.system_name;
+                // This should be handled by place_system
+                //labelnode.innerHTML = args.system_name;
                 // We don't need to arrange_colonies since there are no colonies
                 this.setup_colony_assignments();
                 this.update_token();
@@ -1699,13 +1807,6 @@ function (dojo, declare) {
             //var systemnode  = document.getElementById('HWsystem_'+args.system_id);
             var oldshipnode = document.getElementById('HWpiece_'+args.old_ship_id);
             var newshipnode = document.getElementById('HWpiece_'+args.new_ship_id);
-
-            /*
-            dojo.fx.combine([
-                this.animate_to_bank(oldshipnode),
-                this.slideToObject(newshipnode,systemnode,500,0)
-            ]).play();
-            */
 
             this.place_ship(
                 newshipnode,
