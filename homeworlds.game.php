@@ -94,6 +94,7 @@ class homeworlds extends Table {
         $sql .= implode(',',$values);
         self::DbQuery($sql);
         self::reattributeColorsBasedOnPreferences( $players, $gameinfos['player_colors'] );
+        // Additional color trickery could be performed here
         self::reloadPlayersBasicInfos();
 
         /************ Start the game initialization *****/
@@ -310,7 +311,7 @@ class homeworlds extends Table {
             /*
             VERSION 2:
             Progress approaches 100% assymptotically
-                1-1/(12*ply+1)
+                1-1/(ply/30+1)
             */
             $sql = 'SELECT player_id FROM player';
             $player_ids = self::getCollectionFromDb($sql);
@@ -772,6 +773,7 @@ class homeworlds extends Table {
             )
         );
         $this->gamestate->nextState('trans_after_power_action');
+        self::incGameStateValue('turn_ships_captured',1);
     }
 
     function move($ship_id,$system_id){
@@ -835,7 +837,6 @@ class homeworlds extends Table {
                 owner_id=NULL
             WHERE system_id='.$system_id;
         self::DbQuery($sql);
-
     }
 
     function discover($ship_id,$star_color_num,$star_pips){

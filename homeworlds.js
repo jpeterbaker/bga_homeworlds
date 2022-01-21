@@ -970,13 +970,11 @@ function (dojo, declare) {
         piecenode: the piece node that should be placed as a ship
         targetnode: the node where piecenode should be placed
             If this is a system, piecenode will become a child of targetnode
-            If this is a ship, piecenode will be placed after targetnode as a sibling 
+            If this is a ship, piecenode will be placed before targetnode as a sibling 
             (this parameter is not used if neighbor is provided)
             (if neighbor is not provided, then systemnode must be)
         owner_id: the ID of the player who should own the ship
             (if null, the HWfriendly and HWhostile classes will not be modified)
-        neighbor: if provided, piecenode will be placed after this node with the same parent
-            (if systemnode is not provided, then neighbor must be)
         */
         place_ship: function(piecenode,targetnode,owner_id=null){
             var ani_origin = this.place_animation_marker(piecenode,true);
@@ -987,7 +985,7 @@ function (dojo, declare) {
                 systemnode = targetnode;
             }
             else{
-                dojo.place(piecenode,targetnode,'after');
+                dojo.place(piecenode,targetnode,'before');
                 systemnode = this.get_system(targetnode);
             }
             dojo.removeClass(piecenode,'HWbanked');
