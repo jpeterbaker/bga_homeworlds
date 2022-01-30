@@ -311,6 +311,7 @@ class homeworlds extends Table {
             /*
             VERSION 2:
             Progress approaches 100% assymptotically
+            It reaches 50% when 30 ply have passed
                 1-1/(ply/30+1)
             */
             $sql = 'SELECT player_id FROM player';

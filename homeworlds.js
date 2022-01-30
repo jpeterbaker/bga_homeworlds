@@ -634,6 +634,7 @@ function (dojo, declare) {
 
             var stars = dojo.query('.HWstar',systemnode);
             var star_match = this.get_color(stars[0]) == this.get_color(stars[1]);
+            var gemini     = this.get_size (stars[0]) == this.get_size (stars[1]);
 
             var message = '';
             if(star_match)
@@ -644,6 +645,8 @@ function (dojo, declare) {
                 message += ' '+_('You do not have a green piece and cannot build.');
             if(blues.length == 0)
                 message += ' '+_('You do not have a blue piece and cannot diversify.');
+            if(gemini)
+                message += ' '+_('Your stars are the same size and your home will be connected to more systems, which may be confusing.');
             if(message.length > 0){
                 // At least one problem was detected
                 message =
@@ -776,6 +779,26 @@ function (dojo, declare) {
         deepcopy: function(x){
             // Not fast, but easy to write
             return JSON.parse(JSON.stringify(x));
+        },
+
+        // Return a piecenode in this stack node
+        // The piece is NOT removed from the stack
+        // For consistency, the highest-index piece is returned
+        // (this can prevent soft-lock during tutorials)
+        get_piece_in_stack: function(stacknode){
+            var children = stacknode.children;
+            var hi = -1;
+            var piecenode = null;
+            var child,pid;
+            for(var i=0;i<children.length;++i){
+                child = children[i];
+                pid = this.get_id(child);
+                if(pid>hi){
+                    hi = pid;
+                    piecenode = child;
+                }
+            }
+            return piecenode;
         },
 
         put_in_bank: function(piecenode){
@@ -1270,15 +1293,14 @@ function (dojo, declare) {
             dojo.stopEvent(evt);
 
             var stacknode = evt.currentTarget;
-            var children = stacknode.children;
-            if(children.length == 0){
+            var piecenode = this.get_piece_in_stack(stacknode);
+            if(piecenode == null){
                 this.showMessage(
                     _('No pieces of this type remain.'),
                     'error'
                 );
                 return;
             }
-            var piecenode = children[children.length-1];
 
             var home_candidates = dojo.query('[homeplayer_id=player_'+this.player_id+']');
             var systemnode;
@@ -1331,15 +1353,14 @@ function (dojo, declare) {
                 return
             }
             var stacknode = evt.currentTarget;
-            var children = stacknode.children;
-            if(children.length == 0){
+            var piecenode = this.get_piece_in_stack(stacknode);
+            if(piecenode == null){
                 this.showMessage(
                     _('No pieces of this type remain.'),
                     'error'
                 );
                 return;
             }
-            var piecenode = children[children.length-1];
             this.place_ship(
                 piecenode,
                 systemnode,
@@ -1818,10 +1839,6 @@ function (dojo, declare) {
         sacrifice_from_notif: function(notif){
             var args = notif.args;
             var shipnode  = document.getElementById('HWpiece_'+args.ship_id);
-            /*
-            var ani = this.animate_to_bank(shipnode);
-            ani.play();
-            */
             this.put_in_bank(shipnode);
         },
 
@@ -1831,10 +1848,6 @@ function (dojo, declare) {
             var color_name = this.color_names_eng[args.color];
 
             var pieces = dojo.query('.HW'+color_name,systemnode);
-            /*
-            var ani = this.animate_to_bank(pieces);
-            ani.play();
-            */
             for(var i=0;i<pieces.length;i++)
                 this.put_in_bank(pieces[i]);
             // If it's a homeworld, rearrange the star map
