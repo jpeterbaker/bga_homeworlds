@@ -1455,11 +1455,14 @@ function (dojo, declare) {
             );
             if(color==3){
                 // Build
-                // The color is green, so no target needs to be chosen, and we're done here
+                // The color is green, so no target needs to be chosen
+                // We just need to remember the clicked ship and notify the server
+                this['remembered_builder_ship'] = activatednode;
                 this.ajaxcallwrapper(
                     'act_power_action',
                     {
-                        piece_id:this.get_id(activatednode),
+                        color_num:this.get_color(activatednode),
+                        system_id:this.get_system(activatednode).id.split('_')[1],
                         power:3
                     }
                 );
@@ -1659,6 +1662,8 @@ function (dojo, declare) {
                 // This player is offering a draw
                 this.ajaxcallwrapper('act_offer_draw',{});
                 args.args.draw_offerer = this.player_id;
+                // Let the client think the turn is just starting
+                // so that the draw button will be labelled correctly
                 this.setClientState(args.state_name,args);
             }
         },
@@ -1666,6 +1671,8 @@ function (dojo, declare) {
             this.ajaxcallwrapper('act_cancel_offer_draw',{});
             args = this['latest_args'];
             args.args.draw_offerer = 0;
+            // Let the client think the turn is just starting
+            // so that the draw button will be labelled correctly
             this.setClientState(args.state_name,args);
         },
 
@@ -1810,9 +1817,31 @@ function (dojo, declare) {
 
         build_from_notif: function(notif){
             var args = notif.args;
-            //var systemnode = document.getElementById('HWsystem_'+args.system_id);
-            var oldshipnode = document.getElementById('HWpiece_'+args.old_ship_id);
-            var shipnode    = document.getElementById('HWpiece_'+args.ship_id);
+            var systemnode = document.getElementById('HWsystem_'+args.system_id);
+            var oldshipnode;
+            if(this.isCurrentPlayerActive()){
+                // This player is active, so recall the ship they clicked to build with
+                oldshipnode = this['remembered_builder_ship'];
+            }
+            else{
+                // This is the other player or observer, so just pick a correctly colored ship
+
+                // Find alignment of ships allied with the one being constructed
+                var alignment;
+                if(this.get_bot_player == args.player_id)
+                    alignment = '.HWfriendly';
+                else
+                    alignment = '.HWhostile';
+                // Find the color of this ship
+                var colorname = this.color_names_eng[args.color];
+                // Find allied, same-colored ships
+                var ships = dojo.query(alignment+'.HWship.HW'+colorname,systemnode);
+                if(ships.length == 0)
+                    this.showMessage( _('No valid builder ship.'), 'error');
+                // Pick any of them
+                oldshipnode = ships[0];
+            }
+            var shipnode = document.getElementById('HWpiece_'+args.ship_id);
             this.place_ship(
                 shipnode,
                 //systemnode,

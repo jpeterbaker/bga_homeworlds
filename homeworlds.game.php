@@ -877,16 +877,28 @@ class homeworlds extends Table {
         self::incGameStateValue('turn_systems_discovered',1);
     }
 
-    function build($ship_id){
+    function build($color_num,$system_id){
         self::checkAction('act_power_action');
-        $this->validate_power_action(3,$ship_id);
+        $player_id   = $this->getActivePlayerId();
+        
+        // Find any one ship that could have been the used to build this color
+        $sql = 'SELECT piece_id FROM Pieces
+            WHERE color='.$color_num.'
+                AND system_id='.$system_id.'
+                AND owner_id='.$player_id.'
+            LIMIT 1';
+        $result = self::getCollectionFromDb($sql);
+        if(count($result)==0)
+            throw new BgaUserException(
+                self::_('A ship can only build other ships of its own color.'));
+        $old_ship = $result[$this->array_key_first($result)];
 
-        $old_ship = $this->get_piece_row($ship_id);
-        $color = $old_ship['color'];
+        $this->validate_power_action(3,$old_ship['piece_id']);
+
         // Get the smallest banked piece of that color
         $sql = 'SELECT piece_id,color,system_id,owner_id
             FROM Pieces
-            WHERE color='.$color.'
+            WHERE color='.$color_num.'
                 AND system_id IS NULL
             ORDER BY pips
             LIMIT 1';
@@ -896,19 +908,17 @@ class homeworlds extends Table {
                 self::_('That color is not available to build.'));
 
         $new_ship = $result[$this->array_key_first($result)];
-        $system_id = $old_ship['system_id'];
         $system_name = $this->get_system_name($system_id);
-        $this->make_ship($new_ship['piece_id'],$old_ship['owner_id'],$system_id);
+        $this->make_ship($new_ship['piece_id'],$player_id,$system_id);
 
         $player_name = $this->getActivePlayerName();
-        $player_id   = $this->getActivePlayerId();
         self::notifyAllPlayers('notif_build',
             clienttranslate('${player_name} builds a ${ship_str} ship in ${system_name}.'),
             array(
                 'player_name' => $player_name,
                 'player_id'   => $player_id,
-                //'system_id'   => $system_id,
-                'old_ship_id' => $ship_id,
+                'system_id'   => $system_id,
+                'color'       => $color_num,
                 'system_name' => $system_name,
                 'ship_id'     => $new_ship['piece_id'],
                 'ship_str'    => $this->get_piece_string($new_ship['piece_id'])

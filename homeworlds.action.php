@@ -47,8 +47,8 @@ class action_homeworlds extends APP_GameAction {
 
     public function act_power_action(){
         self::setAjaxMode();
-        $piece_id = self::getArg('piece_id','AT_posint',true);
         $power = self::getArg('power','AT_posint',true);
+        $piece_id = self::getArg('piece_id','AT_posint',false);
         switch($power){
             case 1:
                 $capture_id = self::getArg('capture_id','AT_posint',true);
@@ -67,7 +67,9 @@ class action_homeworlds extends APP_GameAction {
                 }
                 break;
             case 3:
-                $this->game->build($piece_id);
+                $color_num = self::getArg('color_num','AT_posint',true);
+                $system_id = self::getArg('system_id','AT_posint',true);
+                $this->game->build($color_num,$system_id);
                 break;
             case 4:
                 $color_num = self::getArg('color_num','AT_posint',true);
