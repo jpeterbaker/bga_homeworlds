@@ -781,10 +781,12 @@ function (dojo, declare) {
             return JSON.parse(JSON.stringify(x));
         },
 
-        // Return a piecenode in this stack node
-        // The piece is NOT removed from the stack
-        // For consistency, the highest-index piece is returned
-        // (this can prevent soft-lock during tutorials)
+        /*
+        Return a piecenode in this stack node
+        The piece is NOT removed from the stack
+        For consistency, the highest-index piece is returned
+        (this can prevent soft-lock during tutorials).
+        */
         get_piece_in_stack: function(stacknode){
             var children = stacknode.children;
             var hi = -1;

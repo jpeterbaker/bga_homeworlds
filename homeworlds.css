@@ -39,19 +39,39 @@
     width:33.3%;
     height:25%;
 }
-/* Make pieces in the stack higher the more children there are */
+/*
+Make pieces in the stack higher the more children there are
+It's better to count from the end than from the beginning because, 
+while adding tutorial annotation images,
+mousing over an element causes it to have a new child
+at the beginning of its list.
+If you determine height by counting from the start of the list,
+the pieces hop around as you mouse over the bank.
+*/
 .HWstack>*{
     position:absolute;
 }
-.HWstack>*:nth-child(1){
+.HWstack>*:nth-last-child(1){
     bottom:0px;
+    z-index:1;
 }
-.HWstack>*:nth-child(2){
+.HWstack>*:nth-last-child(2){
     bottom:20px;
+    z-index:2;
 }
-.HWstack>*:nth-child(3){
+.HWstack>*:nth-last-child(3){
     bottom:40px;
+    z-index:3;
 }
+/*
+Pieces traveling to the board should be in front of stacked pieces
+in order to not look weird.
+*/
+ 
+.HWship,.HWstar{
+    z-index:4;
+}
+
 
 /********
  Systems
@@ -156,7 +176,7 @@ and rows of same-sized systems are created
 }
 
 /* Hide the symbol on covered children */
-.HWbanked:not(:last-child)>.HWcolor_symbol{
+.HWbanked:not(:first-child)>.HWcolor_symbol{
     display:none;
 }
 
@@ -419,8 +439,11 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
     background-size:100%;
     height:100%;
     width:100%;
-    /*Without a z-index it sometimes appears to slide under pieces*/
-    z-index:1;
+    /*
+    Without a z-index it sometimes appears to slide under pieces,
+    and pieces need z-index 4 to stay in front of stacked pieces
+    */
+    z-index:5;
 }
 
 /* Animation marker shouldn't appear */
