@@ -922,7 +922,6 @@ function (dojo, declare) {
             if(!old){
                 // The node is in its new position now. Just save it.
                 this.placeOnObject(marker,piecenode);
-                console.log('marker',marker,'placed on',piecenode);
                 return marker;
             }
 
@@ -930,7 +929,6 @@ function (dojo, declare) {
             // Put the marker next to it in the DOM tree
             // so the marker will move correspondingly if elements shift
             // when the node changes in the tree.
-            console.log('marker',marker,'placed on',piecenode.parentNode);
             if(piecenode.id=='HWturn_token' || dojo.hasClass(piecenode,'HWbanked')){
                 this.placeOnObject(marker,piecenode.parentNode);
             }
@@ -961,7 +959,6 @@ function (dojo, declare) {
         origin and target nodes will be deleted when animation is complete
         */
         slide_between: function(node,origin,target,delay=0,remove_markers=true){
-            console.log('sliding',node,'from',origin,'to',target);
             var t = 400;
             var delay_html = "<div id='HWdelayer"+node.id+"' style='display:none'></div>";
             var delayer = dojo.place(delay_html,'HWboard');
@@ -1820,36 +1817,65 @@ function (dojo, declare) {
         build_from_notif: function(notif){
             var args = notif.args;
             var systemnode = document.getElementById('HWsystem_'+args.system_id);
-            var oldshipnode;
+            var shipnode = document.getElementById('HWpiece_'+args.ship_id);
+            var color = this.get_color(shipnode);
+            var oldshipnode = null;
             if(this.isCurrentPlayerActive()){
                 // This player is active, so recall the ship they clicked to build with
                 oldshipnode = this['remembered_builder_ship'];
+                // In a replay or tutorial, remembered ship may not be reliable
+                // Make sure it is the right color and in the right system
+                // Otherwise, set it back to null
+                // so an appropriate ship can be found in next block
+                if(
+                    oldshipnode == null
+                    || this.get_color(oldshipnode) != color
+                    || this.get_system(oldshipnode) != systemnode
+                ){
+                    oldshipnode = null;
+                }
             }
-            else{
-                // This is the other player or observer, so just pick a correctly colored ship
+            if(oldshipnode == null){
+                // This is the other player or observer,
+                // so just pick a correctly colored ship in the system
 
                 // Find alignment of ships allied with the one being constructed
                 var alignment;
-                if(this.get_bot_player == args.player_id)
+
+                if(this.get_bot_player() == args.player_id)
                     alignment = '.HWfriendly';
                 else
                     alignment = '.HWhostile';
                 // Find the color of this ship
-                var colorname = this.color_names_eng[args.color];
+                var colorname = this.color_names_eng[color];
                 // Find allied, same-colored ships
                 var ships = dojo.query(alignment+'.HWship.HW'+colorname,systemnode);
-                if(ships.length == 0)
+                if(ships.length == 0){
+                    // This can happen in a replay
                     this.showMessage( _('No valid builder ship.'), 'error');
-                // Pick any of them
-                oldshipnode = ships[0];
+                    oldshipnode = null;
+                }
+                else{
+                    // Pick any of them
+                    oldshipnode = ships[0];
+                }
             }
-            var shipnode = document.getElementById('HWpiece_'+args.ship_id);
-            this.place_ship(
-                shipnode,
-                //systemnode,
-                oldshipnode,
-                args.player_id
-            );
+            if(oldshipnode != null){
+                this.place_ship(
+                    shipnode,
+                    oldshipnode,
+                    args.player_id
+                );
+            }
+            else{
+                // Something went wrong,
+                // but do the best we can by putting it in the right system
+                this.place_ship(
+                    shipnode,
+                    systemnode,
+                    args.player_id
+                );
+            }
         },
 
         trade_from_notif: function(notif){

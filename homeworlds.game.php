@@ -918,7 +918,6 @@ class homeworlds extends Table {
                 'player_name' => $player_name,
                 'player_id'   => $player_id,
                 'system_id'   => $system_id,
-                'color'       => $color_num,
                 'system_name' => $system_name,
                 'ship_id'     => $new_ship['piece_id'],
                 'ship_str'    => $this->get_piece_string($new_ship['piece_id'])

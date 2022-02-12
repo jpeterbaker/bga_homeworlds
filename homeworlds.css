@@ -473,3 +473,23 @@ animation section.
     margin-right:5px;
 }
 
+/*
+Try to make tutorial annotations right-side up on hostile ships.
+Animations mess up my correction, so turn it off (not too noticeable)
+*/
+.HWhostile.HWship>.archiveCommentPointed{
+    transform: rotate(180deg);
+    left:0;
+    animation:none;
+    -webkit-animation:none;
+}
+.HWhostile.HWship.HWsmall>.archiveCommentPointed{
+    top:-35px;
+}
+.HWhostile.HWship.HWmedium>.archiveCommentPointed{
+    top:-25px;
+}
+.HWhostile.HWship.HWlarge>.archiveCommentPointed{
+    top:-15px;
+}
+
