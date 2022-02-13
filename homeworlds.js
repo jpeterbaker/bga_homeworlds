@@ -559,6 +559,8 @@ function (dojo, declare) {
                             this.finalize_creation();
                         }
                     );
+                case 'want_creation':
+                case 'client_want_creation_ship':
                     this.addActionButton(
                         'restart_button',
                         _('Restart turn'),
@@ -813,7 +815,7 @@ function (dojo, declare) {
             var color = this.get_color(piecenode);
             var pips = this.get_size(piecenode);
             var stacknode = document.getElementById('HWstack_'+color+'_'+pips);
-            dojo.place(piecenode,stacknode);
+            dojo.place(piecenode,stacknode,'first');
             // TODO be smarter about when this is done
             this.on_system_change(systemnode);
 
@@ -1391,12 +1393,15 @@ function (dojo, declare) {
         },
 
         restart_creation: function(){
+            this.disconnectAll();
             var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
+            if(systemnode == null)
+                return;
             var contents = dojo.query('.HWship,.HWstar',systemnode);
             for(var i=0;i<contents.length;i++){
                 this.put_in_bank(contents[i]);
             }
-            systemnode.remove();
+                systemnode.remove();
             args = this['latest_args'];
             this.setClientState(args.state_name,args);
         },
