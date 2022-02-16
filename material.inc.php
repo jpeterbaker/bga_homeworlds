@@ -204,6 +204,18 @@ $this->system_name_lists = array(
         'Yuggoth',
         // Recurring planet in works of Hal Clement
         'Mesklin',
+        // Planet from Dan Simmons' Hyperion Cantos
+        'Hyperion',
+        // Ursula K. LeGuin's Tales from Earthsea
+        'Earthsea',
+        // Dragonlance Chronicles (one of the two first gameworlds of D&D)
+        'Krynn',
+        // Piers Anthony's Xanth novels
+        'Xanth',
+        // Gene Wolfe New Sun books
+        'Urth',
+        // Philip Jose Farmer's Riverworld series
+        'Riverworld',
     ],
 );
 
