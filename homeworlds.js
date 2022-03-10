@@ -1607,7 +1607,7 @@ function (dojo, declare) {
             var home_bot = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
             var defenders = dojo.query('.HWfriendly.HWship',home_bot);
             var stars = dojo.query('.HWstar',home_bot);
-            if(defenders.length==0 || stars.length==0){
+            if(home_bot == null || defenders.length==0 || stars.length==0){
                 // This move is self-elimination
                 var player_id_top = this.get_top_player();
                 var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']')[0];

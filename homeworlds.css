@@ -493,3 +493,7 @@ Animations mess up my correction, so turn it off (not too noticeable)
     top:-15px;
 }
 
+/* Annotations should all be above pieces */
+.archiveCommentPointed{
+    z-index:6;
+}
