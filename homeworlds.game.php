@@ -294,7 +294,6 @@ class homeworlds extends Table {
     */
     function getGameProgression() {
         // For Homeworlds, this is hard to estimate.
-
         if(0){
             /*
             VERSION 1:
@@ -307,7 +306,7 @@ class homeworlds extends Table {
             $n_in_play = count($result);
             return intdiv(100*$n_in_play,36);
         }
-        elseif(1){
+        elseif(0){
             /*
             VERSION 2:
             Progress approaches 100% assymptotically
@@ -322,7 +321,7 @@ class homeworlds extends Table {
             }
             return round(100*( 1-1/($plys/30+1) ));
         }
-        else{
+        elseif(0){
             /*
             VERSION 3:
             Progress estimate smoothly transitions from simple estimate f to a fancy estimate g
@@ -363,6 +362,10 @@ class homeworlds extends Table {
 
             // As a shortcut, use
             $f = min(1, self::getStat('turns_number',$p0id)/20 );
+        }
+        else{
+            // Verision 4: return 50% so that players can resign any time
+            return 50;
         }
     }
 
