@@ -88,14 +88,14 @@ $this->system_name_lists = array(
 
 
 
-
-
-
-
-
-
-
-
+    // WORLDS FROM FICTION
+    // To avoid duplicates from appearing due to the randomization routine,
+    // the number of entries in the list should be prime.
+    // Starting the list on line 102 makes it easy to check the number of entries:
+    // subtract 100 and divide by 2 (as long as a comment appears between each pair)
+    // To avoid worlds from the same universe from appearing in succession,
+    // don't put them next to each other or at equal intervals
+    // (a random order is probably best)
 
     3 => [
         // Focal planet of the "Dragonriders of Pern" novels
@@ -108,6 +108,8 @@ $this->system_name_lists = array(
         'Trion',
         // Homeworld of the Klingons in "Star Trek"
         'Qo\'noS',
+        // Focal planet in "Warcraft"
+        'Azeroth',
         // Focal planet of "The Lord of the Rings" novels
         'Arda',
         // Focal planet of the "Discworld" novels
@@ -116,6 +118,8 @@ $this->system_name_lists = array(
         'Krypton',
         //Homeworld of the Transformers in "Transformers"
         'Cybertron',
+        // Homeworld of Dukat in "Star Trek: Deep Space Nine"
+        'Cardassia',
         // Homeworld of the Time Lords in "Doctor Who"
         'Gallifrey',
         // Location of the planet builders in "The Hitchhiker's Guide to the Galaxy" novels
@@ -134,8 +138,6 @@ $this->system_name_lists = array(
         'Trantor',
         // The focal megastructure of the "Ringworld" novels
         'Ringworld',
-        // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
-        'Gaea',
         // Homeworld of the Alteans in "Voltron"
         'Altea',
         // Focal planet of "Solaris"
@@ -148,8 +150,6 @@ $this->system_name_lists = array(
         'Ariel',
         // Terran homeworld in "StarCraft"
         'Tarsonis',
-        // Focal planet in "Warcraft"
-        'Azeroth',
         // Homeworld of the Orcs in "Warcraft"
         'Draenor',
         // Focal planet in "Avatar." Also a central planet in "Borderlands"
@@ -180,8 +180,6 @@ $this->system_name_lists = array(
         'Chulak',
         // Location of the pivotal battle of Serenity in "Firefly." Also a world in Dragonball Z
         'Hera',
-        // Obscure planet in Dimension X in "Teenage Mutant Ninja Turtles"
-        'Balaraphon',
         // Prominent world in "Borderlands"
         'Promethea',
         // Potential victim planet in "Spaceballs"
@@ -190,18 +188,20 @@ $this->system_name_lists = array(
         'Antarea',
         // Focal planet of "Flash Gordon"
         'Mongo',
+        // Prominent world in "The Empire Strikes Back"
+        'Bespin',
         // Focal planet of "Lost in Space"
         'Priplanus',
         // Major setting of "Among Us"
         'Polus',
-        // Focal planet of a scientific fiction project by C. M. Kosemen
-        'Snaiad',
         // Headquarters of the Green Lantern Corps
         'Oa',
         // A planet visited by Calvin/Spaceman Spiff. Also a TV Trope
         'Zok',
         // (Pluto, possibly) Homeworld of the Mi-go in the Lovecraft Mythos
         'Yuggoth',
+        // Homeworld of Tom Zarek in "Battlestar Galactica"
+        'Sagittaron',
         // Recurring planet in works of Hal Clement
         'Mesklin',
         // Planet from Dan Simmons' Hyperion Cantos
@@ -216,8 +216,24 @@ $this->system_name_lists = array(
         'Urth',
         // Philip Jose Farmer's Riverworld series
         'Riverworld',
+        // Prominent world in "The Empire Strikes Back"
+        'Hoth',
+        // Homeworld of Troi in "Star Trek: The Next Generation"
+        'Bajor',
+        // Homeworld of Kira in "Star Trek: Deep Space Nine"
+        'Betazed',
+        // Legendary human homeworld in "Battlestar Galactica"
+        'Kobol',
     ],
 );
+
+// Candidates that can be used later to fill out list to a prime length
+        // Focal planet of a scientific fiction project by C. M. Kosemen
+        // 'Snaiad',
+        // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
+        // 'Gaea',
+        // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
+        // 'Balaraphon',
 
 // These terms will only be used in phrases of the form
 // 3 ${action_name} actions remaining
