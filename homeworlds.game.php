@@ -742,7 +742,8 @@ class homeworlds extends Table {
         $target_ship = $this->get_piece_row($capture_id);
 
         // Check validity
-        if($attack_ship['owner_id'] == $target_ship['owner_id']){
+        if($attack_ship['owner_id'] == $target_ship['owner_id']
+            || is_null($target_ship['owner_id']) ){
             throw new BgaVisibleSystemException(
                 self::_('You may only capture enemy ships.'));
         }
