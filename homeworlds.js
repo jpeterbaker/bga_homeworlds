@@ -1582,7 +1582,6 @@ function (dojo, declare) {
         // Return false if the actions can't be used
         sacrifice_choice_available: function(){
             var color = this['latest_args'].args.color;
-            console.log('sacrifice color is ',color);
             if(color != 1){
                 // Red is by far the most common color to not be able to use.
                 // For now, just assume that all other colors can be used.
@@ -1601,30 +1600,24 @@ function (dojo, declare) {
                 small_hostile=4;
                 big_friendly=0;
                 ships = dojo.query('.HWship',systems[i]);
-                console.log('Looking through system',systems[i].id);
                 for(j=0;j<ships.length;j++){
                     shipnode = ships[j];
                     size = this.get_size(shipnode);
-                    console.log('considering the ship',shipnode.id);
                     if(dojo.hasClass(shipnode,'HWhostile')){
                         if(size < small_hostile){
-                            console.log('found a hostile ship of size',size);
                             small_hostile = size;
                         }
                     }
                     else if(size > big_friendly){
-                        console.log('found a friendly ship of size',size);
                         big_friendly = size;
                     }
                 }
                 if(big_friendly >= small_hostile){
                     // There is a ship that may be captured in this system
-                    console.log('Found a ship to be captured',small_hostile,big_friendly);
                     return true;
                 }
             }
             // No capture options found
-            console.log('Found NO ship');
             return false;
         },
 
@@ -1644,7 +1637,6 @@ function (dojo, declare) {
                 message = _('There is an overpopulation. Are you sure you want to end your turn without triggering a catastrophe?');
             }
             else{
-                console.log('State name is ',state_name);
                 if(state_name == 'want_sacrifice_action' && !this.sacrifice_choice_available()){
                     // There are sacrifice actions left but no way to use them
                     this.end_turn_with_self_elim_check();
