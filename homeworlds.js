@@ -592,10 +592,14 @@ function (dojo, declare) {
             }
             else{
                 // The other player offered a draw
+                // TODO or they brought the game to the same state 3+ times
                 this.addActionButton(
                     'draw_button',
                     _('Accept draw and end game'),
-                    'draw_button_selected'
+                    'draw_button_selected',
+                    null,
+                    null,
+                    'red'
                 );
             }
         },
