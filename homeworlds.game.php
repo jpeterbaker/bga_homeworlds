@@ -621,6 +621,133 @@ class homeworlds extends Table {
         );
     }
 
+    // Returns the number of times that this state has appeared
+    function state_repetition_count(){
+        $s = $this->state_string();
+        $sql = 'SELECT tally FROM States WHERE state_str='.$s;
+        try{
+            $result = self::getCollectionFromDb($sql);
+        } catch (Exception $e) {
+            // If the game version is old, the States table won't exist
+            // This just needs to stay in place until every game in progess
+            // is using the latest verion
+            return 1;
+        }
+        if(count($result) == 0){
+            // This is the first time this state has been seen
+            // Don't forget the quotes around the varchar
+            $sql = 'INSERT INTO States (state_str,tally)
+                VALUES (\''.$s.'\',1)';
+            return 1;
+        }
+        $tally = $result[$s]['tally'];
+        $sql = 'UPDATE States
+            SET tally='.($tally+1).'
+            WHERE state_str='.$s;
+        self::DbQuery($sql);
+        return $tally+1;
+    }
+
+    // Return a string representing the current game state
+    // This function ignores system names
+    // The same game state will always produce the same string
+    // Equality of game states does depend on the player on move,
+    // but it does NOT depend on piece ID or system IDs/names
+    function state_string(){
+        $allDatas = $this->getAllDatas();
+        $players = $allDatas['players'];
+        $systems = $allDatas['systems'];
+
+        // Map player ids to numbers
+        $player_nos = [];
+        foreach($players as $player_id => $player){
+            $player_no = $player['player_no'];
+            $player_nos[$player_id] = $player_no;
+        }
+
+        // Get all system strings, keeping homeworld strings separate
+        // $home_strs will map player numbers to system strings
+        $home_strs = [];
+        $system_strs = [];
+        foreach($systems as $system_id => $system){
+            $s = system_str($system,$player_nos);
+            $homeplayer_id = $system['homeplayer_id'];
+            if(is_null($homeplayer_id)){
+                // Not a homeworld, add it to the regulat list
+                array_push($system_strs,$s);
+            }
+            else{
+                // It is a homeworld
+                // Get the player number and map it to the str
+                $home_strs[$player_nos[$homeplayer_id]] = $s;
+            }
+        }
+        // Sort homeworld strings by player number
+        // ksort sorts by key
+        ksort($home_strs);
+        // Sort other systems by string for uniqueness
+        sort($system_strs);
+
+        // Start the string with the active player number
+        $active_id = $this->getActivePlayerId();
+        $active_no = $players[$active_id]['player_no'];
+
+        $s = $active_no;
+        $s .= implode('',$home_strs);
+        $s .= implode('',$system_strs);
+        return $s;
+    }
+
+    // $system is an array with the format as produced by getAllDatas
+    // $player_nos is an array mapping player ids to player numbers (e.g. 1,2)
+    function system_str($system,$player_nos){
+        $nplayers = count($player_ids);
+        $stars_strs = [];
+        foreach($system['stars'] as $piece_id => $piece){
+            array_push($star_strs,$this->piece_chr($piece,1));
+        }
+        sort($star_strs);
+
+        // Make empty arrays for each player to which ships may be added
+        $ships = [];
+        foreach($player_nos as $player_id => $player_no){
+            $ships[$player_no] = [];
+        }
+        // Put $ships in the order of the player numbers
+        // ksort sorts by key
+        ksort($ships);
+
+        // For each ship, add its letter to the array for its player
+        foreach($systems['ships'] as $piece_id => $piece){
+            $player_id = $piece['owner_id'];
+            $player_no = $player_nos[$player_id];
+            $ship_str = $this->piece_chr($piece,0);
+            array_push($ships[$player_no],$ship_str);
+        }
+
+        // Sort each player's ship strs
+        foreach($ships as $player_no => &$ship_strs){
+            sort($ship_strs);
+        }
+        // String everything together
+        $str = implode(',',$star_strs);
+        foreach($ships as $player_no => &$ship_strs){
+            $str .= implode('',$ship_strs);
+        }
+        return $str;
+    }
+
+    // $piece is an array with fields pips (1-3) and color (1-4)
+    // $is_star indicates whether this is a ship or star
+    // returns a letter a-l for a ship or A-L for a star
+    function piece_chr($piece,$is_star){
+        if($is_star)
+            $a = ord('A');
+        else
+            $a = ord('a');
+        return chr( (color-1)*3 + pips-1 + $a);
+    }
+
     // Put all saved values back into the regular columns
     // The old saved start is retained in case of another restart
     // Also restore the system counter
@@ -1209,6 +1336,7 @@ class homeworlds extends Table {
             // This player has a home, so everyone has had a chance to create
             // Go to normal turn
             $this->save_state();
+            $this->state_repetition_count();
             $this->gamestate->nextState('trans_want_free');
             return;
         }
@@ -1279,13 +1407,6 @@ class homeworlds extends Table {
 
         // If game is over
         if(count($losers)>0){
-            // TODO remove this once all games are using new system where
-            // scores are set to zero at the beginning
-            // (These lines just protect old games from declaring incorrect winner)
-            $sql = 'UPDATE player
-                SET player_score=0';
-            self::DbQuery($sql);
-
             if(count($losers)==1){
                 // Set score of non-loser to 1
                 $sql = 'UPDATE player
@@ -1311,6 +1432,12 @@ class homeworlds extends Table {
 
         $player_id = $this->getActivePlayerId();
         $this->giveExtraTime($player_id);
+
+        // Returning to a state for the third time counts as offering a draw
+        $tally = $this->state_repetition_count();
+        if($tally >= 3){
+            self::setGameStateValue('draw_offerer',$player_id);
+        }
 
         $this->activeNextPlayer();
         $this->gamestate->nextState('trans_want_free');

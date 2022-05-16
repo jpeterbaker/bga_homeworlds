@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS `Pieces` (
     -- Piece size (1-3)
     `pips` tinyint UNSIGNED NOT NULL,
     -- System that this piece occupies (null for bank)
-    -- Corresponds to Systems.system_id
     `system_id` smallint UNSIGNED DEFAULT NULL,
     -- Play-order number of owning player (null for star or bank)
     -- Corresponds to player.player_id
@@ -31,6 +30,13 @@ CREATE TABLE IF NOT EXISTS `Pieces` (
     -- Saved values of system_id and owner_id for reverting to start of turn
     `saved_system_id` smallint UNSIGNED DEFAULT NULL,
     `saved_owner_id` int UNSIGNED DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- String representations of every game state that has occurred
+-- and how many times they have occurred
+CREATE TABLE IF NOT EXISTS `States` (
+    `state_str` varchar(100) NOT NULL PRIMARY KEY,
+    `tally` int UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 -- CREATE TABLE IF NOT EXISTS `Systems` (
