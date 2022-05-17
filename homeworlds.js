@@ -608,7 +608,7 @@ function (dojo, declare) {
         }
         else{
             // The other player offered a draw
-            // TODO or they brought the game to the same state 3+ times
+            // or the other player brought the game to the same state 3+ times
             this.addActionButton(
                 'draw_button',
                 _('Accept draw and end game'),
@@ -1740,6 +1740,7 @@ function (dojo, declare) {
         else{
             // This player is offering a draw
             this.ajaxcallwrapper('act_offer_draw',{});
+            this.showMessage( _('Finish taking your turn. Opponent can accept draw on their turn.'), 'info');
             args.args.draw_offerer = this.player_id;
             // Let the client think the turn is just starting
             // so that the draw button will be labelled correctly

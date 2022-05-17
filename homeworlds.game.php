@@ -624,7 +624,8 @@ class homeworlds extends Table {
     // Returns the number of times that this state has appeared
     function state_repetition_count(){
         $s = $this->state_string();
-        $sql = 'SELECT tally FROM States WHERE state_str='.$s;
+
+        $sql = 'SELECT state_str,tally FROM States WHERE state_str=\''.$s.'\'';
         try{
             $result = self::getCollectionFromDb($sql);
         } catch (Exception $e) {
@@ -638,14 +639,25 @@ class homeworlds extends Table {
             // Don't forget the quotes around the varchar
             $sql = 'INSERT INTO States (state_str,tally)
                 VALUES (\''.$s.'\',1)';
+            self::DbQuery($sql);
             return 1;
         }
-        $tally = $result[$s]['tally'];
+        $tally = $result[$s]['tally']+1;
+        $message = clienttranslate('This position has occurred ${tally} times.');
+        if($tally>=3){
+            $message .= ' ';
+            $message .= clienttranslate('Current player may declare a draw.');
+        }
+        self::notifyAllPlayers(
+            'notif_offer_draw',
+            $message,
+            array('tally' => $tally)
+        );
         $sql = 'UPDATE States
-            SET tally='.($tally+1).'
-            WHERE state_str='.$s;
+            SET tally='.$tally.'
+            WHERE state_str=\''.$s.'\'';
         self::DbQuery($sql);
-        return $tally+1;
+        return $tally;
     }
 
     // Return a string representing the current game state
@@ -670,7 +682,7 @@ class homeworlds extends Table {
         $home_strs = [];
         $system_strs = [];
         foreach($systems as $system_id => $system){
-            $s = system_str($system,$player_nos);
+            $s = $this->system_str($system,$player_nos);
             $homeplayer_id = $system['homeplayer_id'];
             if(is_null($homeplayer_id)){
                 // Not a homeworld, add it to the regulat list
@@ -701,8 +713,8 @@ class homeworlds extends Table {
     // $system is an array with the format as produced by getAllDatas
     // $player_nos is an array mapping player ids to player numbers (e.g. 1,2)
     function system_str($system,$player_nos){
-        $nplayers = count($player_ids);
-        $stars_strs = [];
+        $nplayers = count($player_nos);
+        $star_strs = [];
         foreach($system['stars'] as $piece_id => $piece){
             array_push($star_strs,$this->piece_chr($piece,1));
         }
@@ -718,7 +730,7 @@ class homeworlds extends Table {
         ksort($ships);
 
         // For each ship, add its letter to the array for its player
-        foreach($systems['ships'] as $piece_id => $piece){
+        foreach($system['ships'] as $piece_id => $piece){
             $player_id = $piece['owner_id'];
             $player_no = $player_nos[$player_id];
             $ship_str = $this->piece_chr($piece,0);
@@ -730,10 +742,13 @@ class homeworlds extends Table {
             sort($ship_strs);
         }
         // String everything together
-        $str = implode(',',$star_strs);
+        $str = implode('',$star_strs);
         foreach($ships as $player_no => &$ship_strs){
             $str .= implode('',$ship_strs);
+            $str .= ',';
         }
+        // Remove the final ','
+        $str=substr($str,0,-1);
         return $str;
     }
 
@@ -745,7 +760,7 @@ class homeworlds extends Table {
             $a = ord('A');
         else
             $a = ord('a');
-        return chr( (color-1)*3 + pips-1 + $a);
+        return chr( ($piece['color']-1)*3 + $piece['pips']-1 + $a);
     }
 
     // Put all saved values back into the regular columns
@@ -1428,18 +1443,16 @@ class homeworlds extends Table {
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
 
-        $this->save_state();
-
         $player_id = $this->getActivePlayerId();
-        $this->giveExtraTime($player_id);
+        $this->activeNextPlayer();
 
         // Returning to a state for the third time counts as offering a draw
         $tally = $this->state_repetition_count();
         if($tally >= 3){
             self::setGameStateValue('draw_offerer',$player_id);
         }
-
-        $this->activeNextPlayer();
+        $this->save_state();
+        $this->giveExtraTime($player_id);
         $this->gamestate->nextState('trans_want_free');
     }
 

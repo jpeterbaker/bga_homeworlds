@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `Pieces` (
 -- String representations of every game state that has occurred
 -- and how many times they have occurred
 CREATE TABLE IF NOT EXISTS `States` (
-    `state_str` varchar(100) NOT NULL PRIMARY KEY,
+    `state_str` varchar(60) NOT NULL PRIMARY KEY,
     `tally` int UNSIGNED NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
