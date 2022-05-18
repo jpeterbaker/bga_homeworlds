@@ -173,6 +173,7 @@ class homeworlds extends Table {
                 // Same as next case
             case 2:
                 // real stars
+                // Start at the beginning with same order every time
                 self::setGameStateInitialValue('system_name_start',0);
                 self::setGameStateInitialValue('system_name_inc',1);
                 break;
@@ -393,11 +394,9 @@ class homeworlds extends Table {
     }
 
     function get_system_name($system_id){
+        // Yes this is a little silly,
+        // but it seemed easier than learning to use a deck
         $num_players = $this->getPlayersNumber();
-        $start = self::getGameStateValue('system_name_start');
-        $inc = self::getGameStateValue('system_name_inc');
-        $name_list = $this->get_system_name_list();
-        $name_count = count($name_list);
         if($system_id<=$num_players){
             // This is a homeworld
             $sql = 'SELECT player_id,player_name FROM player
@@ -408,8 +407,14 @@ class homeworlds extends Table {
             return "Homeworld ${player_name}";
         }
         // This is NOT a homeworld
+        $start = self::getGameStateValue('system_name_start');
+        $inc = self::getGameStateValue('system_name_inc');
+        $name_list = $this->get_system_name_list();
+        $name_count = count($name_list);
         $idx = $system_id-$num_players-1;
         $idx_loop = ( $idx*$inc + $start) % $name_count;
+
+        // $this->say('('.$idx.'*'.$inc.'+'.$start.')%'.$name_count.'='.$idx_loop);
 
         $system_name = $name_list[$idx_loop];
         if($idx >= $name_count)
@@ -625,10 +630,12 @@ class homeworlds extends Table {
     function state_repetition_count(){
         $s = $this->state_string();
 
-        $sql = 'SELECT state_str,tally FROM States WHERE state_str=\''.$s.'\'';
+        $sql = "SELECT state_str,tally FROM States WHERE state_str='".$s."'";
         try{
+            // I'm not sure this try-catch is necessary while the db upgrade function is in place, but at least one of them is needed
             $result = self::getCollectionFromDb($sql);
         } catch (Exception $e) {
+            // TODO remove this when all games use new version
             // If the game version is old, the States table won't exist
             // This just needs to stay in place until every game in progess
             // is using the latest verion
@@ -637,8 +644,8 @@ class homeworlds extends Table {
         if(count($result) == 0){
             // This is the first time this state has been seen
             // Don't forget the quotes around the varchar
-            $sql = 'INSERT INTO States (state_str,tally)
-                VALUES (\''.$s.'\',1)';
+            $sql = "INSERT INTO States (state_str,tally)
+                VALUES ('".$s."',1)";
             self::DbQuery($sql);
             return 1;
         }
@@ -654,8 +661,8 @@ class homeworlds extends Table {
             array('tally' => $tally)
         );
         $sql = 'UPDATE States
-            SET tally='.$tally.'
-            WHERE state_str=\''.$s.'\'';
+            SET tally='.$tally."
+            WHERE state_str='".$s."'";
         self::DbQuery($sql);
         return $tally;
     }
@@ -1529,6 +1536,17 @@ class homeworlds extends Table {
     */
 
     function upgradeTableDb( $from_version ) {
+        // I'm not sure this is actually necessary because the States table is so optional
+    if($from_version <= 2204240537){
+        // Before States table was introduced
+        $sql = "
+        CREATE TABLE IF NOT EXISTS `DBPREFIX_States` (
+            `state_str` varchar(55) NOT NULL PRIMARY KEY,
+            `tally` int UNSIGNED NOT NULL DEFAULT 1
+        ) ENGINE=InnoDB;";
+        self::applyDbUpgradeToAllDB( $sql );
+    }
+
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345

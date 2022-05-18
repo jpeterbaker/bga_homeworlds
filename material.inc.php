@@ -88,142 +88,83 @@ $this->system_name_lists = array(
 
 
 
+
     // WORLDS FROM FICTION
     // To avoid duplicates from appearing due to the randomization routine,
     // the number of entries in the list should be prime.
-    // Starting the list on line 102 makes it easy to check the number of entries:
-    // subtract 100 and divide by 2 (as long as a comment appears between each pair)
+    // Starting the list on line 101 makes it easy to check the number of entries
     // To avoid worlds from the same universe from appearing in succession,
     // don't put them next to each other or at equal intervals
     // (a random order is probably best)
 
     3 => [
-        // Focal planet of the "Dragonriders of Pern" novels
-        'Pern',
-        // (Dune) Focal planet of Frank Herbert's "Dune" series
-        'Arrakis',
-        // Residence planet of Yoda in "Star Wars"
-        'Dagobah',
-        // Homeworld of the Masters in the "Tripods" novels
-        'Trion',
-        // Homeworld of the Klingons in "Star Trek"
-        'Qo\'noS',
-        // Focal planet in "Warcraft"
-        'Azeroth',
-        // Focal planet of "The Lord of the Rings" novels
-        'Arda',
-        // Focal planet of the "Discworld" novels
-        'Discworld',
-        // Homeworld of Kal-El (Superman) in D.C. Comics
-        'Krypton',
-        //Homeworld of the Transformers in "Transformers"
-        'Cybertron',
-        // Homeworld of Dukat in "Star Trek: Deep Space Nine"
-        'Cardassia',
-        // Homeworld of the Time Lords in "Doctor Who"
-        'Gallifrey',
-        // Location of the planet builders in "The Hitchhiker's Guide to the Galaxy" novels
-        'Magrathea',
-        // Homeworld of the Vulcans in "Star Trek"
-        'Vulcan',
-        // Human capital world in "Battlestar Galactica"
-        'Caprica',
-        // Homeworld of the Arachnids (Bugs) in "Starship Troopers"
-        'Klendathu',
-        // Homeworld of the Pequeninos in the "Ender Quintet" novels
-        'Lusitania',
-        // (Acheron) Location of main events in "Alien" films
-        'LV-426',
-        // Capital world of the Galactic Empire in the "Foundation" novels
-        'Trantor',
-        // The focal megastructure of the "Ringworld" novels
-        'Ringworld',
-        // Homeworld of the Alteans in "Voltron"
-        'Altea',
-        // Focal planet of "Solaris"
-        'Solaris',
-        // Protoss homeworld in "StarCraft"
-        'Aiur',
-        // Repeated setting in "Firefly." Also a planet in "Elite Dangerous"
-        'Persephone',
-        // Captial world of the Alliance in "Firefly"
-        'Ariel',
-        // Terran homeworld in "StarCraft"
-        'Tarsonis',
-        // Homeworld of the Orcs in "Warcraft"
-        'Draenor',
-        // Focal planet in "Avatar." Also a central planet in "Borderlands"
-        'Pandora',
-        // Frequent setting in many fictional works
-        'Earth',
-        // Homeworld of Luke Skywalker in "Star Wars"
-        'Tatooine',
-        // Human military hub in "Halo"
-        'Reach',
-        // Homeworld of Thor in Marvel Comics
-        'Asgard',
-        // The living planet in Marvel Comics
-        'Ego',
-        // Major setting in "A Wrinkle in Time"
-        'Camazotz',
-        // Homeworld of Hans Rebka in the "Heritage" novels
-        'Teufel',
-        // Homeworld of the Daleks in "Doctor Who"
-        'Skaro',
-        // Zerg base planet in "StarCraft"
-        'Char',
-        // Homeworld of the Vedrans in "Andromeda"
-        'Tarn-Vedra',
-        // Homeworld of the Minbari in "Babylon 5"
-        'Minbar',
-        // Homeworld of Teal'c in "Stargate"
-        'Chulak',
-        // Location of the pivotal battle of Serenity in "Firefly." Also a world in Dragonball Z
-        'Hera',
-        // Prominent world in "Borderlands"
-        'Promethea',
-        // Potential victim planet in "Spaceballs"
-        'Druidia',
-        // Homeworld of the Antareans in "Cocoon"
-        'Antarea',
-        // Focal planet of "Flash Gordon"
-        'Mongo',
-        // Prominent world in "The Empire Strikes Back"
-        'Bespin',
-        // Focal planet of "Lost in Space"
-        'Priplanus',
-        // Major setting of "Among Us"
-        'Polus',
-        // Headquarters of the Green Lantern Corps
-        'Oa',
-        // A planet visited by Calvin/Spaceman Spiff. Also a TV Trope
-        'Zok',
-        // (Pluto, possibly) Homeworld of the Mi-go in the Lovecraft Mythos
-        'Yuggoth',
-        // Homeworld of Tom Zarek in "Battlestar Galactica"
-        'Sagittaron',
-        // Recurring planet in works of Hal Clement
-        'Mesklin',
-        // Planet from Dan Simmons' Hyperion Cantos
-        'Hyperion',
-        // Ursula K. LeGuin's Tales from Earthsea
-        'Earthsea',
-        // Dragonlance Chronicles (one of the two first gameworlds of D&D)
-        'Krynn',
-        // Piers Anthony's Xanth novels
-        'Xanth',
-        // Gene Wolfe New Sun books
-        'Urth',
-        // Philip Jose Farmer's Riverworld series
-        'Riverworld',
-        // Prominent world in "The Empire Strikes Back"
-        'Hoth',
-        // Homeworld of Troi in "Star Trek: The Next Generation"
-        'Bajor',
-        // Homeworld of Kira in "Star Trek: Deep Space Nine"
-        'Betazed',
-        // Legendary human homeworld in "Battlestar Galactica"
-        'Kobol',
+        'Pern', // Focal planet of the "Dragonriders of Pern" books
+        'Arrakis', // (Dune) Focal planet of Frank Herbert's "Dune" series
+        'Dagobah', // Residence planet of Yoda in "Star Wars"
+        'Trion', // Homeworld of the Masters in the "Tripods" books
+        'Qo\'noS', // Homeworld of the Klingons in "Star Trek"
+        'Azeroth', // Focal planet in "Warcraft"
+        'Arda', // Focal planet of "The Lord of the Rings" books
+        'Discworld', // Focal planet of the "Discworld" books
+        'Krypton', // Homeworld of Kal-El (Superman) in D.C. Comics
+        'Cybertron', //Homeworld of the Transformers in "Transformers"
+        'Cardassia', // Homeworld of Dukat in "Star Trek: Deep Space Nine"
+        'Gallifrey', // Homeworld of the Time Lords in "Doctor Who"
+        'Magrathea', // Location of the planet builders in "The Hitchhiker's Guide to the Galaxy" books
+        'Vulcan', // Homeworld of the Vulcans in "Star Trek"
+        'Caprica', // Human capital world in "Battlestar Galactica"
+        'Klendathu', // Homeworld of the Arachnids (Bugs) in "Starship Troopers"
+        'Lusitania', // Homeworld of the Pequeninos in the "Ender Quintet" books
+        'LV-426', // (Acheron) Location of main events in "Alien" films
+        'Trantor', // Capital world of the Galactic Empire in the "Foundation" books
+        'Ringworld', // The focal megastructure of the "Ringworld" books
+        'Altea', // Homeworld of the Alteans in "Voltron"
+        'Solaris', // Focal planet of "Solaris"
+        'Aiur', // Protoss homeworld in "StarCraft"
+        'Persephone', // Repeated setting in "Firefly." Also a planet in "Elite Dangerous"
+        'Ariel', // Captial world of the Alliance in "Firefly"
+        'Tarsonis', // Terran homeworld in "StarCraft"
+        'Draenor', // Homeworld of the Orcs in "Warcraft"
+        'Pandora', // Focal planet in "Avatar." Also a central planet in "Borderlands"
+        'Earth', // Frequent setting in many fictional works
+        'Tatooine', // Homeworld of Luke Skywalker in "Star Wars"
+        'Reach', // Human military hub in "Halo"
+        'Asgard', // Homeworld of Thor in Marvel Comics
+        'Ego', // The living planet in Marvel Comics
+        'Camazotz', // Major setting in "A Wrinkle in Time"
+        'Teufel', // Homeworld of Hans Rebka in the "Heritage" books
+        'Skaro', // Homeworld of the Daleks in "Doctor Who"
+        'Char', // Zerg base planet in "StarCraft"
+        'Tarn-Vedra', // Homeworld of the Vedrans in "Andromeda"
+        'Minbar', // Homeworld of the Minbari in "Babylon 5"
+        'Chulak', // Homeworld of Teal'c in "Stargate"
+        'Hera', // Location of the pivotal battle of Serenity in "Firefly." Also a world in Dragonball Z
+        'Promethea', // Prominent world in "Borderlands"
+        'Druidia', // Potential victim planet in "Spaceballs"
+        'Antarea', // Homeworld of the Antareans in "Cocoon"
+        'Mongo', // Focal planet of "Flash Gordon"
+        'Bespin', // Prominent world in "The Empire Strikes Back"
+        'Priplanus', // Focal planet of "Lost in Space"
+        'Risa', // Pleasure planet in "Star Trek" universe
+        'Polus', // Major setting of "Among Us"
+        'Oa', // Headquarters of the Green Lantern Corps
+        'Zok', // A planet visited by Calvin/Spaceman Spiff. Also a TV Trope
+        'Yuggoth', // (Pluto, possibly) Homeworld of the Mi-go in the Lovecraft Mythos
+        'Sagittaron', // Homeworld of Tom Zarek in "Battlestar Galactica"
+        'Mesklin', // Recurring planet in works of Hal Clement
+        'Hyperion', // Planet from Dan Simmons' Hyperion Cantos
+        'Earthsea', // Ursula K. LeGuin's Tales from Earthsea
+        'Krynn', // (A gameworld of D&D) Setting of the "Dragonlance Chronicles"
+        'Xanth', // Setting of the "Xanth" books
+        'Urth', // (New name for Earth) Setting of "Solar Cycle" books
+        'Riverworld', // Setting of the "Riverworld" books
+        'Hoth', // Prominent world in "The Empire Strikes Back"
+        'Bajor', // Homeworld of Troi in "Star Trek: The Next Generation"
+        'Betazed', // Homeworld of Kira in "Star Trek: Deep Space Nine"
+        'Kobol', // Legendary human homeworld in "Battlestar Galactica"
+        'Wonderland', // Setting of "Alice's Adventures in Wonderland"
+        'Oz', // Setting of the "Oz" books (somewhere on Earth)
+        'Narnia', // Setting of the "Chronicles of Narnia" books
     ],
 );
 
