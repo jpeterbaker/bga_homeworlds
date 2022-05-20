@@ -627,7 +627,7 @@ class homeworlds extends Table {
     }
 
     // Returns the number of times that this state has appeared
-    function state_repetition_count(){
+    function increment_state_repetition_tally(){
         $s = $this->state_string();
 
         $sql = "SELECT state_str,tally FROM States WHERE state_str='".$s."'";
@@ -650,16 +650,6 @@ class homeworlds extends Table {
             return 1;
         }
         $tally = $result[$s]['tally']+1;
-        $message = clienttranslate('This position has occurred ${tally} times.');
-        if($tally>=3){
-            $message .= ' ';
-            $message .= clienttranslate('Current player may declare a draw.');
-        }
-        self::notifyAllPlayers(
-            'notif_offer_draw',
-            $message,
-            array('tally' => $tally)
-        );
         $sql = 'UPDATE States
             SET tally='.$tally."
             WHERE state_str='".$s."'";
@@ -1358,7 +1348,7 @@ class homeworlds extends Table {
             // This player has a home, so everyone has had a chance to create
             // Go to normal turn
             $this->save_state();
-            $this->state_repetition_count();
+            $this->increment_state_repetition_tally();
             $this->gamestate->nextState('trans_want_free');
             return;
         }
@@ -1388,11 +1378,10 @@ class homeworlds extends Table {
     // This is called after every turn except for creations
     function st_end_turn(){
         $this->update_stats();
+        $prev_player_id = $this->getActivePlayerId();
+        $draw_offerer = self::getGameStateValue('draw_offerer');
 
-        $sql = 'SELECT player_id,player_name,homeworld_id FROM player';
-        $players = self::getCollectionFromDb($sql);
-
-        if(self::getGameStateValue('draw_offerer') < 0){
+        if($draw_offerer < 0){
             // Players agreed to end the game in a draw
             $sql = 'UPDATE player
                 SET player_score=1';
@@ -1400,6 +1389,15 @@ class homeworlds extends Table {
             $this->gamestate->nextState('trans_endGame');
             return;
         }
+        elseif($draw_offerer > 0 && $draw_offerer != $prev_player_id){
+            // The other player offered a draw,
+            // and this player just ended their turn without accepting.
+            // Consider this to be a rejection and cancel the offer.
+            self::setGameStateValue('draw_offerer',0);
+        }
+
+        $sql = 'SELECT player_id,player_name,homeworld_id FROM player';
+        $players = self::getCollectionFromDb($sql);
 
         // Empty homeworlds fade at this point
         // Check for loss conditions
@@ -1421,7 +1419,7 @@ class homeworlds extends Table {
                     'notif_elimination',
                     clienttranslate('${player_name} has no ships in their homeworld and is eliminated.'),
                     array(
-                        'player_name'   => $player_name
+                        'player_name' => $player_name
                     )
                 );
             }
@@ -1450,16 +1448,29 @@ class homeworlds extends Table {
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
 
-        $player_id = $this->getActivePlayerId();
         $this->activeNextPlayer();
 
-        // Returning to a state for the third time counts as offering a draw
-        $tally = $this->state_repetition_count();
-        if($tally >= 3){
-            self::setGameStateValue('draw_offerer',$player_id);
+        $tally = $this->increment_state_repetition_tally();
+        if($tally >= 2){
+            // If the position has occured before, players should be told
+            $message = clienttranslate('This position has occurred ${tally} times.');
+            $fillins = array('tally' => $tally);
+            // If this is the third repetition, it counts as offering a draw
+            if($tally>=3){
+                // Next player has been activated, so this is the next player's name
+                $fillins['player_name'] = $this->getActivePlayerName();
+                $message .= ' ';
+                $message .= clienttranslate('${player_name} may declare a draw.');
+                self::setGameStateValue('draw_offerer',$prev_player_id);
+            }
+            self::notifyAllPlayers(
+                'notif_offer_draw',
+                $message,
+                $fillins
+            );
         }
         $this->save_state();
-        $this->giveExtraTime($player_id);
+        $this->giveExtraTime($prev_player_id);
         $this->gamestate->nextState('trans_want_free');
     }
 
