@@ -18,6 +18,7 @@
     margin-right:210px;
     /* height:1000px; */
     /*background:rgba(255,255,255,0.3);*/
+    background-image:url('https://i.imgur.com/hoVyIVr.png');
     display:block;
 }
 #HWbank{
@@ -29,7 +30,7 @@
     width:200px;
     height:600px;
     float:right;
-    background:rgba(0,0,0,0.3);
+    background:rgba(255,255,255,0.3);
 }
 
 /* A stack is a place for identical pieces in the bank */
@@ -77,13 +78,13 @@ in order to not look weird.
  Systems
 ********/
 .HWsystem{
-    border:2px solid black;
+    border:2px solid white;
     display:inline-block;
     margin:5px;
 }
 /* A homeworld system with a non-none homeplayer_id attribute*/
 .HWsystem:not([homeplayer_id=none]){
-    border:2px dashed black;
+    border:2px dashed white;
     /* Include if player-colored borders are wanted
     outline-width:2px;
     outline-style:solid;
@@ -332,18 +333,18 @@ Selectable stuff
 
 /* Selectable ships and stars get a shadow and rise on hover*/
 .HWselectable.HWship.HWfriendly:not([activate]),.HWselectable.HWstar{
-    filter:drop-shadow(15px -15px 10px black);
+    filter:drop-shadow(15px -15px 10px white);
 }
 .HWhostile.HWship.HWselectable{
     /* Reverse the shadow for hostile ships since they're rotated */
-    filter:drop-shadow(-15px 15px 10px black);
+    filter:drop-shadow(-15px 15px 10px white);
 }
 .HWselectable.HWpiece:hover,.HWselectable#HWturn_token:hover{
     transform:translate(0px,-5px) rotate(var(--rotateAmount));
 }
 
 #HWturn_token.HWonly_option{
-    filter:drop-shadow(15px -15px 10px black);
+    filter:drop-shadow(15px -15px 10px white);
 }
 
 /* Use a custom "activate" attribute to highlight with power color */
@@ -475,7 +476,8 @@ animation section.
 
 /*
 Try to make tutorial annotations right-side up on hostile ships.
-Animations mess up my correction, so turn it off (not too noticeable)
+The bobbing animation used by annotations messes up my correction,
+so turn it off (not too noticeable)
 */
 .HWhostile.HWship>.archiveCommentPointed{
     transform: rotate(180deg);
