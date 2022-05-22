@@ -18,8 +18,12 @@
     margin-right:210px;
     /* height:1000px; */
     /*background:rgba(255,255,255,0.3);*/
-    background-image:url('https://i.imgur.com/hoVyIVr.png');
     display:block;
+}
+#overall-content{
+    /*background-image:url('https://i.imgur.com/hoVyIVr.png');*/
+    /*background-image:url('https://i.imgur.com/S4h3S6K.png');*/
+    background-image:url('https://i.imgur.com/DC2XVh0.png');
 }
 #HWbank{
     /*
@@ -30,7 +34,7 @@
     width:200px;
     height:600px;
     float:right;
-    background:rgba(255,255,255,0.3);
+    background:rgba(255,255,255,0.1);
 }
 
 /* A stack is a place for identical pieces in the bank */
@@ -125,7 +129,7 @@ and rows of same-sized systems are created
 .HWsystem_label{
     margin-left:5px;
     margin-right:5px;
-    float:bottom;
+    color:white;
 }
 
 /* Symbol indicator appears on pieces for colorblind friendliness */
@@ -333,38 +337,56 @@ Selectable stuff
 
 /* Selectable ships and stars get a shadow and rise on hover*/
 .HWselectable.HWship.HWfriendly:not([activate]),.HWselectable.HWstar{
-    filter:drop-shadow(15px -15px 10px white);
+    filter:drop-shadow(0px 0px 10px white);
 }
 .HWhostile.HWship.HWselectable{
     /* Reverse the shadow for hostile ships since they're rotated */
-    filter:drop-shadow(-15px 15px 10px white);
+    filter: drop-shadow(0px 0 10px white);
 }
-.HWselectable.HWpiece:hover,.HWselectable#HWturn_token:hover{
-    transform:translate(0px,-5px) rotate(var(--rotateAmount));
+.HWselectable.HWpiece:hover{
+    transform: translate(0px,-5px) rotate(var(--rotateAmount));
+}
+#HWturn_token.HWselectable:hover{
+    filter: drop-shadow(0px 0 15px white);
 }
 
 #HWturn_token.HWonly_option{
-    filter:drop-shadow(15px -15px 10px white);
+    /*filter:drop-shadow(15px -15px 10px white);*/
+    /* With black background, white shadow is needed for visibility,
+    so use animation to indicate the turn is over */
+    animation-duration: 1s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name: swell;
+}
+@keyframes swell {
+    50% {
+        transform: scale(.95, .95);
+    }
+    100% {
+        transform: scale(1, 1);
+    }
 }
 
 /* Use a custom "activate" attribute to highlight with power color */
 [activate=pending]{
-    filter:drop-shadow(15px -15px 10px indigo);
+    filter:drop-shadow(0px 0px 10px violet);
 }
 [activate=sacrifice]{
     /*opacity:0;*/
 }
 [activate='1']{
-    filter:drop-shadow(10px -10px 10px red);
+    filter:drop-shadow(0px 0px 10px #ff0000);
 }
 [activate='2']{
-    filter:drop-shadow(10px -10px 10px yellow);
+    filter:drop-shadow(0px 0px 10px #fff900);
 }
 [activate='3']{
-    filter:drop-shadow(10px -10px 10px green);
+    filter:drop-shadow(0px 0px 10px #00ff00);
 }
 [activate='4']{
-    filter:drop-shadow(10px -10px 10px blue);
+    filter:drop-shadow(0px 0px 10px #0044ff);
 }
 
 /*
@@ -440,6 +462,8 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
     background-size:100%;
     height:100%;
     width:100%;
+    /* Subtle white outline to improve edge visibility */
+    filter:drop-shadow(0px 0px 5px white);
     /*
     Without a z-index it sometimes appears to slide under pieces,
     and pieces need z-index 4 to stay in front of stacked pieces

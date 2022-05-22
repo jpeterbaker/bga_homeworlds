@@ -1085,11 +1085,11 @@ function (dojo, declare) {
             var color = this.gamedatas.players[homeplayer_id].color;
             var player_name = this.gamedatas.players[homeplayer_id].name;
             var bgcolor = 'transparent';
-            // If the color is hard to see on the wood background, change BG
+            // If the color is hard to see on the background, change text background
             if(
-                color == "ffa500" || // Yellow
-                color == "72c3b1" || // Cyan
-                color == "bdd002"){  // Khaki green
+                color == "000000" || // Black
+                color == "0000ff" // Blue
+            ){
                 bgcolor = '777777';
             }
             params = {

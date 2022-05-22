@@ -104,9 +104,9 @@ $gameinfos = array(
 'player_colors' => array(
     "ff0000", // Red
     "008000", // Green
-    "0000ff", // Blue
+    "0000ff", // Blue (hard to see in space)
     "ffa500", // Yellow (hard to see on wood)
-    "000000", // Black
+    "000000", // Black (hard to see in space)
     "ffffff", // White
     "e94190", // Pink
     "982fff", // Purple
