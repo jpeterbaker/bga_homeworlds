@@ -575,6 +575,7 @@ function (dojo, declare) {
                         this.finalize_creation();
                     }
                 );
+                this.selectablize_token(state_name);
             case 'want_creation':
             case 'client_want_creation_ship':
                 this.addActionButton(
@@ -584,7 +585,6 @@ function (dojo, declare) {
                         this.restart_creation();
                     }
                 );
-                this.selectablize_token(state_name);
                 break;
         }
     },

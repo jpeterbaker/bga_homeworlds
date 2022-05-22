@@ -335,21 +335,68 @@ Selectable stuff
     background-color:rgba(255,255,255,0.6);
 }
 
-/* Selectable ships and stars get a shadow and rise on hover*/
-.HWselectable.HWship.HWfriendly:not([activate]),.HWselectable.HWstar{
-    filter:drop-shadow(0px 0px 10px white);
-}
-.HWhostile.HWship.HWselectable{
-    /* Reverse the shadow for hostile ships since they're rotated */
-    filter: drop-shadow(0px 0 10px white);
+/*
+Pieces get a shadow if they are selectable or activated.
+On hover, the shadow tightens and looks stronger
+*/
+.HWselectable.HWpiece,[activate]{
+    filter:drop-shadow(0px 0px 20px var(--shadow_col));
 }
 .HWselectable.HWpiece:hover{
-    transform: translate(0px,-5px) rotate(var(--rotateAmount));
-}
-#HWturn_token.HWselectable:hover{
-    filter: drop-shadow(0px 0 15px white);
+    filter:drop-shadow(0px 0px 10px var(--shadow_col));
 }
 
+.HWselectable.HWpiece{
+    --shadow_col:white;
+}
+[activate='1']{
+    --shadow_col:#ff0000;
+}
+[activate='2']{
+    --shadow_col:#fff900;
+}
+[activate='3']{
+    --shadow_col:#00ff00;
+}
+[activate='4']{
+    --shadow_col:#0044ff;
+}
+[activate=sacrifice]{
+    /*opacity:0;*/
+}
+
+/* Activated ship always bobs */
+[activate]{
+    animation-duration: 1.5s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-name:bob;
+}
+@keyframes bob {
+    50% {
+        transform: translate(0px,-5px);
+    }
+    100% {
+        filter: translate(0,0);
+    }
+}
+
+@keyframes shimmer {
+    50% {
+        filter: drop-shadow(0px 0px 25px var(--shadow_col));
+    }
+    100% {
+        filter: drop-shadow(0px 0px 10px var(--shadow_col));
+    }
+}
+
+/* Token's shadow embiggens on hover */
+#HWturn_token.HWselectable:hover{
+    filter: drop-shadow(0px 0px 15px white);
+}
+
+/* Token throbs when the turn appears over */
 #HWturn_token.HWonly_option{
     /*filter:drop-shadow(15px -15px 10px white);*/
     /* With black background, white shadow is needed for visibility,
@@ -360,6 +407,7 @@ Selectable stuff
     animation-iteration-count: infinite;
     animation-name: swell;
 }
+
 @keyframes swell {
     50% {
         transform: scale(.95, .95);
@@ -367,26 +415,6 @@ Selectable stuff
     100% {
         transform: scale(1, 1);
     }
-}
-
-/* Use a custom "activate" attribute to highlight with power color */
-[activate=pending]{
-    filter:drop-shadow(0px 0px 10px violet);
-}
-[activate=sacrifice]{
-    /*opacity:0;*/
-}
-[activate='1']{
-    filter:drop-shadow(0px 0px 10px #ff0000);
-}
-[activate='2']{
-    filter:drop-shadow(0px 0px 10px #fff900);
-}
-[activate='3']{
-    filter:drop-shadow(0px 0px 10px #00ff00);
-}
-[activate='4']{
-    filter:drop-shadow(0px 0px 10px #0044ff);
 }
 
 /*
