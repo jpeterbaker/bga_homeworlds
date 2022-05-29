@@ -169,12 +169,9 @@ $this->system_name_lists = array(
 );
 
 // Candidates that can be used later to fill out list to a prime length
-        // Focal planet of a scientific fiction project by C. M. Kosemen
-        // 'Snaiad',
-        // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
-        // 'Gaea',
-        // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
-        // 'Balaraphon',
+        // 'Snaiad', // Focal planet of a scientific fiction project by C. M. Kosemen
+        // 'Gaea', // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
+        // 'Balaraphon', // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
 
 // These terms will only be used in phrases of the form
 // 3 ${action_name} actions remaining

@@ -14,8 +14,8 @@
  */
 
 #HWboard{
-    /* Board margin-right makes space for bank */
-    margin-right:210px;
+    /* Board margin-right makes space for bank and legend */
+    margin-right:220px;
     /* height:1000px; */
     /*background:rgba(255,255,255,0.3);*/
     display:block;
@@ -137,15 +137,15 @@ and rows of same-sized systems are created
     position:absolute;
     height:20px;
     width:20px;
-    left:0;
-    right:0;
     margin:auto;
-    background-image:url('img/colorblind.svg');
+    background-image:url('img/colorblind-white.svg');
     background-repeat:no-repeat;
     background-size:20px 80px;
 }
-/* To get the symbol in a vertically good spot,
- pieces need a margin according to their size */
+.HWpiece>.HWcolor_symbol{
+    left:0;
+    right:0;
+}
 
 .HWsymbol_red{
     background-position-y:-0px;
@@ -159,6 +159,9 @@ and rows of same-sized systems are created
 .HWsymbol_blue{
     background-position-y:-60px;
 }
+
+/* To get the symbol in a vertically good spot,
+ they need a margin according to the piece size */
 
 .HWlarge.HWbanked>.HWcolor_symbol,.HWlarge.HWship>.HWcolor_symbol{
     margin-top:40px;
@@ -188,6 +191,20 @@ and rows of same-sized systems are created
 /* Hide the symbol when colorblind mode is off */
 html.colorblind_off .HWcolor_symbol{
     display:none;
+}
+
+/* Legend labels */
+.HWlegend_label{
+    transform:rotate(-90deg);
+    transform-origin:center left;
+    position:absolute;
+    color:white;
+}
+/* Rotate the symbol back so that it matches the ones on the pieces */
+.HWlegend_label>.HWcolor_symbol{
+    display:inline;
+    margin-left:5px;
+    transform:rotate(90deg);
 }
 
 /*
@@ -339,10 +356,7 @@ Selectable stuff
 Pieces get a shadow if they are selectable or activated.
 On hover, the shadow tightens and looks stronger
 */
-.HWselectable.HWpiece,[activate]{
-    filter:drop-shadow(0px 0px 20px var(--shadow_col));
-}
-.HWselectable.HWpiece:hover{
+.HWselectable.HWpiece:hover,[activate]:not([activate=pending]){
     filter:drop-shadow(0px 0px 10px var(--shadow_col));
 }
 
@@ -362,7 +376,7 @@ On hover, the shadow tightens and looks stronger
     --shadow_col:#0044ff;
 }
 [activate=sacrifice]{
-    /*opacity:0;*/
+    --shadow_col:transparent;
 }
 
 /* Activated ship always bobs */
@@ -551,3 +565,4 @@ so turn it off (not too noticeable)
 .archiveCommentPointed{
     z-index:6;
 }
+

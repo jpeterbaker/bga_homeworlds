@@ -13,9 +13,21 @@
 Changing its style will affect the other markers -->
 <div class='HWanimarker' id='HWspare_ani_marker'></div>
 
+<!--
+        VARIABLE NAMES IN TEMPLATE BLOCKS CAN INTERFERE WITH NAMES 
+        USED IN THE TEMPLATE STRINGS AT THE BOTTOM
+-->
 <div id='HWbank'>
+    <!-- BEGIN legend -->
+    <div class='HWlegend_label' style='bottom:{BOTTOM}%'>
+        {COLORNAME_LOCAL}
+        <div class='HWcolor_symbol HWsymbol_{COLORNAME_ENG}'></div>
+        <br>{ACTIONNAME}
+    </div>
+    <!-- END legend -->
+
     <!-- BEGIN stack -->
-    <div id='HWstack_{COLOR}_{PIPS}' class='HWstack' style='left:{LEFT}%;top:{TOP}%'> </div>
+    <div id='HWstack_{COLORNUM}_{PIPS}' class='HWstack' style='left:{LEFT}%;top:{TOP}%'> </div>
     <!-- END stack -->
 </div>
 
@@ -43,9 +55,10 @@ Changing its style will affect the other markers -->
 </div>
 
 <script type="text/javascript">
-    var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='none'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>"
-    var jstpl_homesystem = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>Homeworld <span class='playername' style='color:#${homeplayer_color};background-color:#${name_background_color}'>${homeplayer_name}</span></div></div></div>"
-    var jstpl_piece = "<div class='HWpiece HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HWsymbol_${colorname}'></div></div>"
+    var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='none'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>";
+    var jstpl_homesystem = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>Homeworld <span class='playername' style='color:#${homeplayer_color};background-color:#${name_background_color}'>${homeplayer_name}</span></div></div></div>";
+    var jstpl_piece = "<div class='HWpiece HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HWsymbol_${colorname}'></div></div>";
+    var jstpl_dummy = "hey '${arg}'";
 </script>
 
 {OVERALL_GAME_FOOTER}

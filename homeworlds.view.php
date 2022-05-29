@@ -37,6 +37,39 @@ class view_homeworlds_homeworlds extends game_view {
 
         /*********** Place your code below:  ************/
 
+        $action_names_dude = array(
+            1 => clienttranslate('Capture'),
+            2 => clienttranslate('Move'),
+            3 => clienttranslate('Build'),
+            4 => clienttranslate('Trade')
+        );
+        $color_names_eng_dude = array(
+            1 => 'red',
+            2 => 'yellow',
+            3 => 'green',
+            4 => 'blue'
+        );
+        $color_names_local_dude = array(
+            1 => clienttranslate('Red'),
+            2 => clienttranslate('Yellow'),
+            3 => clienttranslate('Green'),
+            4 => clienttranslate('Blue')
+        );
+
+        $this->page->begin_block('homeworlds_homeworlds','legend');
+        for($color=1;$color<=4;$color++){
+            $bottom  = (4-$color)*25;
+            $this->page->insert_block(
+                'legend',
+                array(
+                    'COLORNAME_LOCAL' => $color_names_local_dude[$color],
+                    'COLORNAME_ENG'   => $color_names_eng_dude[$color],
+                    'ACTIONNAME'      => $action_names_dude[$color],
+                    'BOTTOM'          => $bottom
+                )
+            );
+        }
+
         $this->page->begin_block('homeworlds_homeworlds','stack');
         for($color=1;$color<=4;$color++){
             for($pips=1;$pips<=3;$pips++){
@@ -45,10 +78,10 @@ class view_homeworlds_homeworlds extends game_view {
                 $this->page->insert_block(
                     'stack',
                     array(
-                        'COLOR' => $color,
-                        'PIPS'  => $pips,
-                        'LEFT'  => $left,
-                        'TOP'   => $top
+                        'COLORNUM' => $color,
+                        'PIPS'     => $pips,
+                        'LEFT'     => $left,
+                        'TOP'      => $top
                     )
                 );
             }

@@ -1434,8 +1434,8 @@ function (dojo, declare) {
     },
 
     activate_ship: function(shipnode,color=null){
-        // Free action
         if(color == null){
+            // Free action
             shipnode.setAttribute('activate','pending');
             this.setClientState(
                 'client_want_power',
@@ -1446,6 +1446,7 @@ function (dojo, declare) {
             );
         }
         else{
+            // Sacrifice action
             shipnode.setAttribute('activate',color);
             this.power_selected(color);
         }
