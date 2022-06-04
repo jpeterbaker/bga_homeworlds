@@ -1403,6 +1403,8 @@ class homeworlds extends Table {
         // Check for loss conditions
         $losers = [];
         foreach($players as $player_id => $player){
+            if($this->isPlayerZombie($player_id))
+                continue;
             $homeworld_id = $player['homeworld_id'];
             // Check for totally empty/destroyed homeworld
             if($this->is_empty($homeworld_id,true))
@@ -1519,6 +1521,11 @@ class homeworlds extends Table {
 
     function zombieTurn( $state, $active_player ) {
         // If a player is missing, just end the zombie turn.
+        $player_name = $this->getActivePlayerName();
+        self::notifyAllPlayers('notif_pass',
+            clienttranslate('${player_name} ends their turn.'),
+            array('player_name' => $player_name)
+        );
         $this->gamestate->nextState('zombiePass');
     }
 

@@ -14,8 +14,20 @@ Changing its style will affect the other markers -->
 <div class='HWanimarker' id='HWspare_ani_marker'></div>
 
 <!--
-        VARIABLE NAMES IN TEMPLATE BLOCKS CAN INTERFERE WITH NAMES 
-        USED IN THE TEMPLATE STRINGS AT THE BOTTOM
+The power buttons don't belong here,
+but the titlebar where they belong is inaccessible from here.
+They will be moved by JS.
+-->
+
+<div id='HWpowerBox' class='HWdisabled'>
+<!-- BEGIN power_button -->
+    <div id='HWpowerButton{COLORNUM}' class='HWpowerButton'>{ACTIONNAME}</div>
+<!-- END power_button -->
+</div>
+
+<!--
+        VARIABLE NAMES IN TEMPLATE BLOCKS CAN INTERFERE WITH
+        NAMES USED IN THE TEMPLATE STRINGS AT THE BOTTOM
 -->
 <div id='HWbank'>
     <!-- BEGIN legend -->
@@ -58,7 +70,8 @@ Changing its style will affect the other markers -->
     var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='none'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>";
     var jstpl_homesystem = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>Homeworld <span class='playername' style='color:#${homeplayer_color};background-color:#${name_background_color}'>${homeplayer_name}</span></div></div></div>";
     var jstpl_piece = "<div class='HWpiece HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HWsymbol_${colorname}'></div></div>";
-    var jstpl_dummy = "hey '${arg}'";
+
+
 </script>
 
 {OVERALL_GAME_FOOTER}

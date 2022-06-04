@@ -61,6 +61,10 @@ function (dojo, declare) {
             "<div class='HWfirst_player_indicator'>"+player_label+"</div>",
             'player_board_'+this.player_1
         );
+        dojo.place(
+            'HWpowerBox',
+            'maintitlebar_content'
+        );
 
         this.setup_pieces(gamedatas);
 
@@ -467,6 +471,8 @@ function (dojo, declare) {
         if(!this.isCurrentPlayerActive())
             return
         this.deselect_all();
+        // client_want_power is the only state where button box appears
+        dojo.addClass('HWpowerBox','HWdisabled');
     },
     onLeaving_client_want_target: function(){
         if(!this.isCurrentPlayerActive())
@@ -549,6 +555,7 @@ function (dojo, declare) {
                 );
                 break;
             case 'client_want_power':
+                this.show_button_box();
                 this.addActionButton(
                     'sacrifice_button',
                     _('Sacrifice ship'),
@@ -618,6 +625,58 @@ function (dojo, declare) {
                 'red'
             );
         }
+    },
+
+    show_button_box: function(){
+        // Show the power button box and make every button's state
+        // correspond to its availability in the system
+        var activatednode = dojo.query('[activate]')[0];
+        var systemnode = this.get_system(activatednode);
+        var power_providers = dojo.query('.HWfriendly,.HWstar',systemnode);
+        var i,color,button;
+        var available = {1:0,2:0,3:0,4:0};
+        for(i=0;i<power_providers.length;i++){
+            color  = this.get_color(power_providers[i]);
+            available[color] = 1;
+        }
+        for(color=1;color<=4;++color){
+            button = document.getElementById('HWpowerButton'+color);
+            if(available[color]){
+                dojo.removeClass(button,'HWdisabled');
+                this.connect(
+                    button,
+                    'onclick',
+                    dojo.hitch(
+                        this,
+                        function(evt){
+                            evt.preventDefault();
+                            this.power_button_clicked(evt);
+                        }
+                    ),
+                );
+            }
+            else{
+                dojo.addClass(button,'HWdisabled');
+                this.connect(
+                    button,
+                    'onclick',
+                    dojo.hitch(
+                        this,
+                        function(evt){
+                            evt.preventDefault();
+                            this.showMessage( _('That power is not available to you in the system of the selected ship.'), 'error');
+                        }
+                    ),
+                );
+            }
+        }
+        dojo.removeClass('HWpowerBox','HWdisabled');
+    },
+
+    power_button_clicked: function(evt){
+        var button = evt.currentTarget;
+        var color = button.id[button.id.length-1];
+        this.power_selected(color);
     },
 
     ///////////////////////////////////////////////////

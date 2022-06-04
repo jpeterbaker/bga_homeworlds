@@ -207,6 +207,43 @@ html.colorblind_off .HWcolor_symbol{
     transform:rotate(90deg);
 }
 
+/* Power buttons */
+#HWpowerBox{
+    display:table;
+    border-spacing:5px;
+    margin-left:auto;
+    margin-right:auto;
+}
+#HWpowerBox.HWdisabled{
+    display:none;
+}
+.HWpowerButton{
+    border-radius:7px;
+    display:table-cell;
+    width:25%;
+    padding:0px 5px;
+    border-color:black;
+    border-style:solid;
+    border-width:1px;
+    cursor:pointer;
+}
+.HWpowerButton.HWdisabled{
+    background-color:rgba(128,128,128,0.6);
+    color:gray;
+}
+#HWpowerButton1:not(.HWdisabled){
+    background-color:rgba(255,0,0,0.6);
+}
+#HWpowerButton2:not(.HWdisabled){
+    background-color:rgba(255,255,0,0.6);
+}
+#HWpowerButton3:not(.HWdisabled){
+    background-color:rgba(0,255,0,0.6);
+}
+#HWpowerButton4:not(.HWdisabled){
+    background-color:rgba(0,64,255,0.6);
+}
+
 /*
 The background image has every piece sprite.
 This section sets the vertical background offset by piece color and orientation.

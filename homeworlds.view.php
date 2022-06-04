@@ -37,24 +37,35 @@ class view_homeworlds_homeworlds extends game_view {
 
         /*********** Place your code below:  ************/
 
-        $action_names_dude = array(
+        $action_names= array(
             1 => clienttranslate('Capture'),
             2 => clienttranslate('Move'),
             3 => clienttranslate('Build'),
             4 => clienttranslate('Trade')
         );
-        $color_names_eng_dude = array(
+        $color_names_eng= array(
             1 => 'red',
             2 => 'yellow',
             3 => 'green',
             4 => 'blue'
         );
-        $color_names_local_dude = array(
+        $color_names_local = array(
             1 => clienttranslate('Red'),
             2 => clienttranslate('Yellow'),
             3 => clienttranslate('Green'),
             4 => clienttranslate('Blue')
         );
+
+        $this->page->begin_block('homeworlds_homeworlds','power_button');
+        for($color=1;$color<=4;$color++){
+            $this->page->insert_block(
+                'power_button',
+                array(
+                    'COLORNUM'  => $color,
+                    'ACTIONNAME'=> $action_names[$color]
+                )
+            );
+        }
 
         $this->page->begin_block('homeworlds_homeworlds','legend');
         for($color=1;$color<=4;$color++){
@@ -62,9 +73,9 @@ class view_homeworlds_homeworlds extends game_view {
             $this->page->insert_block(
                 'legend',
                 array(
-                    'COLORNAME_LOCAL' => $color_names_local_dude[$color],
-                    'COLORNAME_ENG'   => $color_names_eng_dude[$color],
-                    'ACTIONNAME'      => $action_names_dude[$color],
+                    'COLORNAME_LOCAL' => $color_names_local[$color],
+                    'COLORNAME_ENG'   => $color_names_eng[$color],
+                    'ACTIONNAME'      => $action_names[$color],
                     'BOTTOM'          => $bottom
                 )
             );
