@@ -193,6 +193,17 @@ html.colorblind_off .HWcolor_symbol{
     display:none;
 }
 
+/* Hide the buttons when they are turned off*/
+html.power_buttons_off .HWpowerButton{
+    display:none;
+}
+
+/* Hide the legend when it is turned off*/
+html.legend_off .HWlegend_label{
+    display:none;
+}
+
+
 /* Legend labels */
 .HWlegend_label{
     transform:rotate(-90deg);

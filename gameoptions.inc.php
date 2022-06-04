@@ -57,6 +57,38 @@ $game_preferences = array(
             )
         ),
         'default' => 0
+    ),
+    103 => array(
+        'name' => totranslate('Power selection method'),
+        // You wouldn't think so, but the cssPref class only gets applied on page load
+        'needReload' => true,
+        'values' => array(
+            1 => array(
+                'name' => totranslate('Buttons or pieces'),
+                'cssPref' => 'power_buttons_on'
+            ),
+            0 => array(
+				'name' => totranslate('Pieces only'),
+				'cssPref' => 'power_buttons_off'
+            ),
+        ),
+        'default' => 1
+    ),
+    104 => array(
+        'name' => totranslate('Power reference labels'),
+        // You wouldn't think so, but the cssPref class only gets applied on page load
+        'needReload' => true,
+        'values' => array(
+            0 => array(
+				'name' => totranslate('Off'),
+				'cssPref' => 'legend_off'
+            ),
+            1 => array(
+                'name' => totranslate('On'),
+                'cssPref' => 'legend_on'
+            ),
+        ),
+        'default' => 1
     )
 );
 
