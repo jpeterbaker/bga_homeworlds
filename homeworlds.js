@@ -24,9 +24,7 @@ define([
 function (dojo, declare) {
     return declare( "bgagame.homeworlds", ebg.core.gamegui, {
     constructor: function(){
-        this.color_names_eng = {1:'red',2:'yellow',3:'green',4:'blue'};
-        this.color_names_local = {1:_('red'),2:_('yellow'),3:_('green'),4:_('blue')};
-        this.size_names_eng = {1:'small',2:'medium',3:'large'};
+        // TRANSLATIONS DON'T WORK HERE
         //this.size_names_local = {1:_('small'),2:_('medium'),3:_('large')};
         // Once homeworlds are established,
         // colony_assignments[size] will be the position (1,2, or 3)
@@ -48,6 +46,12 @@ function (dojo, declare) {
     "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
     */
     setup: function(gamedatas) {
+        // String setup (since translations don't work in constructor)
+        this.color_names_eng = {1:'red',2:'yellow',3:'green',4:'blue'};
+        this.color_names_local = {1:_('Red'),2:_('Yellow'),3:_('Green'),4:_('Blue')};
+        this.action_names_local = {1:_('Capture'),2:_('Move'),3:_('Build'),4:_('Trade')};
+        this.size_names_eng = {1:'small',2:'medium',3:'large'};
+
         // Remember player positions
         var player;
         for(var player_id in gamedatas.players){
@@ -58,13 +62,36 @@ function (dojo, declare) {
         // Display first player indicator in the player panel
         var player_label = _('First player');
         dojo.place(
-            "<div class='HWfirst_player_indicator'>"+player_label+"</div>",
+            "<div id='HWfirst_player_indicator'>"+player_label+"</div>",
             'player_board_'+this.player_1
         );
+        document.getElementById('HWfirst_player_indicator').innerHTML = player_label;
+
+        // Set up power box and buttons
         dojo.place(
             'HWpowerBox',
             'maintitlebar_content'
         );
+        var color,button;
+        for(color=1;color<=4;color++){
+            button = document.getElementById('HWpowerButton'+color);
+            button.innerHTML = this.action_names_local[color];
+        }
+
+        // Set up legend
+        var label,label_html;
+        for(color=1;color<=4;color++){
+            label = document.getElementById('HWlegend_label'+color);
+            label_html = this.format_block(
+                'jstpl_legend_label',
+                {
+                    colorname_local : this.color_names_local[color],
+                    colorname_eng   : this.color_names_eng[color],
+                    actionname      : this.action_names_local[color]
+                }
+            );
+            label.innerHTML = label_html;
+        }
 
         this.setup_pieces(gamedatas);
 

@@ -173,13 +173,14 @@ $this->system_name_lists = array(
         // 'Gaea', // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
         // 'Balaraphon', // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
 
-// These terms will only be used in phrases of the form
-// 3 ${action_name} actions remaining
+// These terms will never be used as verbs
+// They will be used as labels for buttons, labels for piece stacks,
+// and in the phease "3 ${action_name} action(s) remaining"
 $this->action_names = array(
-    1 => clienttranslate('capture'),
-    2 => clienttranslate('move'),
-    3 => clienttranslate('build'),
-    4 => clienttranslate('trade')
+    1 => clienttranslate('Capture'),
+    2 => clienttranslate('Move'),
+    3 => clienttranslate('Build'),
+    4 => clienttranslate('Trade')
 );
 $this->color_names_eng = array(
     1 => 'red',
@@ -188,9 +189,9 @@ $this->color_names_eng = array(
     4 => 'blue'
 );
 $this->color_names_local = array(
-    1 => clienttranslate('red'),
-    2 => clienttranslate('yellow'),
-    3 => clienttranslate('green'),
-    4 => clienttranslate('blue')
+    1 => clienttranslate('Red'),
+    2 => clienttranslate('Yellow'),
+    3 => clienttranslate('Green'),
+    4 => clienttranslate('Blue')
 );
 

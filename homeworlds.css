@@ -213,6 +213,8 @@ html.colorblind_off .HWcolor_symbol{
     border-spacing:5px;
     margin-left:auto;
     margin-right:auto;
+    border:1px solid black;
+    border-radius:7px;
 }
 #HWpowerBox.HWdisabled{
     display:none;
@@ -520,7 +522,7 @@ https://www.kirupa.com/snippets/getting_jittery_on_hover_using_only_css.htm
 .fa-star{
     display:none
 }
-.HWfirst_player_indicator{
+#HWfirst_player_indicator{
     font-size:75%;
 }
 

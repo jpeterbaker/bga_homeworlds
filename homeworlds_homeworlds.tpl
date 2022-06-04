@@ -17,11 +17,13 @@ Changing its style will affect the other markers -->
 The power buttons don't belong here,
 but the titlebar where they belong is inaccessible from here.
 They will be moved by JS.
+Maybe it would be better to use variables for the inner HTML
+of the buttons (and the legend labels), but I thought that was
+why translations weren't working.
 -->
-
 <div id='HWpowerBox' class='HWdisabled'>
 <!-- BEGIN power_button -->
-    <div id='HWpowerButton{COLORNUM}' class='HWpowerButton'>{ACTIONNAME}</div>
+    <div id='HWpowerButton{COLORNUM}' class='HWpowerButton'></div>
 <!-- END power_button -->
 </div>
 
@@ -31,11 +33,7 @@ They will be moved by JS.
 -->
 <div id='HWbank'>
     <!-- BEGIN legend -->
-    <div class='HWlegend_label' style='bottom:{BOTTOM}%'>
-        {COLORNAME_LOCAL}
-        <div class='HWcolor_symbol HWsymbol_{COLORNAME_ENG}'></div>
-        <br>{ACTIONNAME}
-    </div>
+    <div id='HWlegend_label{COLORNUM}' class='HWlegend_label' style='bottom:{BOTTOM}%'> </div>
     <!-- END legend -->
 
     <!-- BEGIN stack -->
@@ -70,6 +68,8 @@ They will be moved by JS.
     var jstpl_system = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='none'><div class='HWstar_container'><div class='HWsystem_label'>${system_name}</div></div></div>";
     var jstpl_homesystem = "<div class='HWsystem' id='HWsystem_${system_id}' homeplayer_id='${homeplayer_id}'><div class='HWstar_container'><div class='HWsystem_label'>Homeworld <span class='playername' style='color:#${homeplayer_color};background-color:#${name_background_color}'>${homeplayer_name}</span></div></div></div>";
     var jstpl_piece = "<div class='HWpiece HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HWsymbol_${colorname}'></div></div>";
+    var jstpl_piece = "<div class='HWpiece HW${colorname} HW${pipsname} ${more_classes}' id='HWpiece_${piece_id}' ptype='${colornum}_${pipsnum}'><div class='HWcolor_symbol HWsymbol_${colorname}'></div></div>";
+    var jstpl_legend_label = "${colorname_local}<div class='HWcolor_symbol HWsymbol_{colorname_eng}'></div><br>${actionname}";
 
 
 </script>
