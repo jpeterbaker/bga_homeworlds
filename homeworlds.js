@@ -67,7 +67,12 @@ function (dojo, declare) {
         );
         document.getElementById('HWfirst_player_indicator').innerHTML = player_label;
 
-        // Set up power box and buttons
+        //////////////////////////////////
+        // Set up buttons and power box //
+        //////////////////////////////////
+
+        this.setup_action_buttons();
+
         dojo.place(
             'HWpowerBox',
             'maintitlebar_content'
@@ -76,9 +81,12 @@ function (dojo, declare) {
         for(color=1;color<=4;color++){
             button = document.getElementById('HWpowerButton'+color);
             button.innerHTML = this.action_names_local[color];
+            this.connect(button,'onclick','power_button_clicked');
         }
 
-        // Set up legend
+        ///////////////////
+        // Set up legend //
+        ///////////////////
         var label,label_html;
         for(color=1;color<=4;color++){
             label = document.getElementById('HWlegend_label'+color);
@@ -95,6 +103,8 @@ function (dojo, declare) {
 
         this.setup_pieces(gamedatas);
 
+        this.connectClass('HWstack','onclick','stack_clicked');
+
         // Setup turn token
         var token_pos;
         if(this.getActivePlayerId() == this.get_bot_player())
@@ -103,12 +113,103 @@ function (dojo, declare) {
             token_pos = 'top';
         var token_space = document.getElementById('HWtoken_space_'+token_pos);
         dojo.place("<div id='HWturn_token'></div>",token_space);
+        var token = document.getElementById('HWturn_token')
+        console.log('token located',token);
+        this.connect(token,'onclick','token_clicked');
 
         // Setup game notifications to handle (see "setupNotifications" method below)
         this.setupNotifications();
     },
 
+    setup_action_buttons: function(){
+        // The right place seems to be just before generalactions
+        // generalactions would be the parent of ordinary BGA buttons
+        var dest = document.getElementById('generalactions');
+        dojo.place('HWcatastropheButton',dest,'before');
+        dojo.place('HWsacrificeButton'  ,dest,'before');
+        dojo.place('HWpassButton'       ,dest,'before');
+        dojo.place('HWdrawButton'       ,dest,'before');
+        dojo.place('HWrestartButton'    ,dest,'before');
+        dojo.place('HWcancelButton'     ,dest,'before');
+
+        // These buttons always have the same text,
+        // so it can be set now
+        button = document.getElementById('HWcatastropheButton');
+        button.innerHTML = _('Trigger catastrophe');
+
+        button = document.getElementById('HWsacrificeButton');
+        button.innerHTML = _('Sacrifice ship');
+
+        button = document.getElementById('HWrestartButton');
+        button.innerHTML = _('Restart turn');
+
+        button = document.getElementById('HWcancelButton');
+        button.innerHTML = _('Cancel');
+
+        this.connect(
+            document.getElementById('HWcatastropheButton'),
+            'onclick',
+            function(evt){
+                evt.preventDefault();
+                // TODO check this
+                console.log('cat button working without hitch');
+                this.catastrophe_button_selected();
+            }
+        );
+
+        this.connect(
+            document.getElementById('HWsacrificeButton'),
+            'onclick', dojo.hitch( this,
+                function(evt){
+                    evt.preventDefault();
+                    this.sacrifice_button_selected();
+                }
+            ),
+        );
+
+        this.connect(
+            document.getElementById('HWpassButton'),
+            'onclick', dojo.hitch( this,
+                function(evt){
+                    evt.preventDefault();
+                    this.pass_button_selected();
+                }
+            ),
+        );
+
+        this.connect(
+            document.getElementById('HWdrawButton'),
+            'onclick', dojo.hitch( this,
+                function(evt){
+                    evt.preventDefault();
+                    this.draw_button_selected();
+                }
+            ),
+        );
+
+        this.connect(
+            document.getElementById('HWcancelButton'),
+            'onclick', dojo.hitch( this,
+                function(evt){
+                    evt.preventDefault();
+                    this.cancel_action();
+                }
+            ),
+        );
+
+        this.connect(
+            document.getElementById('HWrestartButton'),
+            'onclick', dojo.hitch( this,
+                function(evt){
+                    evt.preventDefault();
+                    this.restart_button_selected();
+                }
+            ),
+        );
+    },
+
     setup_pieces: function(gamedatas){
+        // Create the piece nodes
         var colornum,pipsnum;
         var params;
         var piece_id,stack_id;
@@ -128,6 +229,8 @@ function (dojo, declare) {
         // they were placed according to old colony assignments
         // It's not enough to just remake colony assignments
         this.arrange_colonies();
+
+        this.connectClass('HWpiece','onclick','piece_clicked');
     },
 
     clear_all: function(){
@@ -147,6 +250,7 @@ function (dojo, declare) {
         // All server-side player-decision states start with "want"
         if(this.isCurrentPlayerActive() && state_name.startsWith('want'))
             this.set_turn_checkpoint(args,state_name);
+        this['client_state'] = state_name;
         // Call appropriate method
         var methodName = 'onEntering_' + state_name;
         if (this[methodName] !== undefined)
@@ -158,21 +262,16 @@ function (dojo, declare) {
             return
         var stacks = dojo.query('.HWstack');
         stacks.addClass('HWselectable');
-        this.connectClass('HWselectable','onclick','stack_selected_star_creation');
         this.add_tooltip(
             stacks,
             _('Click to add this star to your homeworld'),
             1500
         );
-        // You could instead use
-        // stacks.connect('onclick',this,'stack_selected_star_creation' );
-        // but then this.disconnect wouldn't work
     },
 
     onEntering_client_want_creation_ship: function(args){
         if(!this.isCurrentPlayerActive())
             return
-        this.disconnectAll();
         var stacks = dojo.query('.HWstack');
         stacks.addClass('HWselectable');
         this.add_tooltip(
@@ -180,7 +279,6 @@ function (dojo, declare) {
             _('Click to add this ship to your homeworld'),
             1500
         );
-        this.connectClass('HWselectable','onclick','stack_selected_ship_creation');
     },
 
     onEntering_client_want_creation_confirmation: function(args){
@@ -191,26 +289,16 @@ function (dojo, declare) {
     },
 
     onEntering_want_free: function(args){
+        console.log('want free')
         if(!this.isCurrentPlayerActive())
             return
         var ships = dojo.query('.HWship.HWfriendly');
+        console.log('found ships',ships)
         ships.addClass('HWselectable');
         this.add_tooltip(
             ships,
             _('Click to activate or sacrifice this ship'),
             1500
-        );
-        var f = dojo.hitch(
-            this,
-            function(evt){
-                evt.preventDefault();
-                dojo.stopEvent(evt);
-                this.activate_ship(evt.currentTarget);
-            }
-        );
-        this.connect_nodes(
-            ships,
-            f
         );
     },
 
@@ -241,15 +329,6 @@ function (dojo, declare) {
             tooltip,
             1500
         );
-        var f = dojo.hitch(
-            this,
-            function(evt){
-                evt.preventDefault();
-                dojo.stopEvent(evt);
-                this.activate_ship(evt.currentTarget,args.color);
-            }
-        );
-        this.connect_nodes(ships,f);
     },
 
     onEntering_client_want_power: function(args){
@@ -263,19 +342,6 @@ function (dojo, declare) {
         var candidates = dojo.query('.HWstar,.HWfriendly.HWship',systemnode);
         candidates.addClass('HWselectable');
         this.add_power_tooltips(candidates.concat(activatequery));
-
-        var f = dojo.hitch(
-            this,
-            function(evt){
-                evt.preventDefault();
-                dojo.stopEvent(evt);
-                var shipnode = evt.currentTarget;
-                var powernode = evt.currentTarget;
-                var color = this.get_color(powernode);
-                this.power_selected(color);
-            }
-        );
-        this.connect_nodes(candidates,f);
     },
 
     onEntering_want_restart_turn: function(args){
@@ -396,7 +462,6 @@ function (dojo, declare) {
             default:
                 console.error('Bad power number: '+power);
         }
-        this.connectClass('HWselectable','onclick','target_selected');
     },
 
     onEntering_client_want_catastrophe_target: function(args){
@@ -409,7 +474,6 @@ function (dojo, declare) {
             _('Click to destroy all pieces of this color in this system'),
             1500
         );
-        this.connectClass('HWselectable','onclick','catastrophe_target_selected');
     },
 
     power_targets: function(activatednode,power){
@@ -468,6 +532,8 @@ function (dojo, declare) {
     // This method is called each time we are leaving a game state.
     // You can use this method to perform user interface changes.
     onLeavingState: function( state_name ) {
+        // TODO get smarter about when and how to hide buttons
+        dojo.query('.HWactionButton').addClass('HWdisabled');
         // Call appropriate method
         var methodName = "onLeaving_" + state_name;
         if (this[methodName] !== undefined)
@@ -538,7 +604,8 @@ function (dojo, declare) {
         // These will be changed if passing is not expected,
         // i.e., if there are things the player could still do
         var pass_button_message = _('End turn');
-        var pass_button_color = 'blue';
+        var pass_button = document.getElementById('HWpassButton');
+        dojo.removeClass(pass_button,'HWhilit');
         switch(state_name){
             // Server choice states get catastrophe button
             case 'want_free':
@@ -546,111 +613,65 @@ function (dojo, declare) {
             case 'want_catastrophe':
                 // This needs to be checked in free and sacrifice action cases
                 if(this.get_overpopulated_pieces().length > 0){
-                    this.addActionButton(
-                        'catastrophe_button',
-                        _('Trigger catastrophe'),
-                        'catastrophe_button_selected'
-                    );
+                    dojo.query('#HWcatastropheButton').removeClass('HWdisabled');
                 }
                 // In these states, there are still actions available
+                // Make the pass button an alarming color
                 pass_button_message = _('Pass');
-                pass_button_color = 'red'
+                dojo.addClass(pass_button,'HWhilit');
             // NO BREAK
             // The above states get pass, draw, and restart buttons
+            // which get added lower down
             case 'want_restart_turn':
-                this.addActionButton(
-                    'pass_button',
-                    pass_button_message,
-                    function(evt){
-                        this.pass_button_selected(state_name);
-                    },
-                    null, // destination (deprecated)
-                    null, // blinking (default false)
-                    pass_button_color
-                );
-                // Token needs to be selectable when pass button is available
-                this.selectablize_token(state_name);
-
                 this.setup_draw_button(args);
-
-                this.addActionButton(
-                    'restart_button',
-                    _('Restart turn'),
-                    function(evt){
-                        this.restart_button_selected();
-                    }
-                );
+            // NO BREAK
+            // The above states get pass and restart buttons
+            // which get added lower down
+            case 'client_want_creation_confirmation':
+                pass_button.innerHTML = pass_button_message;
+                dojo.removeClass(pass_button,'HWdisabled');
+                // Token needs to be selectable when pass button is available
+                this.selectablize_token();
+            // NO BREAK
+            // The above states get restart button
+            // which gets added lower down
+            case 'want_creation':
+            case 'client_want_creation_ship':
+                // Before creation is complete,
+                // there is only a restart button
+                dojo.query('#HWrestartButton').removeClass('HWdisabled');
                 break;
             case 'client_want_power':
                 this.show_button_box();
-                this.addActionButton(
-                    'sacrifice_button',
-                    _('Sacrifice ship'),
-                    'sacrifice_button_selected'
-                );
+                dojo.query('#HWsacrificeButton').removeClass('HWdisabled');
                 // NO BREAK
                 // The client_want_power state gets both
                 // a sacrifice and cancel button
             case 'client_want_catastrophe_target':
             case 'client_want_target':
-                this.addActionButton(
-                    'cancel_button',
-                    _('Cancel'),
-                    function(evt){
-                        this.cancel_action();
-                    }
-                );
-                break;
-            case 'client_want_creation_confirmation':
-                this.addActionButton(
-                    'confirm_button',
-                    _('End turn'),
-                    function(evt){
-                        this.finalize_creation();
-                    }
-                );
-                this.selectablize_token(state_name);
-            case 'want_creation':
-            case 'client_want_creation_ship':
-                this.addActionButton(
-                    'restart_button',
-                    _('Restart turn'),
-                    function(evt){
-                        this.restart_creation();
-                    }
-                );
+                dojo.query('#HWcancelButton').removeClass('HWdisabled');
                 break;
         }
     },
 
     setup_draw_button: function(args){
+        var button = document.getElementById('HWdrawButton');
+        dojo.removeClass(button,'HWdisabled');
         if(args.draw_offerer == 0){
             // No one has offered a draw yet
-            this.addActionButton(
-                'draw_button',
-                _('Offer draw'),
-                'draw_button_selected'
-            );
+            button.innerHTML = _('Offer draw');
+            dojo.removeClass(button,'HWhilit');
         }
         else if(args.draw_offerer == this.player_id){
             // This player has already offered a draw
-            this.addActionButton(
-                'cancel_draw_button',
-                _('Cancel draw offer'),
-                'cancel_draw_button_selected'
-            );
+            button.innerHTML = _('Cancel draw offer');
+            dojo.removeClass(button,'HWhilit');
         }
         else{
             // The other player offered a draw
             // or the other player brought the game to the same state 3+ times
-            this.addActionButton(
-                'draw_button',
-                _('Accept draw and end game'),
-                'draw_button_selected',
-                null,
-                null,
-                'red'
-            );
+            button.innerHTML = _('Accept draw and end game');
+            dojo.addClass(button,'HWhilit');
         }
     },
 
@@ -670,38 +691,24 @@ function (dojo, declare) {
             button = document.getElementById('HWpowerButton'+color);
             if(available[color]){
                 dojo.removeClass(button,'HWdisabled');
-                this.connect(
-                    button,
-                    'onclick',
-                    dojo.hitch(
-                        this,
-                        function(evt){
-                            evt.preventDefault();
-                            this.power_button_clicked(evt);
-                        }
-                    ),
-                );
             }
             else{
                 dojo.addClass(button,'HWdisabled');
-                this.connect(
-                    button,
-                    'onclick',
-                    dojo.hitch(
-                        this,
-                        function(evt){
-                            evt.preventDefault();
-                            this.showMessage( _('That power is not available to you in the system of the selected ship.'), 'error');
-                        }
-                    ),
-                );
             }
         }
         dojo.removeClass('HWpowerBox','HWdisabled');
     },
 
     power_button_clicked: function(evt){
+        evt.preventDefault();
         var button = evt.currentTarget;
+        if(dojo.hasClass(button,'HWdisabled')){
+            this.showMessage(
+                _('That power is not available to you in the system of the selected ship.'),
+                'error'
+            );
+            return;
+        }
         var color = button.id[button.id.length-1];
         this.power_selected(color);
     },
@@ -1075,7 +1082,7 @@ function (dojo, declare) {
         var animation_slide = this.slideToObject(node.id,target.id,t,delay);
         var animation_delay = this.slideToObject(delayer.id,delayer.id,0,delay+t+500);
 
-        dojo.connect(
+        this.connect(
             animation_delay,
             'onEnd',
             function(){
@@ -1203,6 +1210,7 @@ function (dojo, declare) {
             par,
             pos
         );
+        this.connect(systemnode,'onclick','system_clicked');
         /* Apply a player-colored border
         if(homeplayer_id != null){
             // Now that the homeworld is created, add a color border
@@ -1249,28 +1257,8 @@ function (dojo, declare) {
         }
     },
 
-    selectablize_token: function(state_name){
+    selectablize_token: function(){
         var tokennode = document.getElementById('HWturn_token');
-        // Remove old connection, if any
-        this.disconnect(tokennode,'onclick');
-        if(state_name == 'client_want_creation_confirmation'){
-            this.connect(
-                tokennode,
-                'onclick',
-                function(evt){
-                    this.finalize_creation();
-                }
-            );
-        }
-        else{
-            this.connect(
-                tokennode,
-                'onclick',
-                function(evt){
-                    this.pass_button_selected(state_name);
-                }
-            );
-        }
         this.add_tooltip(
             [tokennode],
             _('Click to end your turn.'),
@@ -1383,7 +1371,6 @@ function (dojo, declare) {
     deselect_all: function(){
         var selectable = dojo.query('.HWselectable');
         selectable.removeClass('HWselectable')
-        this.disconnectAll();
         for(var i=0;i<selectable.length;i++)
             this.removeTooltip(selectable[i].id);
     },
@@ -1395,11 +1382,86 @@ function (dojo, declare) {
 
     ///////////////////////////////////////////////////
     //// Player's action
-    stack_selected_star_creation: function(evt){
-        evt.preventDefault();
-        dojo.stopEvent(evt);
 
-        var stacknode = evt.currentTarget;
+    // Graphical elements clicked, determine action by current state
+    piece_clicked: function(evt){
+        evt.preventDefault();
+        var node = evt.currentTarget;
+        console.log('piece clicked',node);
+
+        if(!dojo.hasClass(node,'HWselectable'))
+            return;
+        switch(this['client_state']){
+            case 'want_free':
+                this.activate_ship(node);
+                break;
+            case 'client_want_power':
+                this.power_selected(this.get_color(node));
+                break;
+            case 'client_want_target':
+                this.target_selected(node);
+                break;
+            case 'want_sacrifice_action':
+                var color = this['latest_args'].args.color;
+                this.activate_ship(node,color);
+                break;
+            case 'client_want_catastrophe_target':
+                this.catastrophe_target_selected(node);
+                break;
+            default:
+                console.error('Bad client state: ',this['client_state']);
+        }
+    },
+    stack_clicked: function(evt){
+        evt.preventDefault();
+        var node = evt.currentTarget;
+        console.log('stack clicked',node);
+
+        if(!dojo.hasClass(node,'HWselectable')){
+            console.log('stack not selectable');
+            return;
+        }
+        switch(this['client_state']){
+            case 'want_creation':
+                this.stack_selected_star_creation(node);
+                break;
+            case 'client_want_creation_ship':
+                this.stack_selected_ship_creation(node);
+                break;
+            case 'client_want_target':
+                this.target_selected(node);
+                break;
+            default:
+                console.error('Bad client state: ',this['client_state']);
+        }
+    },
+    system_clicked: function(evt){
+        evt.preventDefault();
+        var node = evt.currentTarget;
+        console.log('system clicked',node);
+
+        if(!dojo.hasClass(node,'HWselectable'))
+            return;
+        switch(this['client_state']){
+            case 'client_want_target':
+                this.target_selected(node);
+                break;
+            default:
+                console.error('Bad client state: ',this['client_state']);
+        }
+    },
+    token_clicked: function(evt){
+        evt.preventDefault();
+        var node = evt.currentTarget;
+        console.log('token clicked',node);
+
+        if(!dojo.hasClass(node,'HWselectable'))
+            return;
+
+        this.pass_button_selected();
+    },
+
+    stack_selected_star_creation: function(stacknode){
         var piecenode = this.get_piece_in_stack(stacknode);
         if(piecenode == null){
             this.showMessage(
@@ -1448,7 +1510,7 @@ function (dojo, declare) {
         }
     },
 
-    stack_selected_ship_creation: function(evt){
+    stack_selected_ship_creation: function(stacknode){
         var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
         var shipnodes = dojo.query('.HWship',systemnode);
         // Make sure a ship didn't already get added
@@ -1459,7 +1521,6 @@ function (dojo, declare) {
             );
             return
         }
-        var stacknode = evt.currentTarget;
         var piecenode = this.get_piece_in_stack(stacknode);
         if(piecenode == null){
             this.showMessage(
@@ -1499,7 +1560,6 @@ function (dojo, declare) {
     },
 
     restart_creation: function(){
-        this.disconnectAll();
         var systemnode = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
         if(systemnode == null)
             return;
@@ -1512,7 +1572,7 @@ function (dojo, declare) {
         this.setClientState(args.state_name,args);
     },
 
-    cancel_action(){
+    cancel_action: function(){
         this.deselect_all();
         this.deactivate_all();
         args = this['latest_args'];
@@ -1583,10 +1643,7 @@ function (dojo, declare) {
         }
     },
 
-    catastrophe_target_selected: function(evt){
-        evt.preventDefault();
-        dojo.stopEvent(evt);
-        var targetnode = evt.currentTarget;
+    catastrophe_target_selected: function(targetnode){
         var target_color = this.get_color(targetnode);
         var target_system = this.get_system(targetnode);
         this.ajaxcallwrapper(
@@ -1598,11 +1655,8 @@ function (dojo, declare) {
         );
     },
 
-    target_selected: function(evt){
-        evt.preventDefault();
-        dojo.stopEvent(evt);
+    target_selected: function(targetnode){
         var activatednode = dojo.query('[activate]')[0];
-        var targetnode = evt.currentTarget;
         var power = activatednode.getAttribute('activate');
         var target_ids = targetnode.id.split('_');
         var activate_id = this.get_id(activatednode);
@@ -1621,7 +1675,7 @@ function (dojo, declare) {
             break;
         case 2:
             // Move or discover
-            var is_discovery = targetnode.classList.contains('HWstack');
+            var is_discovery = dojo.hasClass(targetnode,'HWstack');
             if(is_discovery){
                 this.ajaxcallwrapper(
                     'act_power_action',
@@ -1728,7 +1782,15 @@ function (dojo, declare) {
         return false;
     },
 
-    pass_button_selected: function(state_name){
+    pass_button_selected: function(){
+        var state_name = this['latest_args']['state_name'];
+        if(state_name == 'want_creation'){
+            // The client state should be client_want_creation_confirmation,
+            // but the latest server args say want_creation
+            this.finalize_creation();
+            return;
+        }
+
         // Check if there are actions still available
         // 'want_restart_turn' is the only state where
         // no forward board actions are available
@@ -1804,16 +1866,39 @@ function (dojo, declare) {
         this.ajaxcallwrapper('act_pass',{});
     },
     restart_button_selected: function(){
+        var state_name = this['latest_args']['state_name'];
+        if(state_name == 'want_creation'){
+            this.restart_creation();
+            return;
+        }
         this.ajaxcallwrapper('act_restart_turn',{});
     },
     draw_button_selected: function(){
         args = this['latest_args'];
-        // If the other player offered the draw,
-        // then this is an offer acceptance that should be confirmed
-        if(args.args.draw_offerer != 0){
-            message = _('Are you sure that you want to end the game in a draw?');
+        if(args.args.draw_offerer == 0){
+            // No player was offering a draw the last time we heard from the server
+            // So this must be the current player offering a draw
+            this.ajaxcallwrapper('act_offer_draw',{});
+            this.showMessage( _('Finish taking your turn. Opponent can accept draw on their turn.'), 'info');
+            args.args.draw_offerer = this.player_id;
+            // Let the client think the turn is just starting
+            // so the saved args will be updated and draw button will be updated
+            this.setClientState(args.state_name,args);
+        }
+        else if(args.args.draw_offerer == this.player_id){
+            // This player already offered a draw,
+            // so this is a cancel
+            this.ajaxcallwrapper('act_cancel_offer_draw',{});
+            args.args.draw_offerer = 0;
+            // Let the client think the turn is just starting
+            // so the saved args will be updated and draw button will be updated
+            this.setClientState(args.state_name,args);
+        }
+        else{
+            // The other player offered the draw,
+            // and this is an offer acceptance that should be confirmed
             this.confirmationDialog(
-                message,
+                _('Are you sure that you want to end the game in a draw?'),
                 // Yes handler
                 dojo.hitch(
                     this,
@@ -1824,23 +1909,6 @@ function (dojo, declare) {
                 // No handler, if any
             );
         }
-        else{
-            // This player is offering a draw
-            this.ajaxcallwrapper('act_offer_draw',{});
-            this.showMessage( _('Finish taking your turn. Opponent can accept draw on their turn.'), 'info');
-            args.args.draw_offerer = this.player_id;
-            // Let the client think the turn is just starting
-            // so that the draw button will be labelled correctly
-            this.setClientState(args.state_name,args);
-        }
-    },
-    cancel_draw_button_selected: function(){
-        this.ajaxcallwrapper('act_cancel_offer_draw',{});
-        args = this['latest_args'];
-        args.args.draw_offerer = 0;
-        // Let the client think the turn is just starting
-        // so that the draw button will be labelled correctly
-        this.setClientState(args.state_name,args);
     },
 
     ///////////////////////////////////////////////////

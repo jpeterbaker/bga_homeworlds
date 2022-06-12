@@ -85,14 +85,12 @@ in order to not look weird.
     border:2px solid white;
     display:inline-block;
     margin:5px;
+    padding:8px;
+    border-radius:20px;
 }
 /* A homeworld system with a non-none homeplayer_id attribute*/
 .HWsystem:not([homeplayer_id=none]){
-    border:2px dashed white;
-    /* Include if player-colored borders are wanted
-    outline-width:2px;
-    outline-style:solid;
-    */
+    border:5px double white;
 }
 /*
 A dummy div so that the system container can be centered
@@ -127,8 +125,7 @@ and rows of same-sized systems are created
     text-align:center;
 }
 .HWsystem_label{
-    margin-left:5px;
-    margin-right:5px;
+    margin:0px 5px 0px 5px;
     color:white;
 }
 
@@ -194,7 +191,7 @@ html.colorblind_off .HWcolor_symbol{
 }
 
 /* Hide the buttons when they are turned off*/
-html.power_buttons_off .HWpowerButton{
+html.power_buttons_off #HWpowerBox{
     display:none;
 }
 
@@ -218,7 +215,15 @@ html.legend_off .HWlegend_label{
     transform:rotate(90deg);
 }
 
-/* Power buttons */
+/*
+Buttons
+Power buttons are for selecting the power of a free action
+Action buttons are actions of their own:
+    offering a draw
+    triggering a catastrophe
+    passing
+    canceling
+*/
 #HWpowerBox{
     display:table;
     border-spacing:5px;
@@ -226,24 +231,54 @@ html.legend_off .HWlegend_label{
     margin-right:auto;
     border:1px solid black;
     border-radius:7px;
+    margin-top:7px
 }
 #HWpowerBox.HWdisabled{
     display:none;
 }
-.HWpowerButton{
+
+.HWbutton{
     border-radius:7px;
-    display:table-cell;
-    width:25%;
     padding:0px 5px;
     border-color:black;
     border-style:solid;
     border-width:1px;
     cursor:pointer;
+    vertical-align:middle;
+    box-shadow:1px 1px 0px black;
+    line-height:normal;
+    font-size:14px;
+    padding:6px 12px;
+}
+
+.HWactionButton{
+    display:inline-block;
+    margin:0px 0px 2px 10px;
+}
+.HWpowerButton{
+    display:table-cell;
+    width:25%;
+}
+
+/*
+Passing, catastrophes, and accepting draws are more severe actions
+and the buttons will have a more alarming color
+*/
+.HWactionButton.HWhilit{
+    background-color:rgba(255,165,0,0.6);
+}
+.HWactionButton{
+    background-color:rgba(128,0,128,0.6);
+}
+
+.HWactionButton.HWdisabled{
+    display:none;
 }
 .HWpowerButton.HWdisabled{
     background-color:rgba(128,128,128,0.6);
     color:gray;
 }
+
 #HWpowerButton1:not(.HWdisabled){
     background-color:rgba(255,0,0,0.6);
 }

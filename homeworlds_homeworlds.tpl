@@ -14,7 +14,7 @@ Changing its style will affect the other markers -->
 <div class='HWanimarker' id='HWspare_ani_marker'></div>
 
 <!--
-The power buttons don't belong here,
+These buttons don't belong here,
 but the titlebar where they belong is inaccessible from here.
 They will be moved by JS.
 Maybe it would be better to use variables for the inner HTML
@@ -23,9 +23,16 @@ why translations weren't working.
 -->
 <div id='HWpowerBox' class='HWdisabled'>
 <!-- BEGIN power_button -->
-    <div id='HWpowerButton{COLORNUM}' class='HWpowerButton'></div>
+    <div id='HWpowerButton{COLORNUM}' class='HWbutton HWpowerButton'></div>
 <!-- END power_button -->
 </div>
+
+<div id='HWcatastropheButton' class='HWactionButton HWbutton HWdisabled HWhilit'>Temp text</div>
+<div id='HWsacrificeButton'   class='HWactionButton HWbutton HWdisabled'>Temp text</div>
+<div id='HWpassButton'        class='HWactionButton HWbutton HWdisabled'>Temp text</div>
+<div id='HWdrawButton'        class='HWactionButton HWbutton HWdisabled'>Temp text</div>
+<div id='HWcancelButton'      class='HWactionButton HWbutton HWdisabled'>Temp text</div>
+<div id='HWrestartButton'     class='HWactionButton HWbutton HWdisabled'>Temp text</div>
 
 <!--
         VARIABLE NAMES IN TEMPLATE BLOCKS CAN INTERFERE WITH
