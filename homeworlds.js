@@ -114,7 +114,6 @@ function (dojo, declare) {
         var token_space = document.getElementById('HWtoken_space_'+token_pos);
         dojo.place("<div id='HWturn_token'></div>",token_space);
         var token = document.getElementById('HWturn_token')
-        console.log('token located',token);
         this.connect(token,'onclick','token_clicked');
 
         // Setup game notifications to handle (see "setupNotifications" method below)
@@ -151,60 +150,54 @@ function (dojo, declare) {
             'onclick',
             function(evt){
                 evt.preventDefault();
-                // TODO check this
-                console.log('cat button working without hitch');
                 this.catastrophe_button_selected();
             }
         );
 
         this.connect(
             document.getElementById('HWsacrificeButton'),
-            'onclick', dojo.hitch( this,
-                function(evt){
-                    evt.preventDefault();
-                    this.sacrifice_button_selected();
-                }
-            ),
+            'onclick', //dojo.hitch( this, TODO verify this works
+            function(evt){
+                evt.preventDefault();
+                this.sacrifice_button_selected();
+            }
+            //),
         );
 
         this.connect(
             document.getElementById('HWpassButton'),
-            'onclick', dojo.hitch( this,
-                function(evt){
-                    evt.preventDefault();
-                    this.pass_button_selected();
-                }
-            ),
+            'onclick',
+            function(evt){
+                evt.preventDefault();
+                this.pass_button_selected();
+            }
         );
 
         this.connect(
             document.getElementById('HWdrawButton'),
-            'onclick', dojo.hitch( this,
-                function(evt){
-                    evt.preventDefault();
-                    this.draw_button_selected();
-                }
-            ),
+            'onclick',
+            function(evt){
+                evt.preventDefault();
+                this.draw_button_selected();
+            }
         );
 
         this.connect(
             document.getElementById('HWcancelButton'),
-            'onclick', dojo.hitch( this,
-                function(evt){
-                    evt.preventDefault();
-                    this.cancel_action();
-                }
-            ),
+            'onclick',
+            function(evt){
+                evt.preventDefault();
+                this.cancel_action();
+            }
         );
 
         this.connect(
             document.getElementById('HWrestartButton'),
-            'onclick', dojo.hitch( this,
-                function(evt){
-                    evt.preventDefault();
-                    this.restart_button_selected();
-                }
-            ),
+            'onclick',
+            function(evt){
+                evt.preventDefault();
+                this.restart_button_selected();
+            }
         );
     },
 
