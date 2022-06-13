@@ -87,6 +87,7 @@ in order to not look weird.
     margin:5px;
     padding:8px;
     border-radius:20px;
+    position:relative;
 }
 /* A homeworld system with a non-none homeplayer_id attribute*/
 .HWsystem:not([homeplayer_id=none]){
@@ -249,6 +250,7 @@ Action buttons are actions of their own:
     line-height:normal;
     font-size:14px;
     padding:6px 12px;
+    position:relative; /* Need relative pos so annotations appear correctly */
 }
 
 .HWactionButton{
