@@ -116,6 +116,8 @@ function (dojo, declare) {
         var token = document.getElementById('HWturn_token')
         this.connect(token,'onclick','token_clicked');
 
+        this.browser_adapt();
+
         // Setup game notifications to handle (see "setupNotifications" method below)
         this.setupNotifications();
     },
@@ -229,6 +231,24 @@ function (dojo, declare) {
     clear_all: function(){
         var pieces_and_systems = dojo.query('.HWsystem,.HWship,.HWstar,.HWbanked');
         pieces_and_systems.remove();
+    },
+
+    // Browser-specific setup
+    browser_adapt: function(){
+        // THIS APPEARS TO BE UNNECESSARY
+        // because BGA seems to add dj_browsername to the html element
+        return;
+
+        // Prevent animated token shadow on Safari
+        // (it makes ugly artifacts)
+        var ua = navigator.userAgent;
+        // Chrome includes "Safari" in it's useragent name and I have no idea why
+        // but only Safari itself seems to have this shadow problem
+        var isChrome = ua.indexOf('Chrome') >= 0;
+        var isSafari = ua.indexOf('Safari') >= 0;
+        if(isSafari && !isChrome){
+            dojo.query('html').addClass('no_slide_shadow');
+        }
     },
 
     ///////////////////////////////////////////////////

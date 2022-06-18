@@ -138,7 +138,7 @@ $this->system_name_lists = array(
         'Tarn-Vedra', // Homeworld of the Vedrans in "Andromeda"
         'Minbar', // Homeworld of the Minbari in "Babylon 5"
         'Chulak', // Homeworld of Teal'c in "Stargate"
-        'Hera', // Location of the pivotal battle of Serenity in "Firefly." Also a world in Dragonball Z
+        'Hera', // Location of the pivotal battle of Serenity in "Firefly." Also the name of worlds in "Dragonball Z" and "Borderlands."
         'Promethea', // Prominent world in "Borderlands"
         'Druidia', // Potential victim planet in "Spaceballs"
         'Antarea', // Homeworld of the Antareans in "Cocoon"
@@ -159,19 +159,18 @@ $this->system_name_lists = array(
         'Urth', // (New name for Earth) Setting of "Solar Cycle" books
         'Riverworld', // Setting of the "Riverworld" books
         'Hoth', // Prominent world in "The Empire Strikes Back"
-        'Bajor', // Homeworld of Troi in "Star Trek: The Next Generation"
-        'Betazed', // Homeworld of Kira in "Star Trek: Deep Space Nine"
+        'Bajor', // Homeworld of Kira in "Star Trek: Deep Space Nine"
+        'Betazed', // Homeworld of Betazoids in "Star Trek: The Next Generation"
         'Kobol', // Legendary human homeworld in "Battlestar Galactica"
         'Wonderland', // Setting of "Alice's Adventures in Wonderland"
         'Oz', // Setting of the "Oz" books (somewhere on Earth)
         'Narnia', // Setting of the "Chronicles of Narnia" books
+        'Vogsphere', // Homeworld of Vogons in "The Hitchhiker's Guide to the Galaxy" books
+        'Snaiad', // Focal planet of a scientific fiction project by C. M. Kosemen
+        'Gaea', // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
+        'Balaraphon', // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
     ],
 );
-
-// Candidates that can be used later to fill out list to a prime length
-        // 'Snaiad', // Focal planet of a scientific fiction project by C. M. Kosemen
-        // 'Gaea', // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
-        // 'Balaraphon', // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
 
 // These terms will never be used as verbs
 // They will be used as labels for buttons, labels for piece stacks,
