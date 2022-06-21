@@ -912,19 +912,19 @@ function (dojo, declare) {
     /*
     Return a piecenode in this stack node
     The piece is NOT removed from the stack
-    For consistency, the highest-index piece is returned
+    For consistency, the lowest-index piece is returned
     (this can prevent soft-lock during tutorials).
     */
     get_piece_in_stack: function(stacknode){
         var children = stacknode.children;
-        var hi = -1;
+        var lo = 1000;
         var piecenode = null;
         var child,pid;
         for(var i=0;i<children.length;++i){
             child = children[i];
             pid = this.get_id(child);
-            if(pid>hi){
-                hi = pid;
+            if(pid<lo){
+                lo = pid;
                 piecenode = child;
             }
         }
@@ -1580,7 +1580,7 @@ function (dojo, declare) {
         for(var i=0;i<contents.length;i++){
             this.put_in_bank(contents[i]);
         }
-            systemnode.remove();
+        systemnode.remove();
         args = this['latest_args'];
         this.setClientState(args.state_name,args);
     },
