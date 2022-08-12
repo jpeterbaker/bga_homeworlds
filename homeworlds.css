@@ -1,7 +1,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © Jonathan Baker <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -617,7 +617,7 @@ WARNING: The BGA rating form also uses .fa-star,
     */
     z-index:5;
 }
-#HWturn_token:not(html.dj_safari .HWsliding){
+#HWturn_token:not(html.dj_safari .HWsliding,html.ios-user .HWsliding){
     /*
     Except while sliding in Safari,
     add a subtle white outline to improve edge visibility

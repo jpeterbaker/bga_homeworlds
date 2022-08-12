@@ -1,7 +1,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * Homeworlds implementation : © <Jonathan Baker> <babamots@gmail.com>
+ * Homeworlds implementation : © Jonathan Baker <babamots@gmail.com>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -302,11 +302,9 @@ function (dojo, declare) {
     },
 
     onEntering_want_free: function(args){
-        console.log('want free')
         if(!this.isCurrentPlayerActive())
             return
         var ships = dojo.query('.HWship.HWfriendly');
-        console.log('found ships',ships)
         ships.addClass('HWselectable');
         this.add_tooltip(
             ships,
@@ -1400,7 +1398,6 @@ function (dojo, declare) {
     piece_clicked: function(evt){
         evt.preventDefault();
         var node = evt.currentTarget;
-        console.log('piece clicked',node);
 
         if(!dojo.hasClass(node,'HWselectable'))
             return;
@@ -1428,10 +1425,8 @@ function (dojo, declare) {
     stack_clicked: function(evt){
         evt.preventDefault();
         var node = evt.currentTarget;
-        console.log('stack clicked',node);
 
         if(!dojo.hasClass(node,'HWselectable')){
-            console.log('stack not selectable');
             return;
         }
         switch(this['client_state']){
@@ -1451,7 +1446,6 @@ function (dojo, declare) {
     system_clicked: function(evt){
         evt.preventDefault();
         var node = evt.currentTarget;
-        console.log('system clicked',node);
 
         if(!dojo.hasClass(node,'HWselectable'))
             return;
@@ -1466,7 +1460,6 @@ function (dojo, declare) {
     token_clicked: function(evt){
         evt.preventDefault();
         var node = evt.currentTarget;
-        console.log('token clicked',node);
 
         if(!dojo.hasClass(node,'HWselectable'))
             return;
