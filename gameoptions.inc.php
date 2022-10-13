@@ -58,6 +58,22 @@ $game_preferences = array(
         ),
         'default' => 0
     ),
+    105 => array(
+        'name' => totranslate('Background'),
+        // You wouldn't think so, but the cssPref class only gets applied on page load
+        'needReload' => true,
+        'values' => array(
+            1 => array(
+                'name' => totranslate('Stars'),
+                'cssPref' => 'hw_bg_stars'
+            ),
+            0 => array(
+				'name' => totranslate('BGA default'),
+				'cssPref' => 'hw_bg_default'
+            ),
+        ),
+        'default' => 1
+    ),
     103 => array(
         'name' => totranslate('Power selection method'),
         // You wouldn't think so, but the cssPref class only gets applied on page load

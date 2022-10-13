@@ -20,7 +20,7 @@
     /*background:rgba(255,255,255,0.3);*/
     display:block;
 }
-#overall-content{
+html.hw_bg_stars #overall-content{
     /*background-image:url('https://i.imgur.com/hoVyIVr.png');*/
     /*background-image:url('https://i.imgur.com/S4h3S6K.png');*/
     background-image:url('https://i.imgur.com/DC2XVh0.png');

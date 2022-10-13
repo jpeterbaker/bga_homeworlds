@@ -781,10 +781,11 @@ function (dojo, declare) {
                 + '</span>'
                 + message
                 + ' <span style="color:red">'
-                + _('You should restart your turn unless this was deliberate.')
+                + _('Is this what you want?')
+//                + _('You should restart your turn unless this was deliberate.')
                 + '</span>';
         }
-        //this.confirmationDialog(message);
+//        this.confirmationDialog(message);
         //this.multipleChoiceDialog(message,['OK'],()=>{});
         return message;
     },
@@ -1189,11 +1190,14 @@ function (dojo, declare) {
             var color = this.gamedatas.players[homeplayer_id].color;
             var player_name = this.gamedatas.players[homeplayer_id].name;
             var bgcolor = 'transparent';
-            // If the color is hard to see on the background, change text background
-            if(
-                color == "000000" || // Black
-                color == "0000ff" // Blue
-            ){
+            // If text color is hard to see on the board background,
+            // change text background to grey
+            var bad_text_colors = ['000000','0000ff']; // Black star background
+            var rootnode = document.documentElement;
+            if(dojo.hasClass(rootnode,'hw_bg_default')){
+                bad_text_colors = ['ffa500','72c3b1','bdd002'];
+            }
+            if(bad_text_colors.includes(color)){
                 bgcolor = '777777';
             }
             params = {
@@ -1540,13 +1544,10 @@ function (dojo, declare) {
             systemnode,
             this.player_id
         );
-        var message = this.get_bad_home_warning();
-        if(message.length == 0)
-            message = _('${you} must end or restart your turn.');
         this.setClientState(
             'client_want_creation_confirmation',
             {
-                descriptionmyturn : message
+                descriptionmyturn : _('${you} must end or restart your turn.')
             }
         );
     },
@@ -1793,7 +1794,26 @@ function (dojo, declare) {
         if(state_name == 'want_creation'){
             // The client state should be client_want_creation_confirmation,
             // but the latest server args say want_creation
-            this.finalize_creation();
+            var message = this.get_bad_home_warning();
+            if(message.length > 0){
+                // Creation has a problem
+                this.confirmationDialog(
+                    message,
+                    // Yes handler
+                    dojo.hitch(
+                        this,
+                        this.finalize_creation
+                    ),
+                    // No handler
+                    dojo.hitch(
+                        this,
+                        this.restart_creation
+                    )
+                );
+            }
+            else{
+                this.finalize_creation();
+            }
             return;
         }
 
@@ -1824,9 +1844,7 @@ function (dojo, declare) {
             // Yes handler
             dojo.hitch(
                 this,
-                function(){
-                    this.end_turn_with_self_elim_check();
-                }
+                this.end_turn_with_self_elim_check
             ),
             // No handler, if any
         );

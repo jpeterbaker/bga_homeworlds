@@ -169,6 +169,8 @@ $this->system_name_lists = array(
         'Snaiad', // Focal planet of a scientific fiction project by C. M. Kosemen
         'Gaea', // Focal planet of "The Vision of Escaflowne." Also a planet in "No Man's Sky." Also a term for Earth or its personification as a Greek god.
         'Balaraphon', // Planet in Dimension X in "Teenage Mutant Ninja Turtles"
+        'Zebes', // Habitat of Mother Brain in Metroid game series
+        'Corneria', // Major setting of Star Fox game series
     ],
 );
 
