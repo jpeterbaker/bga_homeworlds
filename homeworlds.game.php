@@ -1403,18 +1403,30 @@ class homeworlds extends Table {
         // Check for loss conditions
         $losers = [];
         foreach($players as $player_id => $player){
-            if($this->isPlayerZombie($player_id))
+            // TODO check that this works correctly
+            if(
+                $player['player_eliminated'] ||
+                $this->isPlayerZombie($player_id)
+            ){
+                // Player was already dropped for time (zombie) or eliminated normally
+                // so include them among the losers
+                array_push($losers,$player_id);
                 continue;
+            }
+            // self::eliminatePlayer could be used in 3+ player games
             $homeworld_id = $player['homeworld_id'];
+
             // Check for totally empty/destroyed homeworld
             if($this->is_empty($homeworld_id,true))
                 $this->fade($homeworld_id);
+
             // Check for homeworld that is not occupied by its owner
             $sql = 'SELECT piece_id FROM Pieces
                 WHERE system_id='.$homeworld_id.'
                 AND owner_id='.$player_id;
             $defenders = self::getCollectionFromDb($sql);
             if(count($defenders)==0){
+                // This player has just been eliminated
                 array_push($losers,$player_id);
                 $player_name = $player['player_name'];
                 self::notifyAllPlayers(
@@ -1424,11 +1436,18 @@ class homeworlds extends Table {
                         'player_name' => $player_name
                     )
                 );
+
+                // Mark the player as eliminated in the DB
+                $sql = 'UPDATE player
+                    SET player_eliminated=1
+                    WHERE player_id='.$player_id;
+                self::DbQuery($sql);
             }
         }
 
-        // If game is over
+        // This condition (and the score results) will need to be changed for non-binary
         if(count($losers)>0){
+            // Game is over
             if(count($losers)==1){
                 // Set score of non-loser to 1
                 $sql = 'UPDATE player
