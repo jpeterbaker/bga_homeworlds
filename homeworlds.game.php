@@ -379,6 +379,15 @@ class homeworlds extends Table {
         self::notifyAllPlayers('notif_debug',$s,[]);
     }
 
+    function any_null($x){
+        foreach($x as $i=>$v){
+            if($v==NULL)
+                return true;
+        }
+        return false;
+        
+    }
+
     function array_key_first($x){
         foreach($x as $key=>$value)
             return $key;
@@ -630,6 +639,7 @@ class homeworlds extends Table {
     function increment_state_repetition_tally(){
         $s = $this->state_string();
 
+        // Don't forget the quotes around the varchar
         $sql = "SELECT state_str,tally FROM States WHERE state_str='".$s."'";
         try{
             // I'm not sure this try-catch is necessary while the db upgrade function is in place, but at least one of them is needed
@@ -842,8 +852,6 @@ class homeworlds extends Table {
 //////////// Player actions
 ////////////
     function creation($star1_id,$star2_id,$ship_id){
-        // Player clicked a piece during creation
-        // It should become a star or ship, depending on context
         self::checkAction('act_creation');
         $player_id = $this->getActivePlayerId();
         $player_name = $this->getActivePlayerName();
@@ -1334,11 +1342,8 @@ class homeworlds extends Table {
     Functions to call automatically upon entry to a state
     */
     function st_after_creation(){
-        // Skip any zombie turns
-        do{
-            $this->activeNextPlayer();
-            $player_id = $this->getActivePlayerId();
-        }while($this->isPlayerZombie($player_id));
+        $this->activeNextPlayer();
+        $player_id = $this->getActivePlayerId();
 
         $sql = 'SELECT player_id FROM player
             WHERE player_id='.$player_id.'
@@ -1396,24 +1401,23 @@ class homeworlds extends Table {
             self::setGameStateValue('draw_offerer',0);
         }
 
-        $sql = 'SELECT player_id,player_name,homeworld_id FROM player';
+        $sql = 'SELECT player_id,player_name,homeworld_id,player_eliminated FROM player';
         $players = self::getCollectionFromDb($sql);
 
         // Empty homeworlds fade at this point
         // Check for loss conditions
+
+        // Wiki says that "best practice" is to leave out-of-time zombies in the game
+        // so don't try to detect them here or end the game early 
         $losers = [];
         foreach($players as $player_id => $player){
-            // TODO check that this works correctly
-            if(
-                $player['player_eliminated'] ||
-                $this->isPlayerZombie($player_id)
-            ){
-                // Player was already dropped for time (zombie) or eliminated normally
-                // so include them among the losers
+            if( $player['player_eliminated']
+                ){
+                // Player was already eliminated normally
+                // so include them among the losers but don't say anything about it
                 array_push($losers,$player_id);
                 continue;
             }
-            // self::eliminatePlayer could be used in 3+ player games
             $homeworld_id = $player['homeworld_id'];
 
             // Check for totally empty/destroyed homeworld
@@ -1438,6 +1442,9 @@ class homeworlds extends Table {
                 );
 
                 // Mark the player as eliminated in the DB
+                // TODO for multiplayer, use self::eliminatePlayer so that
+                // the eliminated player getes an explanatory notification and
+                // invitation to spectate
                 $sql = 'UPDATE player
                     SET player_eliminated=1
                     WHERE player_id='.$player_id;
@@ -1528,24 +1535,49 @@ class homeworlds extends Table {
     /*
         zombieTurn:
 
-        This method is called each time it is the turn of a player who has quit the game (= "zombie" player).
-        You can do whatever you want in order to make sure the turn of this player ends appropriately
-        (ex: pass).
+        This method is called each time it is the turn of a player who has quit the game
+        (= "zombie" player).
+        You can do whatever you want in order to make sure the turn of this
+        player ends appropriately (ex: pass).
 
-        Important: your zombie code will be called when the player leaves the game. This action is triggered
-        from the main site and propagated to the gameserver from a server, not from a browser.
-        As a consequence, there is no current player associated to this action. In your zombieTurn function,
-        you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message.
+        Important: your zombie code will be called when the player leaves the game.
+        This action is triggered from the main site and propagated to the
+        gameserver from a server, not from a browser.
+        As a consequence, there is no current player associated to this action.
+        In your zombieTurn function, you must _never_ use getCurrentPlayerId()
+        or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message.
     */
 
     function zombieTurn( $state, $active_player ) {
-        // If a player is missing, just end the zombie turn.
-        $player_name = $this->getActivePlayerName();
-        self::notifyAllPlayers('notif_pass',
-            clienttranslate('${player_name} ends their turn.'),
-            array('player_name' => $player_name)
-        );
-        $this->gamestate->nextState('zombiePass');
+        // Zombies may pass using regular rules unless it's the creation phase
+        if($state['name'] != 'want_creation'){
+            $this->pass();
+            return;
+        }
+
+        // Player left before creating their homeworld
+        // We need to pick a homeworld so that the remaining player
+        // has something to destroy and end the game
+        // (in case they don't understand that they can
+        // just hit the "quit" button and win by forfeit)
+
+        // Pick three pieces, attempting to make a normal homeworld
+        $pieces = [
+            $this->get_id_from_bank(4,1), // b1
+            $this->get_id_from_bank(1,3), // r3
+            $this->get_id_from_bank(3,3), // g3
+        ];
+        if($this->any_null($pieces)){
+            // The other player(s) used every copy of one of those peices
+            // Try a different homeworld
+            $pieces = [
+                $this->get_id_from_bank(2,1), // y1
+                $this->get_id_from_bank(3,2), // g2
+                $this->get_id_from_bank(4,3), // b3
+            ];
+        }
+        // TODO in multiplayer, more than two stacks could be exhausted
+        $this->creation($pieces[0],$pieces[1],$pieces[2]);
     }
 
 	function isPlayerZombie($player_id) {

@@ -81,7 +81,6 @@ $machinestates = array(
         'possibleactions' => array( 'act_creation' ),
         'transitions' => array(
             'trans_after_creation' => 20,
-            'zombiePass' => 20
         )
     ),
     // Get free action, sacrifice, catastrophe, or pass
@@ -106,8 +105,7 @@ $machinestates = array(
             'trans_want_sacrifice_action' => 12,
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
-            'trans_restart' => 11,
-            'zombiePass' => 30
+            'trans_restart' => 11
         )
     ),
     // Get sac action, catastrophe, or pass
@@ -129,8 +127,7 @@ $machinestates = array(
             'trans_after_power_action' => 21,
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
-            'trans_restart' => 11,
-            'zombiePass' => 30
+            'trans_restart' => 11
         )
     ),
     13 => array(
@@ -149,8 +146,7 @@ $machinestates = array(
         'transitions' => array(
             'trans_after_catastrophe' => 23,
             'trans_end_turn' => 30,
-            'trans_restart' => 11,
-            'zombiePass' => 30
+            'trans_restart' => 11
         )
     ),
     14 => array(
@@ -167,8 +163,7 @@ $machinestates = array(
         'args' => 'args_want_restart_turn',
         'transitions' => array(
             'trans_end_turn' => 30,
-            'trans_restart' => 11,
-            'zombiePass' => 30
+            'trans_restart' => 11
         )
     ),
     ///////////////////
@@ -181,7 +176,6 @@ $machinestates = array(
         'transitions' => array(
             'trans_want_creation' => 10 ,
             'trans_want_free' => 11,
-            'trans_skip_zombie' => 20
         )
     ),
     21 => array(
