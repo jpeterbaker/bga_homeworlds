@@ -1903,11 +1903,18 @@ function (dojo, declare) {
             // No player was offering a draw the last time we heard from the server
             // So this must be the current player offering a draw
             this.ajaxcallwrapper('act_offer_draw',{});
-            this.showMessage( _('Finish taking your turn. Opponent can accept draw on their turn.'), 'info');
-            args.args.draw_offerer = this.player_id;
             // Let the client think the turn is just starting
             // so the saved args will be updated and draw button will be updated
+            args.args.draw_offerer = this.player_id;
             this.setClientState(args.state_name,args);
+
+            this.multipleChoiceDialog(
+                '<span style="font-size:16px;font-weight:100">'
+                    +_('Finish taking your turn. Opponent can accept draw on their turn.'
+                    +'</span>'),
+                [_('OK')],
+                ()=>{}
+            );
         }
         else if(args.args.draw_offerer == this.player_id){
             // This player already offered a draw,
