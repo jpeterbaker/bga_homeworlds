@@ -1380,7 +1380,11 @@ class homeworlds extends Table {
             $this->gamestate->nextState('trans_want_restart_turn');
     }
 
-    // This is called after every turn except for creations
+    // This is called after every turn EXCEPT FOR CREATIONS
+    // Empty homeworlds fade at this point
+    // Check for loss conditions
+    // Wiki says that "best practice" is to leave out-of-time zombies in the game
+    // so don't try to detect them here or end the game early 
     function st_end_turn(){
         $this->update_stats();
         $prev_player_id = $this->getActivePlayerId();
@@ -1404,11 +1408,6 @@ class homeworlds extends Table {
         $sql = 'SELECT player_id,player_name,homeworld_id,player_eliminated FROM player';
         $players = self::getCollectionFromDb($sql);
 
-        // Empty homeworlds fade at this point
-        // Check for loss conditions
-
-        // Wiki says that "best practice" is to leave out-of-time zombies in the game
-        // so don't try to detect them here or end the game early 
         $losers = [];
         foreach($players as $player_id => $player){
             if( $player['player_eliminated']
@@ -1549,6 +1548,9 @@ class homeworlds extends Table {
     */
 
     function zombieTurn( $state, $active_player ) {
+        // Let the token finish sliding to the zombie before passing it back
+        self::notifyAllPlayers('simplePause','',['time'=>1000]);
+
         // Zombies may pass using regular rules unless it's the creation phase
         if($state['name'] != 'want_creation'){
             $this->pass();

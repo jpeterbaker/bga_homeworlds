@@ -1024,7 +1024,7 @@ function (dojo, declare) {
 
     /*
     Create and return an un-displayed node that is in the location of the given node.
-    The given node can then be moved in the DOM tree and then animated from
+    The given node can then be moved in the DOM tree and then animated to/from
     the un-displayed node to its new location
 
     If old is set to true, piecenode is going to be taken from the DOM tree,
@@ -1080,8 +1080,8 @@ function (dojo, declare) {
     },
 
     /*
-    Run an animation moving node from origin to target (all nodes)
-    The node should already be in the desired place in the DOM tree
+    Run an animation moving a node from origin (a node) to target (a node)
+    The moving node should already be in the desired place in the DOM tree
 
     origin and target nodes will be deleted when animation is complete
     */
@@ -1964,12 +1964,19 @@ function (dojo, declare) {
         dojo.subscribe('notif_sacrifice',   this,'sacrifice_from_notif');
         dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
 
-        dojo.subscribe('notif_restart', this,'restart_from_notif');
         dojo.subscribe('notif_pass', this,'pass_from_notif');
+        dojo.subscribe('notif_restart', this,'restart_from_notif');
+
         // Notifications that don't need anything special
         dojo.subscribe('notif_elimination', this,'ignore_notif');
         dojo.subscribe('notif_offer_draw', this,'ignore_notif');
         dojo.subscribe('notif_cancel_offer_draw', this,'ignore_notif');
+
+        // This line could be used to prevent zombies from passing instantly
+        // and messing up the token, but it would add a second to every turn.
+        // I'm going to try it on the server side instead so that it only applies
+        // to zombies.
+        // this.notifqueue.setSynchronous('notif_pass',1000);
     },
 
     ignore_notif: function(notif){
