@@ -90,6 +90,19 @@ $game_preferences = array(
         ),
         'default' => 1
     ),
+    106 => array(
+        'name' => totranslate('One-click captures'),
+        'needReload' => false,
+        'values' => array(
+            0 => array(
+				'name' => totranslate('Off'),
+            ),
+            1 => array(
+                'name' => totranslate('On'),
+            ),
+        ),
+        'default' => 0
+    )
     104 => array(
         'name' => totranslate('Power reference labels'),
         // You wouldn't think so, but the cssPref class only gets applied on page load
