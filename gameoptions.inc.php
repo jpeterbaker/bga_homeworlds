@@ -92,7 +92,7 @@ $game_preferences = array(
     ),
     106 => array(
         'name' => totranslate('One-click captures'),
-        'needReload' => false,
+        'needReload' => true,
         'values' => array(
             0 => array(
 				'name' => totranslate('Off'),

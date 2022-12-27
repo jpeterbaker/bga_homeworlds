@@ -533,6 +533,11 @@ function (dojo, declare) {
             return;
         var capturable = this.get_captures();
         capturable.addClass('HWselectable');
+        this.add_tooltip(
+            capturable,
+            _('Click this ship to capture it'),
+            1500
+        );
     },
 
     // Get NodeList of capturable ships
