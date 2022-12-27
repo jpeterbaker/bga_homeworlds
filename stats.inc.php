@@ -71,19 +71,24 @@ $stats_type = array(
             "name" => totranslate("Ships built"),
             "type" => "int"
         ),
+        "ships_captured" => array(
+            "id"=> 11,
+            "name" => totranslate("Ships captured"),
+            "type" => "int"
+        ),
         "ships_traded" => array(
             "id"=> 14,
             "name" => totranslate("Ships traded"),
             "type" => "int"
         ),
+        "ship_movements" => array(
+            "id"=> 17,
+            "name" => totranslate("Ship movements"),
+            "type" => "int"
+        ),
         "systems_discovered" => array(
             "id"=> 12,
             "name" => totranslate("Systems discovered"),
-            "type" => "int"
-        ),
-        "ships_captured" => array(
-            "id"=> 11,
-            "name" => totranslate("Ships captured"),
             "type" => "int"
         ),
         "ships_sacrificed" => array(

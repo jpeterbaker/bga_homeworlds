@@ -43,6 +43,7 @@ class homeworlds extends Table {
             // Track statistics until end of turn (in case of restart)
             'turn_ships_captured'       => 51,
             'turn_systems_discovered'   => 52,
+            'turn_movements'            => 57,
             'turn_ships_built'          => 53,
             'turn_ships_traded'         => 54,
             'turn_ships_sacrificed'     => 55,
@@ -158,6 +159,7 @@ class homeworlds extends Table {
         // Actions taken this turn (added to stats unless turn is reset)
         self::setGameStateInitialValue('turn_ships_captured',0);
         self::setGameStateInitialValue('turn_systems_discovered',0);
+        self::setGameStateInitialValue('turn_movements',0);
         self::setGameStateInitialValue('turn_ships_built',0);
         self::setGameStateInitialValue('turn_ships_traded',0);
         self::setGameStateInitialValue('turn_ships_sacrificed',0);
@@ -641,16 +643,7 @@ class homeworlds extends Table {
 
         // Don't forget the quotes around the varchar
         $sql = "SELECT state_str,tally FROM States WHERE state_str='".$s."'";
-        try{
-            // I'm not sure this try-catch is necessary while the db upgrade function is in place, but at least one of them is needed
-            $result = self::getCollectionFromDb($sql);
-        } catch (Exception $e) {
-            // TODO remove this when all games use new version
-            // If the game version is old, the States table won't exist
-            // This just needs to stay in place until every game in progess
-            // is using the latest verion
-            return 1;
-        }
+        $result = self::getCollectionFromDb($sql);
         if(count($result) == 0){
             // This is the first time this state has been seen
             // Don't forget the quotes around the varchar
@@ -789,6 +782,7 @@ class homeworlds extends Table {
 
         self::setGameStateValue('turn_ships_captured',0);
         self::setGameStateValue('turn_systems_discovered',0);
+        self::setGameStateValue('turn_movements',0);
         self::setGameStateValue('turn_ships_built',0);
         self::setGameStateValue('turn_ships_traded',0);
         self::setGameStateValue('turn_ships_sacrificed',0);
@@ -971,6 +965,7 @@ class homeworlds extends Table {
             $this->fade($old_system_id);
 
         $this->gamestate->nextState('trans_after_power_action');
+        self::incGameStateValue('turn_movements',1);
     }
 
     function fade($system_id){
@@ -1510,6 +1505,8 @@ class homeworlds extends Table {
             'ships_captured',$player_id);
         self::incStat(self::getGameStateValue('turn_systems_discovered'),
             'systems_discovered',$player_id);
+        self::incStat(self::getGameStateValue('turn_movements'),
+            'ship_movements',$player_id);
         self::incStat(self::getGameStateValue('turn_ships_built'),
             'ships_built',$player_id);
         self::incStat(self::getGameStateValue('turn_ships_traded'),
@@ -1521,6 +1518,7 @@ class homeworlds extends Table {
 
         self::setGameStateValue('turn_ships_captured',0);
         self::setGameStateValue('turn_systems_discovered',0);
+        self::setGameStateValue('turn_movements',0);
         self::setGameStateValue('turn_ships_built',0);
         self::setGameStateValue('turn_ships_traded',0);
         self::setGameStateValue('turn_ships_sacrificed',0);

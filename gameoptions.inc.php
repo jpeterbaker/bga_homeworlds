@@ -102,7 +102,7 @@ $game_preferences = array(
             ),
         ),
         'default' => 0
-    )
+    ),
     104 => array(
         'name' => totranslate('Power reference labels'),
         // You wouldn't think so, but the cssPref class only gets applied on page load

@@ -158,7 +158,7 @@ function (dojo, declare) {
 
         this.connect(
             document.getElementById('HWsacrificeButton'),
-            'onclick', //dojo.hitch( this, TODO verify this works
+            'onclick',
             function(evt){
                 evt.preventDefault();
                 this.sacrifice_button_selected();
@@ -505,7 +505,6 @@ function (dojo, declare) {
                 // Build target is selected automatically, so don't highlight anything
                 return dojo.NodeList();
             case 4:
-                // TODO return candidates rather than highlighting manually
                 var targets = dojo.NodeList();
                 var old_color = this.get_color(activatednode);
                 var pips = this.get_size(activatednode);
@@ -529,11 +528,18 @@ function (dojo, declare) {
         return (this.prefs[106].value == 1);
     },
 
+    prep_quick_capturables: function(){
+        if(!this.accept_one_click_capture())
+            return;
+        var capturable = this.get_captures();
+        capturable.addClass('HWselectable');
+    },
+
     // Get NodeList of capturable ships
     // Relies on this['client_state'] for context
     get_captures: function(){
         var captures = dojo.NodeList();
-        var i,system,size;
+        var i,system,size,ship;
         switch(this['client_state']){
             case 'want_free':
                 // No ship has been selected or sacrificed yet
@@ -541,11 +547,14 @@ function (dojo, declare) {
                 var systems = dojo.query('.HWsystem');
                 for(i=0;i<systems.length;i++){
                     system = systems[i];
-                    if(dojo.query(system,'.HWstar.HWred,.HWfriendly.HWred').length==0)
+                    if(dojo.query('.HWstar.HWred,.HWfriendly.HWred',system).length==0)
                         // This player has not access to red in this system
                         continue;
-                    size = this.get_largest(system);
-                    captures = captures.concat(this.get_captures(system,size));
+                    ship = this.get_largest_friendly(system);
+                    if(ship == null)
+                        continue;
+                    size = this.get_size(ship);
+                    captures = captures.concat(this.get_captures_local(system,size));
                 }
                 return captures;
             case 'want_sacrifice_action':
@@ -554,8 +563,11 @@ function (dojo, declare) {
                 var systems = dojo.query('.HWsystem');
                 for(i=0;i<systems.length;i++){
                     system = systems[i];
-                    size = this.get_largest(system);
-                    captures = captures.concat(this.get_captures(system,size));
+                    ship = this.get_largest_friendly(system);
+                    if(ship == null)
+                        continue;
+                    size = this.get_size(ship);
+                    captures = captures.concat(this.get_captures_local(system,size));
                 }
                 return captures;
             case 'client_want_target':
@@ -780,9 +792,21 @@ function (dojo, declare) {
     get_size: function(piecenode){
         return parseInt(piecenode.getAttribute('ptype').split('_')[1]);
     },
-    // Size of largest friendly ship in the system
-    get_largest: function(system){
-        return Math.max(...dojo.query(system,'.HWfriendly.HWship').forEach(this.get_size));
+    // Largest friendly ship node in the system
+    // null if there are no friendly ships in the system
+    get_largest_friendly: function(system){
+        var hisize = 0;
+        var hiship = null;
+        var ships = dojo.query('.HWfriendly.HWship',system);
+        var i,size;
+        for(i=0;i<ships.length;i++){
+            size = this.get_size(ships[i]);
+            if(size > hisize){
+                hisize = size;
+                hiship = ships[i];
+            }
+        }
+        return hiship;
     },
     // Hostile ships no bigger than size in system
     get_captures_local: function(system,size){
@@ -790,7 +814,7 @@ function (dojo, declare) {
         var s;
         for(s=1;s<=size;s++){
             // Add hostile ships of size s
-            ships = ships.concat(dojo.query(system,'.HWhostile.HWship[ptype~=_'+s+']'));
+            ships = ships.concat(dojo.query('.HWhostile.HWship[ptype$=_'+s+']',system));
         }
         return ships;
     },
@@ -1648,6 +1672,23 @@ function (dojo, declare) {
     },
 
     activate_ship: function(shipnode,color=null){
+        if(dojo.hasClass(shipnode,'HWhostile')){
+            // "Activating" a hostile ship means they're trying to capture it
+            // Send instruction to server ASAP
+            var system = this.get_system(shipnode);
+            var captor_id = this.get_id(this.get_largest_friendly(system));
+            var target_id = this.get_id(shipnode);
+            this.ajaxcallwrapper(
+                'act_power_action',
+                {
+                    piece_id:   captor_id,
+                    capture_id: target_id,
+                    power:      1
+                },
+                this.cancel_action
+            );
+            return;
+        }
         if(color == null){
             // Free action
             shipnode.setAttribute('activate','pending');
@@ -1817,7 +1858,7 @@ function (dojo, declare) {
             // TODO implement for other colors
             return true;
         }
-        // Action available if there are any capturable ships
+        // Capture action is available if there are any capturable ships
         return (this.get_captures().length > 0);
     },
 
