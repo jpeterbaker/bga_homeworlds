@@ -637,9 +637,23 @@ class homeworlds extends Table {
         );
     }
 
+    // The number of times that this state has appeared
+    // Assumes active player has just finished their turn but hasn't passed token yet
+    // i.e. player on move is the player following the active player
+    function get_state_repetitions(){
+        $s = $this->state_string(true);
+        // Don't forget the quotes around the varchar
+        $sql = "SELECT state_str,tally FROM States WHERE state_str='".$s."'";
+        $result = self::getCollectionFromDb($sql);
+        if(count($result) == 0){
+            return 0;
+        }
+        return $result[$s]['tally'];
+    }
+    
     // Returns the number of times that this state has appeared
-    function increment_state_repetition_tally(){
-        $s = $this->state_string();
+    function increment_state_repetitions(){
+        $s = $this->state_string(false);
 
         // Don't forget the quotes around the varchar
         $sql = "SELECT state_str,tally FROM States WHERE state_str='".$s."'";
@@ -661,11 +675,12 @@ class homeworlds extends Table {
     }
 
     // Return a string representing the current game state
-    // This function ignores system names
     // The same game state will always produce the same string
     // Equality of game states does depend on the player on move,
     // but it does NOT depend on piece ID or system IDs/names
-    function state_string(){
+    // Set $next_player true if it should be considered to be the next player's turn
+    // In multiplayer games, this may cause issues if the next player is being eliminated
+    function state_string($skip){
         $allDatas = $this->getAllDatas();
         $players = $allDatas['players'];
         $systems = $allDatas['systems'];
@@ -702,6 +717,8 @@ class homeworlds extends Table {
 
         // Start the string with the active player number
         $active_id = $this->getActivePlayerId();
+        if($skip)
+            $active_id = self::getPlayerAfter($active_id);
         $active_no = $players[$active_id]['player_no'];
 
         $s = $active_no;
@@ -1186,14 +1203,29 @@ class homeworlds extends Table {
         self::incGameStateValue('turn_catastrophes_trigged',1);
     }
 
-	function pass(){
+	function pass($repeat_verified){
         self::checkAction('act_pass');
         $player_name = $this->getActivePlayerName();
-        self::notifyAllPlayers('notif_pass',
-            clienttranslate('${player_name} ends their turn.'),
-            array('player_name' => $player_name)
+
+        $tally = $this->get_state_repetitions();
+        // Repetition count isn't incremented until turn officially ends
+        if($repeat_verified || $this->get_state_repetitions() < 2){
+            // Position hasn't been repeated 3 times or
+            // player has confirmed it's what they want to do
+            self::notifyAllPlayers('notif_pass',
+                clienttranslate('${player_name} ends their turn.'),
+                array('player_name' => $player_name)
+            );
+            $this->gamestate->nextState('trans_end_turn');
+            return;
+        }
+        // Need player confirmation that they want to repeat a third time
+        self::notifyPlayer(
+            self::getCurrentPlayerId(),
+            'notif_verify_repeat',
+            '',
+            []
         );
-        $this->gamestate->nextState('trans_end_turn');
     }
 
 	function restart(){
@@ -1348,7 +1380,7 @@ class homeworlds extends Table {
             // This player has a home, so everyone has had a chance to create
             // Go to normal turn
             $this->save_state();
-            $this->increment_state_repetition_tally();
+            $this->increment_state_repetitions();
             $this->gamestate->nextState('trans_want_free');
             return;
         }
@@ -1472,7 +1504,7 @@ class homeworlds extends Table {
 
         $this->activeNextPlayer();
 
-        $tally = $this->increment_state_repetition_tally();
+        $tally = $this->increment_state_repetitions();
         if($tally >= 2){
             // If the position has occured before, players should be told
             $message = clienttranslate('This position has occurred ${tally} times.');
@@ -1551,7 +1583,7 @@ class homeworlds extends Table {
 
         // Zombies may pass using regular rules unless it's the creation phase
         if($state['name'] != 'want_creation'){
-            $this->pass();
+            $this->pass(true);
             return;
         }
 

@@ -692,7 +692,8 @@ function (dojo, declare) {
                 }
                 // In these states, there are still actions available
                 // Make the pass button an alarming color
-                pass_button_message = _('Pass');
+                //pass_button_message = _('Pass');
+                // The word "Pass" can sound like canceling everything if the player has already done some actions
                 dojo.addClass(pass_button,'HWhilit');
             // NO BREAK
             // The above states get pass, draw, and restart buttons
@@ -1933,39 +1934,40 @@ function (dojo, declare) {
         var home_bot = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
         var defenders = dojo.query('.HWfriendly.HWship',home_bot);
         var stars = dojo.query('.HWstar',home_bot);
-        if(home_bot == null || defenders.length==0 || stars.length==0){
-            // This move is self-elimination
-            var player_id_top = this.get_top_player();
-            var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']')[0];
-            var enemy_defenders = dojo.query('.HWhostile.HWship',home_top);
-            var enemy_stars = dojo.query('.HWstar',home_top);
-            var message;
-            if(enemy_defenders.length==0 || enemy_stars.length==0){
-                message = _('Both homeworlds are destroyed or unoccupied by their owners. If you end your turn now, the game will end in a draw. Is this what you want to do?');
-            }
-            else{
-                message = _('Your homeworld is destroyed or undefended. If you end your turn now, the game will end and you will lose. Is this what you want to do?');
-            }
-            this.confirmationDialog(
-                message,
-                // Yes handler
-                dojo.hitch(
-                    this,
-                    function(){
-                        this.ajaxcallwrapper('act_pass',{});
-                    }
-                ),
-                // No handler
-                dojo.hitch(
-                    this,
-                    function(){
-                        this.ajaxcallwrapper('act_restart_turn',{});
-                    }
-                ),
-            );
+        if(home_bot != null && defenders.length!=0 && stars.length!=0){
+            // NOT self-elimination
+            this.ajaxcallwrapper('act_pass',{repeat_verified:0});
             return;
         }
-        this.ajaxcallwrapper('act_pass',{});
+        // This move IS self-elimination
+        var player_id_top = this.get_top_player();
+        var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']')[0];
+        var enemy_defenders = dojo.query('.HWhostile.HWship',home_top);
+        var enemy_stars = dojo.query('.HWstar',home_top);
+        var message;
+        if(enemy_defenders.length==0 || enemy_stars.length==0){
+            message = _('Both homeworlds are destroyed or unoccupied by their owners. If you end your turn now, the game will end in a draw. Is this what you want to do?');
+        }
+        else{
+            message = _('Your homeworld is destroyed or undefended. If you end your turn now, the game will end and you will lose. Is this what you want to do?');
+        }
+        this.confirmationDialog(
+            message,
+            // Yes handler
+            dojo.hitch(
+                this,
+                function(){
+                    this.ajaxcallwrapper('act_pass',{repeat_verified:0});
+                }
+            ),
+            // No handler
+            dojo.hitch(
+                this,
+                function(){
+                    this.ajaxcallwrapper('act_restart_turn',{});
+                }
+            ),
+        );
     },
     restart_button_selected: function(){
         var state_name = this['latest_args']['state_name'];
@@ -2034,28 +2036,31 @@ function (dojo, declare) {
     your homeworlds.game.php file.
     */
     setupNotifications: function() {
-        dojo.subscribe('notif_debug'   ,this,'ignore_notif');
+        dojo.subscribe('notif_debug' ,this,'ignore_notif');
 
-        dojo.subscribe('notif_create'  ,this,'create_from_notif');
+        dojo.subscribe('notif_create',this,'create_from_notif');
 
-        dojo.subscribe('notif_capture' ,this,'capture_from_notif');
-        dojo.subscribe('notif_build'   ,this,'build_from_notif');
-        dojo.subscribe('notif_trade'   ,this,'trade_from_notif');
+        dojo.subscribe('notif_capture',this,'capture_from_notif');
+        dojo.subscribe('notif_build'  ,this,'build_from_notif');
+        dojo.subscribe('notif_trade'  ,this,'trade_from_notif');
 
         dojo.subscribe('notif_discover',this,'discover_from_notif');
-        dojo.subscribe('notif_move',    this,'move_from_notif');
-        dojo.subscribe('notif_fade',    this,'fade_from_notif');
+        dojo.subscribe('notif_move'    ,this,'move_from_notif');
+        dojo.subscribe('notif_fade'    ,this,'fade_from_notif');
 
-        dojo.subscribe('notif_sacrifice',   this,'sacrifice_from_notif');
-        dojo.subscribe('notif_catastrophe', this,'catastrophe_from_notif');
+        dojo.subscribe('notif_sacrifice'  ,this,'sacrifice_from_notif');
+        dojo.subscribe('notif_catastrophe',this,'catastrophe_from_notif');
 
-        dojo.subscribe('notif_pass', this,'pass_from_notif');
-        dojo.subscribe('notif_restart', this,'restart_from_notif');
+        dojo.subscribe('notif_pass'   ,this,'pass_from_notif');
+        dojo.subscribe('notif_restart',this,'restart_from_notif');
 
-        // Notifications that don't need anything special
-        dojo.subscribe('notif_elimination', this,'ignore_notif');
-        dojo.subscribe('notif_offer_draw', this,'ignore_notif');
-        dojo.subscribe('notif_cancel_offer_draw', this,'ignore_notif');
+        dojo.subscribe('notif_verify_repeat',this,'verify_repeat');
+
+        // Notifications that are only to put info in log
+        dojo.subscribe('notif_elimination',this,'ignore_notif');
+        // For button config purposes, draw offer info is passed as state parameter
+        dojo.subscribe('notif_offer_draw',this,'ignore_notif');
+        dojo.subscribe('notif_cancel_offer_draw',this,'ignore_notif');
 
         // This line could be used to prevent zombies from passing instantly
         // and messing up the token, but it would add a second to every turn.
@@ -2268,6 +2273,26 @@ function (dojo, declare) {
         // It's sloppy, but for now, I'm doing a full board reconstruction
         this.clear_all();
         this.setup_pieces(notif.args.gamedatas);
+    },
+
+    verify_repeat: function(notif){
+        this.confirmationDialog(
+            _('This position has occurred at least three times. If you proceed, your opponent will be able to declare a draw.?'),
+            // Yes handler
+            dojo.hitch(
+                this,
+                function(){
+                    this.ajaxcallwrapper('act_pass',{repeat_verified:1});
+                }
+            ),
+            // No handler
+            dojo.hitch(
+                this,
+                function(){
+                    this.ajaxcallwrapper('act_restart_turn',{});
+                }
+            ),
+        );
     },
 
     // Turn has ended, move the token

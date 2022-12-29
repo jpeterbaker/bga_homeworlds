@@ -96,7 +96,8 @@ class action_homeworlds extends APP_GameAction {
 
     public function act_pass(){
         self::setAjaxMode();
-        $this->game->pass();
+        $repeat_verified = self::getArg('repeat_verified','AT_bool',true);
+        $this->game->pass($repeat_verified);
         self::ajaxResponse();
     }
 
