@@ -31,6 +31,7 @@ class homeworlds extends Table {
 
         self::initGameStateLabels( array( 
             'used_free'         => 10,
+            'used_cat'          => 11,
             'sacrifice_color'   => 20,
             'sacrifice_actions' => 21,
             'draw_offerer'      => 30,
@@ -140,7 +141,13 @@ class homeworlds extends Table {
         // (This flag is needed in after_cat state to determine
         // whether to transition to want_free or want_catastrophe
         // if there has been no sacrifice)
-        self::setGameStateInitialValue('used_free'  ,0);
+        self::setGameStateInitialValue('used_free',0);
+        // Change used_cat to 1 when a catastrophe has occurred this turn.
+        // In the rare case that player's first action is a catastrophe,
+        // this is the only record that the player has performed any action.
+        // In the want_free state, the client may want to know this
+        // so that Restart Turn button can be shown/hidden intelligently
+        self::setGameStateInitialValue('used_cat' ,0);
 
         // Color zero indicates no sacrifice has occurred
         self::setGameStateInitialValue('sacrifice_color'  ,0);
@@ -1201,6 +1208,7 @@ class homeworlds extends Table {
 
         $this->gamestate->nextState('trans_after_catastrophe');
         self::incGameStateValue('turn_catastrophes_trigged',1);
+        self::setGameStateValue('used_cat',1);
     }
 
 	function pass($repeat_verified){
@@ -1250,6 +1258,7 @@ class homeworlds extends Table {
             )
         );
         self::setGameStateValue('used_free',0);
+        self::setGameStateValue('used_cat',0);
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
 
@@ -1333,7 +1342,8 @@ class homeworlds extends Table {
 
     function args_want_free(){
         return array(
-            'draw_offerer' => self::getGameStateValue('draw_offerer')
+            'draw_offerer' => self::getGameStateValue('draw_offerer'),
+            'used_cat'     => self::getGameStateValue('used_cat')
         );
     }
     function args_want_sacrifice_action(){
@@ -1435,6 +1445,7 @@ class homeworlds extends Table {
         $sql = 'SELECT player_id,player_name,homeworld_id,player_eliminated FROM player';
         $players = self::getCollectionFromDb($sql);
 
+        // Identify newly eliminated players
         $losers = [];
         foreach($players as $player_id => $player){
             if( $player['player_eliminated']
@@ -1499,6 +1510,7 @@ class homeworlds extends Table {
 
         // Get ready for next turn
         self::setGameStateValue('used_free',0);
+        self::setGameStateValue('used_cat',0);
         self::setGameStateValue('sacrifice_color',0);
         self::setGameStateValue('sacrifice_actions',0);
 

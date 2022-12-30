@@ -135,6 +135,9 @@ function (dojo, declare) {
 
         // These buttons always have the same text,
         // so it can be set now
+        button = document.getElementById('HWpassButton');
+        button.innerHTML = _('End turn');
+
         button = document.getElementById('HWcatastropheButton');
         button.innerHTML = _('Trigger catastrophe');
 
@@ -143,9 +146,6 @@ function (dojo, declare) {
 
         button = document.getElementById('HWrestartButton');
         button.innerHTML = _('Restart turn');
-
-        button = document.getElementById('HWcancelButton');
-        button.innerHTML = _('Cancel');
 
         this.connect(
             document.getElementById('HWcatastropheButton'),
@@ -675,14 +675,10 @@ function (dojo, declare) {
         if(!state_name.startsWith('want') && !state_name.startsWith('client'))
             return;
 
-        // Set default pass button params
-        // These will be changed if passing is not expected,
-        // i.e., if there are things the player could still do
-        var pass_button_message = _('End turn');
         var pass_button = document.getElementById('HWpassButton');
         dojo.removeClass(pass_button,'HWhilit');
         switch(state_name){
-            // Server choice states get catastrophe button
+            // All server states where player makes a choice get catastrophe button
             case 'want_free':
             case 'want_sacrifice_action':
             case 'want_catastrophe':
@@ -692,8 +688,6 @@ function (dojo, declare) {
                 }
                 // In these states, there are still actions available
                 // Make the pass button an alarming color
-                //pass_button_message = _('Pass');
-                // The word "Pass" can sound like canceling everything if the player has already done some actions
                 dojo.addClass(pass_button,'HWhilit');
             // NO BREAK
             // The above states get pass, draw, and restart buttons
@@ -704,7 +698,6 @@ function (dojo, declare) {
             // The above states get pass and restart buttons
             // which get added lower down
             case 'client_want_creation_confirmation':
-                pass_button.innerHTML = pass_button_message;
                 dojo.removeClass(pass_button,'HWdisabled');
                 // Token needs to be selectable when pass button is available
                 this.selectablize_token();
@@ -727,6 +720,11 @@ function (dojo, declare) {
             case 'client_want_target':
                 dojo.query('#HWcancelButton').removeClass('HWdisabled');
                 break;
+        }
+        // In want_free state, nothing has happened, so take away restart button
+        // EXCEPT in very rare case of starting turn with with catastrophe
+        if(state_name=='want_free' && !args.used_cat){
+            dojo.query('#HWrestartButton').addClass('HWdisabled');
         }
     },
 
@@ -1689,7 +1687,7 @@ function (dojo, declare) {
                 {
                     piece_id:   captor_id,
                     capture_id: target_id,
-                    power:      1
+                    power:      1 // bools have to be 0 or 1, not false or true
                 },
                 this.cancel_action
             );
