@@ -147,6 +147,9 @@ function (dojo, declare) {
         button = document.getElementById('HWrestartButton');
         button.innerHTML = _('Restart turn');
 
+        button = document.getElementById('HWcancelButton');
+        button.innerHTML = _('Cancel');
+
         this.connect(
             document.getElementById('HWcatastropheButton'),
             'onclick',
@@ -723,7 +726,7 @@ function (dojo, declare) {
         }
         // In want_free state, nothing has happened, so take away restart button
         // EXCEPT in very rare case of starting turn with with catastrophe
-        if(state_name=='want_free' && !args.used_cat){
+        if(state_name=='want_free' && !parseInt(args.used_cat)){
             dojo.query('#HWrestartButton').addClass('HWdisabled');
         }
     },

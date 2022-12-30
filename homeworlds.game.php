@@ -1206,9 +1206,9 @@ class homeworlds extends Table {
         if($this->is_empty($system_id))
             $this->fade($system_id);
 
+        self::setGameStateValue('used_cat',1); // Must happen before nextState
         $this->gamestate->nextState('trans_after_catastrophe');
         self::incGameStateValue('turn_catastrophes_trigged',1);
-        self::setGameStateValue('used_cat',1);
     }
 
 	function pass($repeat_verified){
@@ -1341,6 +1341,7 @@ class homeworlds extends Table {
     */
 
     function args_want_free(){
+        $used_cat = self::getGameStateValue('used_cat');
         return array(
             'draw_offerer' => self::getGameStateValue('draw_offerer'),
             'used_cat'     => self::getGameStateValue('used_cat')
