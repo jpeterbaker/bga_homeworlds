@@ -659,6 +659,8 @@ class homeworlds extends Table {
     }
     
     // Returns the number of times that this state has appeared
+    // Assumes token has already been passed
+    // i.e. current player is on move
     function increment_state_repetitions(){
         $s = $this->state_string(false);
 
@@ -1217,7 +1219,7 @@ class homeworlds extends Table {
 
         $tally = $this->get_state_repetitions();
         // Repetition count isn't incremented until turn officially ends
-        if($repeat_verified || $this->get_state_repetitions() < 2){
+        if($repeat_verified || $tally < 2){
             // Position hasn't been repeated 3 times or
             // player has confirmed it's what they want to do
             self::notifyAllPlayers('notif_pass',

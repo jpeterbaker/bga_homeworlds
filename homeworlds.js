@@ -260,7 +260,7 @@ function (dojo, declare) {
     // onEnteringState:
     // This method is called each time we are entering into a new game state.
     // You can use this method to perform user interface changes.
-    onEnteringState: function( state_name, args ) {
+    onEnteringState: function(state_name,args){
         // Current player saves most recent info from server
         // to make it easier to cancel partial actions from client states.
         // All server-side player-decision states start with "want"
@@ -1934,8 +1934,7 @@ function (dojo, declare) {
     end_turn_with_self_elim_check: function(){
         var home_bot = dojo.query('[homeplayer_id=player_'+this.player_id+']')[0];
         var defenders = dojo.query('.HWfriendly.HWship',home_bot);
-        var stars = dojo.query('.HWstar',home_bot);
-        if(home_bot != null && defenders.length!=0 && stars.length!=0){
+        if(home_bot != null && defenders.length != 0){
             // NOT self-elimination
             this.ajaxcallwrapper('act_pass',{repeat_verified:0});
             return;
@@ -1944,9 +1943,9 @@ function (dojo, declare) {
         var player_id_top = this.get_top_player();
         var home_top = dojo.query('[homeplayer_id=player_'+player_id_top+']')[0];
         var enemy_defenders = dojo.query('.HWhostile.HWship',home_top);
-        var enemy_stars = dojo.query('.HWstar',home_top);
+        // No need to check for stars: if the stars are gone, so's the system
         var message;
-        if(enemy_defenders.length==0 || enemy_stars.length==0){
+        if(home_top == null || enemy_defenders.length == 0){
             message = _('Both homeworlds are destroyed or unoccupied by their owners. If you end your turn now, the game will end in a draw. Is this what you want to do?');
         }
         else{

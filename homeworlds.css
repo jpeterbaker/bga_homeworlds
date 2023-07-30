@@ -450,6 +450,13 @@ On hover, the shadow tightens and looks stronger
 .HWselectable.HWpiece{
     --shadow_col:white;
 }
+/* TODO consider outlines instead of shadows and bobbing
+This looks pretty good, though transparency would be good
+    outline: 5px solid green;
+    border-radius: 1px
+Outlines don't interfere with element sizing the way borders do
+border-radius also applies to outlines
+*/
 [activate='1']{
     --shadow_col:#ff0000;
 }
