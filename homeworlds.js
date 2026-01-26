@@ -2277,7 +2277,7 @@ function (dojo, declare) {
 
     verify_repeat: function(notif){
         this.confirmationDialog(
-            _('This position has occurred at least three times. If you proceed, your opponent will be able to declare a draw.?'),
+            _('This position has occurred at least three times. If you proceed, your opponent will be able to declare a draw.'),
             // Yes handler
             dojo.hitch(
                 this,

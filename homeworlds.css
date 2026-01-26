@@ -23,7 +23,8 @@
 html.hw_bg_stars #overall-content{
     /*background-image:url('https://i.imgur.com/hoVyIVr.png');*/
     /*background-image:url('https://i.imgur.com/S4h3S6K.png');*/
-    background-image:url('https://i.imgur.com/DC2XVh0.png');
+    /*background-image:url('https://i.imgur.com/DC2XVh0.png');*/
+    background-image:url('img/star_bg.png');
 }
 #HWbank{
     /*
@@ -201,6 +202,10 @@ html.legend_off .HWlegend_label{
     display:none;
 }
 
+/* Rotate the stars when that option is selected */
+html.tilt_stars .HWstar{
+    transform:rotate(-40deg);
+}
 
 /* Legend labels */
 .HWlegend_label{
@@ -410,13 +415,13 @@ Use margin to center banked pieces
 Ships and systems can be friendly or hostile.
 These terms will need to be generalized if 3+ player is implemented.
 */
-.HWhostile{
+html.friendly_right .HWhostile,html.friendly_left .HWfriendly{
     float:left;
 }
 .HWhostile.HWship{
     --rotateAmount:180deg;
 }
-.HWfriendly{
+html.friendly_right .HWfriendly,html.friendly_left .HWhostile{
     float:right;
 }
 .HWfriendly.HWship{
@@ -683,5 +688,13 @@ so turn it off (not too noticeable)
 /* Annotations should all be above pieces */
 .archiveCommentPointed{
     z-index:6;
+}
+
+/*Diagonal stars look a little better farther apart*/
+html.tilt_stars .HWstar.HWmedium{
+    margin:10px;
+}
+html.tilt_stars .HWstar.HWlarge{
+    margin:12px;
 }
 

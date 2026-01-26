@@ -44,8 +44,7 @@ $game_options = array(
 $game_preferences = array(
     102 => array(
         'name' => totranslate('Colorblind mode'),
-        // You wouldn't think so, but the cssPref class only gets applied on page load
-        'needReload' => true,
+        'needReload' => false,
         'values' => array(
             0 => array(
 				'name' => totranslate('Off'),
@@ -60,8 +59,7 @@ $game_preferences = array(
     ),
     105 => array(
         'name' => totranslate('Background'),
-        // You wouldn't think so, but the cssPref class only gets applied on page load
-        'needReload' => true,
+        'needReload' => false,
         'values' => array(
             1 => array(
                 'name' => totranslate('Stars'),
@@ -76,8 +74,7 @@ $game_preferences = array(
     ),
     103 => array(
         'name' => totranslate('Power selection method'),
-        // You wouldn't think so, but the cssPref class only gets applied on page load
-        'needReload' => true,
+        'needReload' => false,
         'values' => array(
             1 => array(
                 'name' => totranslate('Buttons or pieces'),
@@ -92,7 +89,7 @@ $game_preferences = array(
     ),
     106 => array(
         'name' => totranslate('One-click captures'),
-        'needReload' => true,
+        'needReload' => false,
         'values' => array(
             0 => array(
 				'name' => totranslate('Off'),
@@ -103,18 +100,32 @@ $game_preferences = array(
         ),
         'default' => 0
     ),
-    104 => array(
-        'name' => totranslate('Power reference labels'),
-        // You wouldn't think so, but the cssPref class only gets applied on page load
-        'needReload' => true,
+    107 => array(
+        'name' => totranslate('Tilt stars'),
+        'needReload' => false,
         'values' => array(
             0 => array(
 				'name' => totranslate('Off'),
-				'cssPref' => 'legend_off'
+				'cssPref' => 'notilt_stars'
             ),
             1 => array(
                 'name' => totranslate('On'),
-                'cssPref' => 'legend_on'
+                'cssPref' => 'tilt_stars'
+            ),
+        ),
+        'default' => 0
+    ),
+    108 => array(
+        'name' => totranslate('Position of your ships'),
+        'needReload' => false,
+        'values' => array(
+            0 => array(
+				'name' => totranslate('Left side'),
+				'cssPref' => 'friendly_left'
+            ),
+            1 => array(
+                'name' => totranslate('Right side'),
+                'cssPref' => 'friendly_right'
             ),
         ),
         'default' => 1
